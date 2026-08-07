@@ -1,13 +1,18 @@
+"use client";
+
 import { Triangle } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import type { PeirceChain as PeirceChainType } from "@/lib/types";
 
 const STEPS = [
-  { key: "firstness", label: "Firstness", hint: "what presents itself" },
-  { key: "secondness", label: "Secondness", hint: "the resisting fact" },
-  { key: "thirdness", label: "Thirdness", hint: "the interpreted rule" },
+  { key: "firstness", label: "peirce.firstness", hint: "peirce.firstness.hint" },
+  { key: "secondness", label: "peirce.secondness", hint: "peirce.secondness.hint" },
+  { key: "thirdness", label: "peirce.thirdness", hint: "peirce.thirdness.hint" },
 ] as const;
 
 export function PeirceChain({ chain }: { chain: PeirceChainType }) {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-3">
       {STEPS.map((s, i) => (
@@ -21,9 +26,9 @@ export function PeirceChain({ chain }: { chain: PeirceChainType }) {
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex items-baseline gap-2">
               <span className="text-[12px] font-extrabold uppercase tracking-wide text-ink-900">
-                {s.label}
+                {t(s.label)}
               </span>
-              <span className="text-[11px] italic text-ink-400">{s.hint}</span>
+              <span className="text-[11px] italic text-ink-400">{t(s.hint)}</span>
             </div>
             <p className="mt-1 text-[13px] leading-relaxed text-ink-700">
               {chain[s.key]}
