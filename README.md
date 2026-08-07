@@ -183,6 +183,33 @@ claude mcp add velo -- node "$(pwd)/dist/src/mcp/server.js"
 | Block explorer | `verify_commitment` |
 | Send transaction | `attest_case` *(pending the contract)* |
 
+### Deploying
+
+`deploy/deploy-contract.ts` deploys `contracts/velo.compact` to the network in
+`deploy/network-config.ts` (`preview` by default — the hackathon's official
+network). It runs under [Bun](https://bun.sh), not `npm run build && node`:
+the deploy dependency ships raw `.ts` exports that plain `tsc`/`node` cannot
+resolve.
+
+```bash
+MIDNIGHT_NETWORK_ID=preview \
+MIDNIGHT_STORAGE_PASSWORD=<a-real-secret-you-pick> \
+MIDNIGHT_WALLET_SEED=<your-wallet-seed> \
+bun run deploy/deploy-contract.ts
+```
+
+**Use a wallet with nothing in it you can't afford to lose.** The deploy
+dependency logs the wallet seed to stdout as part of its normal, unconditional
+output — this repo redacts that line before it reaches your terminal (red
+team [F16](./docs/RED_TEAM_ROUND_4.md)), but that is a mitigation around a
+third-party default, not a guarantee the way the rest of this project's
+guarantees are. Treat any wallet used here as disposable regardless.
+
+`MIDNIGHT_STORAGE_PASSWORD` has no default — pick a real secret and never
+commit it. It encrypts the local signing-key store, not a throwaway
+namespace string (red team [F17](./docs/RED_TEAM_ROUND_4.md), fixed: this
+used to fall back to a hardcoded value).
+
 ## Status — what is real and what is not
 
 This project is 48 hours old. The table is honest on purpose; overclaiming is

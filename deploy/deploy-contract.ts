@@ -49,9 +49,49 @@ const config: DeployConfig = {
   privateStateStoreName: "velo-private-state",
 };
 
-console.log("Deploying VELO contract with network config:", midnightNetworkConfig);
+/**
+ * Red team F16: `midnightNetworkConfig` carries `walletSeed` as a plain
+ * field (see @effectstream/midnight-contracts/midnight-env.ts) -- logging
+ * the object itself, as this line originally did, printed the seed in
+ * plaintext. Log everything except that one field instead of guessing
+ * which fields are safe.
+ */
+const { walletSeed: _redactedSeed, ...safeNetworkConfig } = midnightNetworkConfig;
+console.log("Deploying VELO contract with network config:", { ...safeNetworkConfig, walletSeed: "[REDACTED]" });
 
-deployMidnightContract(config, midnightNetworkConfig)
+/**
+ * Red team F16 continued: the dependency itself also logs the raw seed,
+ * unconditionally, from inside buildWalletAndWaitForFunds
+ * (`log.info(\`Wallet seed: ${seed}\`)`) -- there is no flag to suppress
+ * it, and it is not VELO's code to edit. This is a mitigation, not a fix:
+ * redact any stdout/stderr line that looks like it's disclosing the seed,
+ * for the duration of the deploy call only. The real fix is upstream, in
+ * a dependency this repo doesn't control -- see docs/RED_TEAM_ROUND_4.md.
+ */
+const SEED_LEAK_PATTERN = /(wallet\s*seed:?\s*)(\S+)/gi;
+function redactSeed(chunk: unknown): unknown {
+  if (typeof chunk !== "string") return chunk;
+  return chunk.replace(SEED_LEAK_PATTERN, "$1[REDACTED by VELO F16 mitigation — see docs/RED_TEAM_ROUND_4.md]");
+}
+
+async function deployWithSeedRedaction(): Promise<void> {
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (process.stdout as any).write = (chunk: unknown, ...args: unknown[]) =>
+    (originalStdoutWrite as (...a: unknown[]) => boolean)(redactSeed(chunk), ...args);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (process.stderr as any).write = (chunk: unknown, ...args: unknown[]) =>
+    (originalStderrWrite as (...a: unknown[]) => boolean)(redactSeed(chunk), ...args);
+  try {
+    await deployMidnightContract(config, midnightNetworkConfig);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+  }
+}
+
+deployWithSeedRedaction()
   .then(() => {
     console.log("VELO contract deployment successful.");
     process.exit(0);
