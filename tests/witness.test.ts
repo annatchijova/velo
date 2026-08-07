@@ -83,9 +83,13 @@ test("different cases get different salts", () => {
   );
 });
 
-test("corroboration count is bounded by the circuit's Uint<0..17>", () => {
-  assert.equal(checkCorroborationCount(0), 0);
-  assert.equal(checkCorroborationCount(17), 17);
+test("corroboration count is bounded by the circuit's Uint<0..17> and crosses as bigint", () => {
+  // bigint, not number: the generated bindings type this witness as
+  // returning [PS, bigint]. Asserting the type here because a number
+  // would typecheck fine on this side and only fail at the contract.
+  assert.equal(typeof checkCorroborationCount(0), "bigint");
+  assert.equal(checkCorroborationCount(0), 0n);
+  assert.equal(checkCorroborationCount(17), 17n);
   assert.throws(() => checkCorroborationCount(18), WitnessError, "above the circuit bound must be rejected");
   assert.throws(() => checkCorroborationCount(-1), WitnessError, "negative must be rejected");
   assert.throws(() => checkCorroborationCount(1.5), WitnessError, "non-integer must be rejected");
@@ -104,7 +108,8 @@ test("witnessesForBundle produces 32-byte values matching the bundle", () => {
     bundle.analysisFingerprint,
     "the fingerprint witness must be exactly the sealed bundle's fingerprint",
   );
-  assert.equal(witnesses.corroborationCount, bundle.corroborationCount);
+  assert.equal(typeof witnesses.corroborationCount, "bigint");
+  assert.equal(witnesses.corroborationCount, BigInt(bundle.corroborationCount));
 });
 
 test("custody tip witness changes when the custody chain changes (red team F3)", () => {
