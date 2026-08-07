@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+Version sections below are maintained automatically by
+[release-please](https://github.com/googleapis/release-please) from
+Conventional Commits; the open release pull request is the staging area for
+unreleased changes.
 
 ### Added
 
@@ -98,5 +101,4 @@ this point, so the entire history is grouped under the initial `0.1.0`.
 - Red team round 3: CSRF on the loopback/frontend seal-adjacent routes
   (finding F14) fixed.
 
-[Unreleased]: https://github.com/annatchijova/velo/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/annatchijova/velo/releases/tag/v0.1.0
