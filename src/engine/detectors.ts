@@ -2,39 +2,77 @@ import type { Artifact, Marker } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
 export interface DetectorResult {
-  /** Stable identifier — used as the corroboration "source" name. */
+  /** Stable identifier for the detector category. */
   name: string;
   fired: boolean;
   fractures: string[];
   /** Contribution to the aggregate score if fired. Zero if not fired. */
   weight: Fraction;
+  /**
+   * IDs of the artifacts that actually caused this detector to fire.
+   *
+   * Red team F2: without this, corroboration was counted as "how many
+   * detector categories fired", which a single artifact carrying markers
+   * from four categories could satisfy on its own. Corroboration is a
+   * claim about independent *sources*, so the scorer needs to know which
+   * artifacts contributed, not just that something did.
+   */
+  contributingArtifactIds: string[];
 }
 
 const HAS = (a: Artifact, m: Marker) => a.markers.includes(m);
+
+/** Parses an ISO timestamp, or returns null — never NaN, which compares false against everything. */
+function parseTimestamp(ts: string): number | null {
+  const ms = new Date(ts).getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
 
 /**
  * Effect-before-cause is checked for real (timestamp comparison), not just
  * marker presence — a case can carry a `cause_event`/`effect_event` pair
  * whose actual timestamps we can verify independently of what the artifact
  * claims about itself.
+ *
+ * Red team F6: an unparseable timestamp used to silently disable this
+ * comparison, because `NaN < x` is false. An unreadable timestamp on
+ * forensic evidence is itself an anomaly, so it now fails closed and
+ * raises its own fracture instead of passing quietly.
  */
 export function detectTemporalViolation(artifacts: Artifact[]): DetectorResult {
   const causes = artifacts.filter((a) => HAS(a, "cause_event"));
   const effects = artifacts.filter((a) => HAS(a, "effect_event"));
   const fractures: string[] = [];
+  const contributors = new Set<string>();
+
+  for (const a of artifacts) {
+    if (parseTimestamp(a.timestamp) === null) {
+      fractures.push("TIMESTAMP_UNPARSEABLE");
+      contributors.add(a.id);
+    }
+  }
 
   for (const cause of causes) {
     for (const effect of effects) {
-      if (new Date(effect.timestamp).getTime() < new Date(cause.timestamp).getTime()) {
+      const causeMs = parseTimestamp(cause.timestamp);
+      const effectMs = parseTimestamp(effect.timestamp);
+      if (causeMs === null || effectMs === null) continue; // already reported above
+      if (effectMs < causeMs) {
         fractures.push("TEMPORAL_CAUSALITY_VIOLATION");
+        contributors.add(cause.id);
+        contributors.add(effect.id);
       }
     }
   }
-  if (artifacts.some((a) => HAS(a, "effect_before_cause"))) {
-    fractures.push("TEMPORAL_CAUSALITY_VIOLATION");
-  }
-  if (artifacts.some((a) => HAS(a, "temporal_entropy_null"))) {
-    fractures.push("TEMPORAL_ENTROPY_NULL");
+  for (const a of artifacts) {
+    if (HAS(a, "effect_before_cause")) {
+      fractures.push("TEMPORAL_CAUSALITY_VIOLATION");
+      contributors.add(a.id);
+    }
+    if (HAS(a, "temporal_entropy_null")) {
+      fractures.push("TEMPORAL_ENTROPY_NULL");
+      contributors.add(a.id);
+    }
   }
 
   const fired = fractures.length > 0;
@@ -43,70 +81,92 @@ export function detectTemporalViolation(artifacts: Artifact[]): DetectorResult {
     fired,
     fractures: [...new Set(fractures)],
     weight: fired ? new Fraction(1, 4) : Fraction.zero(),
+    contributingArtifactIds: [...contributors],
+  };
+}
+
+/** Shared shape for the marker-driven detectors: map markers to fractures, collect contributors. */
+function markerDetector(
+  name: string,
+  weight: Fraction,
+  mapping: ReadonlyArray<readonly [Marker, string]>,
+  artifacts: Artifact[],
+): DetectorResult {
+  const fractures: string[] = [];
+  const contributors = new Set<string>();
+
+  for (const [marker, fracture] of mapping) {
+    for (const a of artifacts) {
+      if (HAS(a, marker)) {
+        fractures.push(fracture);
+        contributors.add(a.id);
+      }
+    }
+  }
+
+  const fired = fractures.length > 0;
+  return {
+    name,
+    fired,
+    fractures: [...new Set(fractures)],
+    weight: fired ? weight : Fraction.zero(),
+    contributingArtifactIds: [...contributors],
   };
 }
 
 export function detectCrossSourceContradiction(artifacts: Artifact[]): DetectorResult {
-  const fractures: string[] = [];
-  if (artifacts.some((a) => HAS(a, "log_vs_memory"))) fractures.push("LOG_MEMORY_CONTRADICTION");
-  if (artifacts.some((a) => HAS(a, "network_vs_host"))) fractures.push("NETWORK_HOST_CONTRADICTION");
-  if (artifacts.some((a) => HAS(a, "cryptographic_inconsistency"))) fractures.push("CRYPTOGRAPHIC_INCONSISTENCY");
-
-  const fired = fractures.length > 0;
-  return {
-    name: "cross_source",
-    fired,
-    fractures,
-    weight: fired ? new Fraction(1, 4) : Fraction.zero(),
-  };
+  return markerDetector(
+    "cross_source",
+    new Fraction(1, 4),
+    [
+      ["log_vs_memory", "LOG_MEMORY_CONTRADICTION"],
+      ["network_vs_host", "NETWORK_HOST_CONTRADICTION"],
+      ["cryptographic_inconsistency", "CRYPTOGRAPHIC_INCONSISTENCY"],
+    ],
+    artifacts,
+  );
 }
 
 export function detectAntiForensicMarker(artifacts: Artifact[]): DetectorResult {
-  const fractures: string[] = [];
-  if (artifacts.some((a) => HAS(a, "log_cleared"))) fractures.push("LOG_CLEARED");
-  if (artifacts.some((a) => HAS(a, "timestamps_stomped"))) fractures.push("TIMESTAMPS_STOMPED");
-  if (artifacts.some((a) => HAS(a, "usn_journal_gap"))) fractures.push("USN_JOURNAL_GAP");
-  if (artifacts.some((a) => HAS(a, "mft_entry_anomaly"))) fractures.push("MFT_ENTRY_ANOMALY");
-  if (artifacts.some((a) => HAS(a, "surgical_deletion"))) fractures.push("SURGICAL_DELETION");
-
-  const fired = fractures.length > 0;
-  return {
-    name: "anti_forensic",
-    fired,
-    fractures,
-    weight: fired ? new Fraction(3, 10) : Fraction.zero(),
-  };
+  return markerDetector(
+    "anti_forensic",
+    new Fraction(3, 10),
+    [
+      ["log_cleared", "LOG_CLEARED"],
+      ["timestamps_stomped", "TIMESTAMPS_STOMPED"],
+      ["usn_journal_gap", "USN_JOURNAL_GAP"],
+      ["mft_entry_anomaly", "MFT_ENTRY_ANOMALY"],
+      ["surgical_deletion", "SURGICAL_DELETION"],
+    ],
+    artifacts,
+  );
 }
 
 export function detectNarrativePattern(artifacts: Artifact[]): DetectorResult {
-  const fractures: string[] = [];
-  if (artifacts.some((a) => HAS(a, "competence_theater"))) fractures.push("COMPETENCE_THEATER");
-  if (artifacts.some((a) => HAS(a, "narrative_poisoning"))) fractures.push("NARRATIVE_POISONING_DETECTED");
-  if (artifacts.some((a) => HAS(a, "false_flag_attribution"))) fractures.push("FALSE_FLAG_ATTRIBUTION");
-  if (artifacts.some((a) => HAS(a, "documentary_fabrication"))) fractures.push("DOCUMENTARY_FABRICATION");
-
-  const fired = fractures.length > 0;
-  return {
-    name: "narrative",
-    fired,
-    fractures,
-    weight: fired ? new Fraction(1, 5) : Fraction.zero(),
-  };
+  return markerDetector(
+    "narrative",
+    new Fraction(1, 5),
+    [
+      ["competence_theater", "COMPETENCE_THEATER"],
+      ["narrative_poisoning", "NARRATIVE_POISONING_DETECTED"],
+      ["false_flag_attribution", "FALSE_FLAG_ATTRIBUTION"],
+      ["documentary_fabrication", "DOCUMENTARY_FABRICATION"],
+    ],
+    artifacts,
+  );
 }
 
 export function detectProcessMasquerade(artifacts: Artifact[]): DetectorResult {
-  const fractures: string[] = [];
-  if (artifacts.some((a) => HAS(a, "process_masquerade"))) fractures.push("PROCESS_MASQUERADE");
-  if (artifacts.some((a) => HAS(a, "unusual_path"))) fractures.push("UNUSUAL_PATH");
-  if (artifacts.some((a) => HAS(a, "parent_anomaly"))) fractures.push("PARENT_ANOMALY");
-
-  const fired = fractures.length > 0;
-  return {
-    name: "process",
-    fired,
-    fractures,
-    weight: fired ? new Fraction(1, 5) : Fraction.zero(),
-  };
+  return markerDetector(
+    "process",
+    new Fraction(1, 5),
+    [
+      ["process_masquerade", "PROCESS_MASQUERADE"],
+      ["unusual_path", "UNUSUAL_PATH"],
+      ["parent_anomaly", "PARENT_ANOMALY"],
+    ],
+    artifacts,
+  );
 }
 
 export function runAllDetectors(artifacts: Artifact[]): DetectorResult[] {

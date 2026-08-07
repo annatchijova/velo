@@ -101,7 +101,36 @@ export function verifyCustodyChain(chain: CustodyChain): CustodyVerification {
   }
 
   let prevHash = chain.genesisHash;
-  for (const event of chain.events) {
+  let previousTimestampMs: number | null = null;
+
+  for (const [index, event] of chain.events.entries()) {
+    // Red team F7: the closed vocabulary above was a TypeScript type and a
+    // comment — both of which vanish at runtime. A chain with
+    // eventType "EVENTO_INVENTADO", seq 0/1/42 and reverse-chronological
+    // timestamps verified clean. A closed vocabulary has to be a
+    // construction of the system, not prose about it.
+    if (!(CUSTODY_EVENT_TYPES as readonly string[]).includes(event.eventType)) {
+      return {
+        valid: false,
+        reason: `Unknown event type ${JSON.stringify(event.eventType)} at seq ${event.seq} — not in the closed ISO 27037 vocabulary.`,
+      };
+    }
+    if (event.seq !== index) {
+      return { valid: false, reason: `Non-consecutive seq at position ${index}: found ${event.seq}.` };
+    }
+
+    const timestampMs = new Date(event.timestamp).getTime();
+    if (Number.isNaN(timestampMs)) {
+      return { valid: false, reason: `Unparseable timestamp ${JSON.stringify(event.timestamp)} at seq ${event.seq}.` };
+    }
+    if (previousTimestampMs !== null && timestampMs < previousTimestampMs) {
+      return {
+        valid: false,
+        reason: `Timestamp at seq ${event.seq} precedes the previous event — custody cannot run backwards.`,
+      };
+    }
+    previousTimestampMs = timestampMs;
+
     if (event.prevHash !== prevHash) {
       return { valid: false, reason: `Broken link at seq ${event.seq}: prevHash does not match the actual previous entry.` };
     }

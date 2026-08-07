@@ -14,19 +14,36 @@ import { runAllDetectors } from "../engine/detectors.js";
 import type { Artifact } from "../engine/evidence.js";
 import { score } from "../engine/scorer.js";
 import { sealBundle, verifyBundle } from "../seal/bundle.js";
-import { createCustodyChain, appendCustodyEvent } from "../seal/custody.js";
+import { CUSTODY_EVENT_TYPES, createCustodyChain, appendCustodyEvent, verifyCustodyChain } from "../seal/custody.js";
 import { listBundles, loadBundle, saveBundle, toSummary } from "./store.js";
 
 const server = new McpServer({ name: "velo", version: "0.1.0" });
 
+/**
+ * Red team F1: caseId reaches the filesystem as a path component, so it
+ * is constrained at the boundary. Mirrors CASE_ID_PATTERN in store.ts —
+ * both exist on purpose (schema is the boundary, store doesn't trust
+ * callers).
+ */
+const caseIdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9._-]+$/, "caseId may only contain letters, digits, dot, underscore and hyphen");
+
+/**
+ * Red team F6: an unparseable timestamp used to silence the temporal
+ * detector (NaN comparisons are always false). Rejected at the edge now;
+ * the detector also fails closed independently.
+ */
 const artifactSchema = z.object({
   id: z.string(),
   type: z.enum(["file", "process", "log", "network", "registry", "dns_record"]),
-  timestamp: z.string(),
+  timestamp: z.string().datetime({ offset: true }),
   source: z.string(),
   process: z.string(),
   path: z.string(),
-  entropyMilliBits: z.number().int(),
+  entropyMilliBits: z.number().int().safe(),
   markers: z.array(z.string()),
   description: z.string(),
   provenanceChain: z.array(z.string()),
@@ -51,7 +68,7 @@ server.registerTool(
   {
     title: "Get case",
     description: "Get the public summary of one case by ID. Never returns the evidence manifest or custody chain detail.",
-    inputSchema: { caseId: z.string() },
+    inputSchema: { caseId: caseIdSchema },
   },
   async ({ caseId }) => {
     const bundle = loadBundle(caseId);
@@ -62,26 +79,52 @@ server.registerTool(
   },
 );
 
+/**
+ * Red team F13: custody events used to be fabricated inside seal_case
+ * with new Date(), after the analysis, unconnected to any real
+ * acquisition — and custodyValid was hardcoded true, making ABSTAIN
+ * unreachable through the product's actual interface.
+ *
+ * Now the caller supplies the real custody history, and validity is
+ * *derived* by verifying that chain, not asserted.
+ */
+const custodyEventSchema = z.object({
+  eventType: z.enum(CUSTODY_EVENT_TYPES),
+  timestamp: z.string().datetime({ offset: true }),
+  detail: z.string(),
+});
+
 // --- Wallet "mint" ---
 server.registerTool(
   "seal_case",
   {
     title: "Seal case",
     description:
-      "Run the deterministic forensic engine on the given artifacts and seal the result locally. Never touches the network.",
+      "Run the deterministic forensic engine on the given artifacts and seal the result locally. Never touches the network. " +
+      "Supply the real custody history in custodyEvents: if it is absent or does not form a valid ISO 27037 sequence, the " +
+      "verdict is ABSTAIN, because evidence without a chain of custody is inadmissible regardless of what it shows.",
     inputSchema: {
-      caseId: z.string(),
+      caseId: caseIdSchema,
       artifacts: z.array(artifactSchema),
       devilAdvocate: z.string().default(""),
+      custodyEvents: z.array(custodyEventSchema).default([]),
     },
   },
-  async ({ caseId, artifacts, devilAdvocate }) => {
-    const detectorResults = runAllDetectors(artifacts as Artifact[]);
-    const scoreResult = score({ detectorResults, devilAdvocate, custodyValid: true });
-
+  async ({ caseId, artifacts, devilAdvocate, custodyEvents }) => {
     let chain = createCustodyChain(caseId);
-    chain = appendCustodyEvent(chain, "IDENTIFIED", new Date().toISOString(), `evidence identified for ${caseId}`);
+    for (const ev of custodyEvents) {
+      chain = appendCustodyEvent(chain, ev.eventType, ev.timestamp, ev.detail);
+    }
     chain = appendCustodyEvent(chain, "ANALYZED", new Date().toISOString(), "deterministic engine ran");
+
+    // Derived, never asserted: a chain with no real acquisition history
+    // cannot support an admissible verdict.
+    const custodyCheck = verifyCustodyChain(chain);
+    const hasAcquisitionHistory = custodyEvents.length > 0;
+    const custodyValid = custodyCheck.valid && hasAcquisitionHistory;
+
+    const detectorResults = runAllDetectors(artifacts as Artifact[]);
+    const scoreResult = score({ detectorResults, artifacts: artifacts as Artifact[], devilAdvocate, custodyValid });
 
     const manifest = { caseId, artifacts: artifacts as Artifact[] };
     const bundle = sealBundle(caseId, new Date().toISOString(), scoreResult, manifest, chain);
@@ -91,7 +134,19 @@ server.registerTool(
       content: [
         {
           type: "text",
-          text: JSON.stringify({ savedTo: path, summary: toSummary(bundle), reasoning: scoreResult.reasoning }, null, 2),
+          text: JSON.stringify(
+            {
+              savedTo: path,
+              summary: toSummary(bundle),
+              reasoning: scoreResult.reasoning,
+              custodyValid,
+              custodyNote: hasAcquisitionHistory
+                ? custodyCheck.reason
+                : "No custody events supplied — treated as no chain of custody, so the verdict is ABSTAIN.",
+            },
+            null,
+            2,
+          ),
         },
       ],
     };
@@ -103,8 +158,11 @@ server.registerTool(
   "verify_commitment",
   {
     title: "Verify commitment",
-    description: "Verify that a sealed case's bundle hash and analysis fingerprint are internally consistent and untampered. Anyone can call this, not just the case owner.",
-    inputSchema: { caseId: z.string() },
+    description:
+      "Check that a sealed case is internally consistent — its hashes recompute and its custody chain links hold. " +
+      "This does NOT establish who produced the bundle or when: authenticity is anchored by the on-chain attestation (Capa 2, pending). " +
+      "Anyone can call this, not just the case owner.",
+    inputSchema: { caseId: caseIdSchema },
   },
   async ({ caseId }) => {
     const bundle = loadBundle(caseId);

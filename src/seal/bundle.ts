@@ -87,9 +87,24 @@ export function sealBundle(
 }
 
 export interface BundleVerification {
-  valid: boolean;
+  /**
+   * Red team F4: this field was previously named `valid`. A judge reading
+   * "valid: true" understands "this is authentic" — but what is actually
+   * established is only that the bundle is self-consistent. Anyone can
+   * fabricate a bundle from scratch that passes this check, because
+   * everything here is SHA-256 over public data with no secret anywhere.
+   * The name now says what the check means.
+   */
+  internallyConsistent: boolean;
   reasons: string[];
+  /** Stated in every result so the limitation travels with the answer, not just the docs. */
+  doesNotEstablish: string;
 }
+
+const DOES_NOT_ESTABLISH =
+  "This does not establish who produced this bundle, or when. It proves only that the bundle " +
+  "is internally consistent with itself. Authenticity is anchored by the on-chain attestation (Capa 2), " +
+  "which is not part of this build.";
 
 /** Recomputes both hashes and the custody chain independently — trusts nothing stored in the bundle. */
 export function verifyBundle(bundle: SealedBundle): BundleVerification {
@@ -130,5 +145,42 @@ export function verifyBundle(bundle: SealedBundle): BundleVerification {
     reasons.push("MALICE verdict without a devil's-advocate counter-argument.");
   }
 
-  return { valid: reasons.length === 0, reasons };
+  return { internallyConsistent: reasons.length === 0, reasons, doesNotEstablish: DOES_NOT_ESTABLISH };
+}
+
+/**
+ * What actually goes on-chain (Capa 2).
+ *
+ * Red team F3: the docs said the analysis fingerprint is what gets
+ * committed, and custody.ts pointed at "the on-chain commitment" as the
+ * defense against truncation — but the fingerprint excludes the custody
+ * chain by design, so that anchor did not cover custody at all. An
+ * attacker could truncate custody events, recompute the (public)
+ * bundleHash, and the fingerprint would be unchanged.
+ *
+ * The commitment now covers both: the fingerprint (so a deterministic
+ * replay of the same analysis still matches, which is the whole point of
+ * having a separate fingerprint) AND the custody tip (so the custody
+ * history is anchored too). Both are needed; neither alone is sufficient.
+ */
+export interface AttestationPayload {
+  analysisFingerprint: string;
+  custodyTip: string;
+}
+
+/**
+ * The two private values the Compact circuit's witnesses must return
+ * (`bundleFingerprint()` and `custodyTip()` in contracts/velo.compact).
+ * The third witness, the salt, is generated per-attestation and is not
+ * derived from the bundle.
+ *
+ * Deliberately NOT combined into a single hash here: the on-chain
+ * commitment is computed by Compact's `persistentHash` inside the
+ * circuit, which is not SHA-256 and cannot be reproduced from
+ * TypeScript. Precomputing a "commitment" here would be a value that
+ * merely looks like the on-chain one while never matching it — the kind
+ * of near-miss that is worse than not having the function at all.
+ */
+export function attestationPayload(bundle: SealedBundle): AttestationPayload {
+  return { analysisFingerprint: bundle.analysisFingerprint, custodyTip: chainTip(bundle.custodyChain) };
 }

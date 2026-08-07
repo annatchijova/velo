@@ -83,7 +83,7 @@ async function main() {
 
   const devilAdvocate =
     "The confession could suggest good faith, but the scheduled task predates it by 5 minutes — the 'reaction' cannot be a reaction to something that hadn't happened yet. Premeditation, not honesty.";
-  const result = score({ detectorResults, devilAdvocate, custodyValid: true });
+  const result = score({ detectorResults, artifacts: maliceCase, devilAdvocate, custodyValid: true });
   step("VERDICT", `${result.verdict} (score ${result.score.toDisplayString()}, ${result.corroborationCount} independent sources)`);
   step("REASONING", result.reasoning);
 
@@ -106,9 +106,10 @@ async function main() {
 
   section("STEP 4 — Verify independently and offline");
   const verification = verifyBundle(bundle);
-  step("VALID", String(verification.valid));
+  step("INTERNALLY CONSISTENT", String(verification.internallyConsistent));
   const custodyCheck = verifyCustodyChain(bundle.custodyChain);
   step("CUSTODY CHAIN", `${custodyCheck.valid} — ${custodyCheck.reason}`);
+  step("DOES NOT ESTABLISH", verification.doesNotEstablish);
 
   section("THE MOMENT THAT MATTERS — trying to force a MALICE without enough corroboration");
   console.log("\nSame kind of evidence, but only ONE independent source this time.");
@@ -116,6 +117,7 @@ async function main() {
   const insufficientResults = runAllDetectors(insufficientCase);
   const insufficientScore = score({
     detectorResults: insufficientResults,
+    artifacts: insufficientCase,
     devilAdvocate: "Trying to force it anyway.",
     custodyValid: true,
   });

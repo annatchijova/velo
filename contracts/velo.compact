@@ -37,13 +37,23 @@ export ledger attestationCount: Counter;
 // integration), never on-chain, never even in cleartext inside the proof.
 witness bundleFingerprint(): Bytes<32>;
 witness bundleSalt(): Bytes<32>;
-// Bounded so `>=` is well-defined — see compact skill sec 3, Uint<0..n>
-// is the type that supports ordering comparisons, plain Uint<n> is not
-// documented to. 17 is an arbitrary ceiling comfortably above the 5
-// detector categories this build's engine can ever produce (see
-// src/engine/detectors.ts) — corroborationCount can never legitimately
-// exceed 5 today, so 17 leaves headroom without claiming a specific
-// future maximum.
+
+// RED TEAM F3: the custody tip is now part of what the commitment binds.
+// Previously the commitment covered only the analysis fingerprint, which
+// excludes the custody chain by design — so an attacker could truncate
+// custody events, recompute the (public) bundleHash, and the on-chain
+// value would be unchanged. The documents called this commitment the
+// "defense against truncation" while it did not cover custody at all.
+// Binding both means a replayed identical analysis still matches
+// (the point of having a separate fingerprint) AND the custody history
+// is anchored.
+witness custodyTip(): Bytes<32>;
+
+// Number of INDEPENDENT SOURCES (distinct provenance roots), not detector
+// categories — see red team F2 and src/engine/scorer.ts. Bounded so `>=`
+// is well-defined: per the compact skill sec 3, Uint<0..n> supports
+// ordering comparisons, plain Uint<n> is not documented to. 17 is an
+// arbitrary ceiling with headroom; it does not claim a real maximum.
 witness corroborationCountWitness(): Uint<0..17>;
 
 // No constructor needed — Counter and Map both default to their zero
@@ -69,11 +79,15 @@ witness corroborationCountWitness(): Uint<0..17>;
  */
 export circuit attest(caseCommitment: Bytes<32>, verdict: Verdict): [] {
   const fingerprint = bundleFingerprint();
+  const tip = custodyTip();
   const salt = bundleSalt();
   const corroborationCount = corroborationCountWitness();
 
-  const computedCommitment = persistentHash<Vector<2, Bytes<32>>>([fingerprint, salt]);
-  assert(computedCommitment == caseCommitment, "commitment does not match the known bundle fingerprint and salt");
+  // F3: three-element commitment — analysis identity, custody history,
+  // and the blinding salt. Truncating custody now changes the commitment,
+  // so the on-chain record actually anchors what the docs claim it does.
+  const computedCommitment = persistentHash<Vector<3, Bytes<32>>>([fingerprint, tip, salt]);
+  assert(computedCommitment == caseCommitment, "commitment does not match the known bundle fingerprint, custody tip and salt");
 
   // Material implication, not a branch: (verdict == MALICE) => (corroborationCount >= 2).
   // Written as a boolean so there is no dependence on conditional-assert

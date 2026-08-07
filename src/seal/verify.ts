@@ -9,12 +9,30 @@
  * built-ins only — no npm dependencies.
  *
  * Usage: node verify.js path/to/bundle.json
+ *
+ * WHAT THIS ESTABLISHES, AND WHAT IT DOES NOT (red team F4):
+ * It establishes that the bundle is internally consistent — the hashes
+ * recompute, the custody links hold. It does NOT establish authenticity:
+ * everything here is SHA-256 over public data with no secret anywhere, so
+ * anyone can fabricate a bundle from scratch that passes. Authenticity is
+ * anchored by the on-chain attestation (Capa 2), which is not part of
+ * this build. The output says "internally consistent", never "valid",
+ * because a reader takes "valid" to mean "authentic".
+ *
+ * DUPLICATED LOGIC WARNING (red team F8): the canonicalization below is a
+ * deliberate copy of src/seal/canonical.ts — that duplication is the
+ * price of the no-dependencies property. It has already drifted once
+ * (bigint handling). tests/conformance.test.ts pins both implementations
+ * to the same vectors so drift fails a test instead of silently
+ * producing two different hashes for one bundle.
  */
 
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const CANONICALIZE_VERSION = 1;
+const CANONICALIZE_VERSION = 2;
+
+const CUSTODY_EVENT_TYPES = ["IDENTIFIED", "COLLECTED", "ACQUIRED", "PRESERVED", "ANALYZED", "SEALED"];
 
 interface CustodyEvent {
   seq: number;
@@ -46,26 +64,42 @@ interface SealedBundle {
   analysisFingerprint: string;
 }
 
+/** Code-point ordering — must match canonical.ts. See F9 there for why. */
+function compareByCodePoint(a: string, b: string): number {
+  const ca = [...a];
+  const cb = [...b];
+  const len = Math.min(ca.length, cb.length);
+  for (let i = 0; i < len; i++) {
+    const pa = ca[i]!.codePointAt(0)!;
+    const pb = cb[i]!.codePointAt(0)!;
+    if (pa !== pb) return pa < pb ? -1 : 1;
+  }
+  return ca.length === cb.length ? 0 : ca.length < cb.length ? -1 : 1;
+}
+
 function canonicalizeValue(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "bigint") return `${value.toString()}n`;
   if (typeof value === "number") {
-    if (!Number.isInteger(value) || !Number.isFinite(value)) {
-      throw new Error(`canonicalize: value ${value} is not an allowed integer`);
+    if (!Number.isFinite(value)) throw new Error(`canonicalize: non-finite number ${value} is not allowed`);
+    if (!Number.isInteger(value)) throw new Error(`canonicalize: non-integer number ${value} is not allowed`);
+    if (!Number.isSafeInteger(value)) {
+      throw new Error(`canonicalize: integer ${value} exceeds the safe range (2^53-1) and may have lost precision`);
     }
-    return value.toString();
+    return Object.is(value, -0) ? "0" : value.toString();
   }
   if (typeof value === "string") return JSON.stringify(value.normalize("NFC"));
   if (Array.isArray(value)) return `[${value.map(canonicalizeValue).join(",")}]`;
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
-    const keys = Object.keys(record).sort();
+    const keys = Object.keys(record).sort(compareByCodePoint);
     return `{${keys.map((k) => `${JSON.stringify(k.normalize("NFC"))}:${canonicalizeValue(record[k])}`).join(",")}}`;
   }
   throw new Error(`canonicalize: unsupported type ${typeof value}`);
 }
 
-function canonicalize(value: unknown): string {
+export function canonicalize(value: unknown): string {
   return `v${CANONICALIZE_VERSION}:${canonicalizeValue(value)}`;
 }
 
@@ -77,16 +111,62 @@ function genesisHash(caseId: string): string {
   return sha256Hex(`VELO_GENESIS:${caseId}`);
 }
 
-function verifyCustodyChain(chain: CustodyChain): { valid: boolean; reasons: string[] } {
+/**
+ * Red team F10: JSON.parse silently takes the last value for duplicate
+ * keys, so a file whose bytes read `"verdict": "NOISE"` first could be
+ * certified as MALICE — and other languages' parsers take the first
+ * value, meaning the same bytes verify to opposite verdicts. Duplicates
+ * are rejected outright rather than resolved by any rule.
+ */
+function parseStrict(text: string): unknown {
+  const seenAt = new WeakMap<object, Set<string>>();
+  return JSON.parse(text, function (this: object, key, value) {
+    if (key === "") return value;
+    let keys = seenAt.get(this);
+    if (!keys) {
+      keys = new Set();
+      seenAt.set(this, keys);
+    }
+    if (keys.has(key)) {
+      throw new SyntaxError(`Duplicate key ${JSON.stringify(key)} in bundle JSON — ambiguous document, refusing to verify.`);
+    }
+    keys.add(key);
+    return value;
+  });
+}
+
+function verifyCustodyChain(chain: CustodyChain): { ok: boolean; reasons: string[] } {
   const reasons: string[] = [];
-  const expectedGenesis = genesisHash(chain.caseId);
-  if (chain.genesisHash !== expectedGenesis) {
+  if (chain.genesisHash !== genesisHash(chain.caseId)) {
     reasons.push("Genesis hash does not match case ID.");
-    return { valid: false, reasons };
+    return { ok: false, reasons };
   }
 
   let prevHash = chain.genesisHash;
-  for (const event of chain.events) {
+  let previousTimestampMs: number | null = null;
+
+  for (const [index, event] of chain.events.entries()) {
+    // F7: the closed vocabulary is enforced here too — the judge's tool
+    // previously did not even know what the valid event types were.
+    if (!CUSTODY_EVENT_TYPES.includes(event.eventType)) {
+      reasons.push(`Unknown event type ${JSON.stringify(event.eventType)} at seq ${event.seq}.`);
+      break;
+    }
+    if (event.seq !== index) {
+      reasons.push(`Non-consecutive seq at position ${index}: found ${event.seq}.`);
+      break;
+    }
+    const timestampMs = new Date(event.timestamp).getTime();
+    if (Number.isNaN(timestampMs)) {
+      reasons.push(`Unparseable timestamp at seq ${event.seq}.`);
+      break;
+    }
+    if (previousTimestampMs !== null && timestampMs < previousTimestampMs) {
+      reasons.push(`Timestamp at seq ${event.seq} precedes the previous event.`);
+      break;
+    }
+    previousTimestampMs = timestampMs;
+
     if (event.prevHash !== prevHash) {
       reasons.push(`Broken link at seq ${event.seq}.`);
       break;
@@ -107,14 +187,30 @@ function verifyCustodyChain(chain: CustodyChain): { valid: boolean; reasons: str
     prevHash = event.entryHash;
   }
 
-  return { valid: reasons.length === 0, reasons };
+  return { ok: reasons.length === 0, reasons };
 }
 
-function verifyBundle(bundle: SealedBundle): { valid: boolean; reasons: string[] } {
+/** Shape check at the boundary, so a malformed file is reported, not thrown (F12). */
+function assertLooksLikeBundle(value: unknown): asserts value is SealedBundle {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Not a bundle: expected a JSON object.");
+  }
+  const b = value as Record<string, unknown>;
+  for (const field of ["caseId", "sealedAt", "verdict", "bundleHash", "analysisFingerprint"]) {
+    if (typeof b[field] !== "string") throw new TypeError(`Not a bundle: missing or non-string field "${field}".`);
+  }
+  if (typeof b["corroborationCount"] !== "number") throw new TypeError('Not a bundle: missing numeric "corroborationCount".');
+  const chain = b["custodyChain"];
+  if (typeof chain !== "object" || chain === null || !Array.isArray((chain as CustodyChain).events)) {
+    throw new TypeError('Not a bundle: missing or malformed "custodyChain".');
+  }
+}
+
+export function verifyBundle(bundle: SealedBundle): { internallyConsistent: boolean; reasons: string[] } {
   const reasons: string[] = [];
 
   const custody = verifyCustodyChain(bundle.custodyChain);
-  if (!custody.valid) reasons.push(...custody.reasons.map((r) => `Custody chain: ${r}`));
+  if (!custody.ok) reasons.push(...custody.reasons.map((r) => `Custody chain: ${r}`));
 
   const deterministicCore = {
     caseId: bundle.caseId,
@@ -137,9 +233,7 @@ function verifyBundle(bundle: SealedBundle): { valid: boolean; reasons: string[]
       ? bundle.custodyChain.genesisHash
       : bundle.custodyChain.events[bundle.custodyChain.events.length - 1]!.entryHash;
 
-  const expectedBundleHash = sha256Hex(
-    canonicalize({ ...deterministicCore, sealedAt: bundle.sealedAt, custodyTip }),
-  );
+  const expectedBundleHash = sha256Hex(canonicalize({ ...deterministicCore, sealedAt: bundle.sealedAt, custodyTip }));
   if (expectedBundleHash !== bundle.bundleHash) {
     reasons.push("Bundle hash mismatch — timestamp or custody chain altered.");
   }
@@ -151,7 +245,7 @@ function verifyBundle(bundle: SealedBundle): { valid: boolean; reasons: string[]
     reasons.push("MALICE without a devil's-advocate counter-argument.");
   }
 
-  return { valid: reasons.length === 0, reasons };
+  return { internallyConsistent: reasons.length === 0, reasons };
 }
 
 function main() {
@@ -160,18 +254,41 @@ function main() {
     console.error("Usage: node verify.js path/to/bundle.json");
     process.exit(2);
   }
-  const bundle = JSON.parse(readFileSync(path, "utf8"));
+
+  let bundle: SealedBundle;
+  try {
+    const raw = readFileSync(path, "utf8");
+    const parsed = parseStrict(raw);
+    assertLooksLikeBundle(parsed);
+    bundle = parsed;
+  } catch (err) {
+    // F12: a judge gets a sentence, not a stack trace. Still fails closed.
+    console.log(`file: ${path}`);
+    console.log("internally consistent: NO");
+    console.log(`  - Could not read this as a sealed bundle: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+
   const result = verifyBundle(bundle);
 
   console.log(`case: ${bundle.caseId}`);
   console.log(`verdict: ${bundle.verdict}`);
   console.log(`bundle hash: ${bundle.bundleHash}`);
   console.log(`analysis fingerprint: ${bundle.analysisFingerprint}`);
-  console.log(`valid: ${result.valid}`);
+  console.log(`internally consistent: ${result.internallyConsistent ? "YES" : "NO"}`);
   for (const reason of result.reasons) {
     console.log(`  - ${reason}`);
   }
-  process.exit(result.valid ? 0 : 1);
+  console.log("");
+  console.log("This does NOT establish who produced this bundle, or when.");
+  console.log("It establishes only that the bundle is consistent with itself.");
+  console.log("Authenticity is anchored by the on-chain attestation, which is not part of this build.");
+
+  process.exit(result.internallyConsistent ? 0 : 1);
 }
 
-main();
+// Only run the CLI when executed directly, so the conformance test can
+// import canonicalize() from this file without triggering it.
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop() ?? "")) {
+  main();
+}

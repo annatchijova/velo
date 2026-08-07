@@ -51,57 +51,98 @@ function maliceArtifacts(): Artifact[] {
   ];
 }
 
-test("MALICE requires >= 2 corroborating sources — the star test", () => {
-  // Genuinely isolated to ONE detector category (temporal only) — no
-  // other marker type present, so exactly one source can corroborate.
-  const singleSource: Artifact[] = [
+test("MALICE requires >= 2 INDEPENDENT SOURCES — the star test (red team F2)", () => {
+  // One physical source (a single disk image, one provenance root), but
+  // carrying markers from four different detector categories. Before the
+  // F2 fix this reported "corroborationCount: 4" and reached MALICE off
+  // one artifact — the exact scenario that made the project's central
+  // claim ("two independent corroborating sources") untrue.
+  const oneSourceManyCategories: Artifact[] = [
     {
-      id: "a-cause-only",
-      type: "registry",
+      id: "a-single-image",
+      type: "file",
       timestamp: "2026-08-07T14:25:00Z",
-      source: "windows_registry",
-      process: "windows_registry",
-      path: "HKLM\\...\\Run\\SystemUpdate",
-      entropyMilliBits: 3200,
-      markers: ["cause_event"],
-      description: "Scheduled task created before the confession.",
-      provenanceChain: ["sha256:cron01"],
-    },
-    {
-      id: "a-effect-only",
-      type: "log",
-      timestamp: "2026-08-07T14:20:00Z",
-      source: "mail_gateway",
-      process: "mail_gateway",
-      path: "mail://analyst@corp.example",
-      entropyMilliBits: 4500,
-      markers: ["effect_event"],
-      description: "Self-reported confession mail, sent before its own supposed cause.",
-      provenanceChain: ["sha256:mail01"],
+      source: "disk_image_alpha",
+      process: "n/a",
+      path: "/mnt/evidence/alpha.E01",
+      entropyMilliBits: 7100,
+      markers: ["effect_before_cause", "surgical_deletion", "narrative_poisoning", "process_masquerade"],
+      description: "A single acquired disk image carrying markers from four categories.",
+      provenanceChain: ["sha256:acquisition-alpha"],
     },
   ];
-  const detectorResults = runAllDetectors(singleSource);
+
+  const detectorResults = runAllDetectors(oneSourceManyCategories);
   assert.equal(
     detectorResults.filter((d) => d.fired).length,
-    1,
-    "test setup check: exactly one detector category should fire here",
+    4,
+    "test setup check: four detector categories should fire from this one artifact",
   );
 
-  const result = score({ detectorResults, devilAdvocate: "some counter-argument", custodyValid: true });
-  assert.notEqual(result.verdict, "MALICE", "MALICE must never be reachable with fewer than 2 corroborating sources");
+  const result = score({
+    detectorResults,
+    artifacts: oneSourceManyCategories,
+    devilAdvocate: "some counter-argument",
+    custodyValid: true,
+  });
+
+  assert.equal(result.corroborationCount, 1, "one physical source is one source, however many categories it trips");
+  assert.equal(result.detectorCategoriesFired, 4, "categories are still reported — just never mistaken for sources");
+  assert.notEqual(result.verdict, "MALICE", "MALICE must never be reachable from a single independent source");
+});
+
+test("two artifacts from the SAME provenance root count as one source (red team F2)", () => {
+  const sameRoot: Artifact[] = [
+    {
+      id: "a-one",
+      type: "file",
+      timestamp: "2026-08-07T14:20:00Z",
+      source: "disk_image_alpha",
+      process: "n/a",
+      path: "/mnt/evidence/alpha/file1",
+      entropyMilliBits: 4000,
+      markers: ["surgical_deletion"],
+      description: "Carved from image alpha.",
+      provenanceChain: ["sha256:acquisition-alpha", "sha256:carve-1"],
+    },
+    {
+      id: "a-two",
+      type: "file",
+      timestamp: "2026-08-07T14:21:00Z",
+      source: "disk_image_alpha",
+      process: "n/a",
+      path: "/mnt/evidence/alpha/file2",
+      entropyMilliBits: 4100,
+      markers: ["narrative_poisoning"],
+      description: "Also carved from image alpha — same acquisition.",
+      provenanceChain: ["sha256:acquisition-alpha", "sha256:carve-2"],
+    },
+  ];
+
+  const result = score({
+    detectorResults: runAllDetectors(sameRoot),
+    artifacts: sameRoot,
+    devilAdvocate: "x",
+    custodyValid: true,
+  });
+
+  assert.equal(result.corroborationCount, 1, "same acquisition root => one independent source");
 });
 
 test("MALICE requires a devil's-advocate counter-argument", () => {
-  const detectorResults = runAllDetectors(maliceArtifacts());
-  const result = score({ detectorResults, devilAdvocate: "", custodyValid: true });
+  const artifacts = maliceArtifacts();
+  const detectorResults = runAllDetectors(artifacts);
+  const result = score({ detectorResults, artifacts, devilAdvocate: "", custodyValid: true });
 
   assert.notEqual(result.verdict, "MALICE", "MALICE without a devil's-advocate must degrade, not publish");
 });
 
 test("full path: enough corroboration + devil's advocate => MALICE", () => {
-  const detectorResults = runAllDetectors(maliceArtifacts());
+  const artifacts = maliceArtifacts();
+  const detectorResults = runAllDetectors(artifacts);
   const result = score({
     detectorResults,
+    artifacts,
     devilAdvocate: "The confession could suggest good faith, but the cron job predates it — premeditation.",
     custodyValid: true,
   });
@@ -111,8 +152,9 @@ test("full path: enough corroboration + devil's advocate => MALICE", () => {
 });
 
 test("broken custody chain forces ABSTAIN regardless of score", () => {
-  const detectorResults = runAllDetectors(maliceArtifacts());
-  const result = score({ detectorResults, devilAdvocate: "x", custodyValid: false });
+  const artifacts = maliceArtifacts();
+  const detectorResults = runAllDetectors(artifacts);
+  const result = score({ detectorResults, artifacts, devilAdvocate: "x", custodyValid: false });
   assert.equal(result.verdict, "ABSTAIN");
 });
 
@@ -131,7 +173,7 @@ test("NOISE case: no markers fired at all", () => {
       provenanceChain: ["sha256:ok01"],
     },
   ];
-  const result = score({ detectorResults: runAllDetectors(benign), devilAdvocate: "", custodyValid: true });
+  const result = score({ detectorResults: runAllDetectors(benign), artifacts: benign, devilAdvocate: "", custodyValid: true });
   assert.equal(result.verdict, "NOISE");
 });
 
@@ -175,9 +217,11 @@ test("KNOWN LIMITATION: verifyCustodyChain in isolation cannot detect truncation
 });
 
 test("sealed bundle: analysis fingerprint is stable across re-sealing the same analysis, bundle hash is not", () => {
-  const detectorResults = runAllDetectors(maliceArtifacts());
+  const artifacts = maliceArtifacts();
+  const detectorResults = runAllDetectors(artifacts);
   const result = score({
     detectorResults,
+    artifacts,
     devilAdvocate: "Confession predates by the cron job — premeditation, not good faith.",
     custodyValid: true,
   });
@@ -192,13 +236,15 @@ test("sealed bundle: analysis fingerprint is stable across re-sealing the same a
   assert.equal(bundleA.analysisFingerprint, bundleB.analysisFingerprint, "same analysis, same fingerprint");
   assert.notEqual(bundleA.bundleHash, bundleB.bundleHash, "different seal time, different bundle hash");
 
-  assert.equal(verifyBundle(bundleA).valid, true);
+  assert.equal(verifyBundle(bundleA).internallyConsistent, true);
 });
 
 test("tampered commitment fails verification", () => {
-  const detectorResults = runAllDetectors(maliceArtifacts());
+  const artifacts = maliceArtifacts();
+  const detectorResults = runAllDetectors(artifacts);
   const result = score({
     detectorResults,
+    artifacts,
     devilAdvocate: "Confession predates by the cron job — premeditation, not good faith.",
     custodyValid: true,
   });
@@ -209,5 +255,5 @@ test("tampered commitment fails verification", () => {
 
   const tampered = { ...bundle, verdict: "NOISE" as const };
   const verification = verifyBundle(tampered);
-  assert.equal(verification.valid, false);
+  assert.equal(verification.internallyConsistent, false);
 });
