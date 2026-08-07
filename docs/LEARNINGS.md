@@ -267,6 +267,95 @@ a fix of the upstream defect, and the deploy wallet should still be disposable.
 
 ---
 
+---
+
+## L3 — `Custom error: 170` is not about your contract
+
+**Date:** 2026-08-07 · **Cost:** one failed deploy, and nearly a wrong fix.
+
+### What we hit
+
+With DUST finally registered (L1), the deploy got all the way to submission and
+the node rejected it:
+
+```
+1010: Invalid Transaction: Custom error: 170
+Deployment failed: Transaction submission error
+```
+
+### What we assumed, and why it was reasonable but wrong
+
+The obvious read: something about the contract or the ledger version. A forum
+thread on this exact error opens with a report that ledger-v8 `8.0.3` fails
+where `8.1.0` works — which points hard at a version bump as the fix.
+
+Chasing that would have meant tearing down and re-pulling a working proof-server
+container. It would not have helped.
+
+### What it actually was
+
+Two facts, in order.
+
+**First, what 170 means.** The Midnight team's answer on that thread: error 170
+is **`InvalidDustSpendProof`** — "the node rejected the DUST fee proof on the
+deploy tx, not the contract deploy proof." The contract was never the problem.
+The *payment* for it was.
+
+**Second, which of the causes applied.** The same answer lists cross-line
+version mismatch, indexer lag, and stale DUST state. Checked against the
+[compatibility matrix](https://docs.midnight.network/relnotes/support-matrix),
+every component already matched what Preview requires — compiler `0.31.1`,
+runtime `0.16.0`, midnight-js `4.1.1`, compact-js `2.5.1`, proof server
+`8.1.0`. The proof server was running `:latest`, which looked suspicious, but
+the Docker Hub digests for `:latest` and `:8.1.0` are byte-identical
+(`sha256:801bbc03…`). Nothing was misaligned.
+
+That left staleness — and the logs had already recorded it. In the failing run
+the dust sync went `true → false → false → true` in its last 30 seconds; the
+transaction was built while dust state was still settling, so the spend proof
+referenced a merkle root being superseded. The successful run, three minutes
+later, had `dust=true` stable from 41 s onward.
+
+**Nothing was changed between the two runs.** Same code, same versions, same
+container, same wallet. Only the freshness of the dust state differed.
+
+### A near-miss worth recording
+
+The instinct was to `docker rm -f` the proof-server and re-pull. Two things
+stopped it: the digest comparison showing `:latest` *was* `8.1.0`, and noticing
+that the container's alarming `created=1970-01-01T00:00:01Z` is a
+reproducible-build epoch stamp — standard for Nix-built images — not evidence
+of an ancient pull. Both checks took under a minute. Deleting a healthy
+container would have cost far more and fixed nothing.
+
+### The generalizable lesson
+
+L1's lesson was that an error message names a symptom in the vocabulary of the
+layer that threw it. L3 is the sharper version: **the first published
+explanation of an error is not necessarily the one that applies to you.** The
+forum thread's headline — a version bump fixed it — was true for its author and
+false for us. What made the difference was reading far enough to find what the
+error *is* (`InvalidDustSpendProof`), then testing our own stack against the
+matrix instead of adopting someone else's remedy.
+
+Also: the evidence was already in the logs. `dust=true → false → true` was
+printed in the failing run before anyone knew it mattered. Diagnosis was
+re-reading output we already had, with a question sharp enough to make it
+meaningful.
+
+### Status — RESOLVED (2026-08-07)
+
+Contract deployed to Midnight `preview`:
+
+```
+Contract address: 46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d
+VELO contract deployment successful.
+```
+
+Standing advice, since the cause was timing: **register dust, then deploy
+promptly.** Do not leave a wallet warm between the two steps.
+
+
 ## Español
 
 ### L1 — "Insufficient Funds" con la wallet fondeada: NIGHT no es DUST

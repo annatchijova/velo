@@ -151,7 +151,7 @@ Static files come from `src/web/static/` (override with `VELO_STATIC_DIR`).
 | `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
 | `GET` | `/api/cases/:caseId` | Public summary of one case |
 | `GET` | `/api/cases/:caseId/verify` | Internal-consistency check |
-| `GET` | `/api/attest` | `501` — the contract compiles but nothing is deployed |
+| `GET` | `/api/attest` | `501` — the contract is deployed, but this endpoint does not call it yet |
 
 `POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
 and returns the sealed summary plus `reasoning`, `custodyValid`,
@@ -191,12 +191,61 @@ network). It runs under [Bun](https://bun.sh), not `npm run build && node`:
 the deploy dependency ships raw `.ts` exports that plain `tsc`/`node` cannot
 resolve.
 
+Three environment variables, and they are three different kinds of thing —
+worth stating plainly, because conflating them costs time:
+
+| Variable | What it is | Where it comes from |
+|---|---|---|
+| `MIDNIGHT_WALLET_MNEMONIC` | The wallet's recovery phrase (24 words, quoted) | The wallet you funded. Verified working with a **1AM** phrase — standard BIP39 derivation |
+| `MIDNIGHT_WALLET_SEED` | The hex seed *derived from* that phrase | Only if you already have a raw seed — otherwise don't set it |
+| `MIDNIGHT_STORAGE_PASSWORD` | A local disk-encryption password. Nothing to do with any wallet | You invent it |
+
+Set **either** the mnemonic **or** the seed. If both are set the seed wins and
+the mnemonic is silently ignored — `unset MIDNIGHT_WALLET_SEED` if a stale one
+is exported.
+
+**Step 1 — register NIGHT for DUST generation. Once per wallet:**
+
 ```bash
 MIDNIGHT_NETWORK_ID=preview \
 MIDNIGHT_STORAGE_PASSWORD=<a-real-secret-you-pick> \
-MIDNIGHT_WALLET_SEED=<your-wallet-seed> \
+MIDNIGHT_WALLET_MNEMONIC="word1 word2 ... word24" \
+bun run deploy/register-dust.ts
+```
+
+**Step 2 — deploy, with the same variables, and do it promptly:**
+
+```bash
+MIDNIGHT_NETWORK_ID=preview \
+MIDNIGHT_STORAGE_PASSWORD=<a-real-secret-you-pick> \
+MIDNIGHT_WALLET_MNEMONIC="word1 word2 ... word24" \
 bun run deploy/deploy-contract.ts
 ```
+
+#### The two errors you will probably hit
+
+**`Insufficient Funds: could not balance dust`** — not a funding problem, and
+more tokens will not fix it. Fees are paid in DUST, which is *generated* by
+NIGHT that has been explicitly **registered** for dust generation — a separate
+on-chain transaction that `deployMidnightContract` never performs (its wallet
+setup waits only on the *shielded* balance and discards the dust balance it
+computes). That is what step 1 is for. Registration state lives on-chain, so it
+is once per wallet, not per deploy.
+
+**`1010: Invalid Transaction: Custom error: 170`** — this is
+`InvalidDustSpendProof`: the node rejected the **DUST fee proof**, not your
+contract. Two known causes. First, a misaligned fee stack — check every
+component against the [compatibility
+matrix](https://docs.midnight.network/relnotes/support-matrix) (Preview wants
+proof server `8.1.0`; note `midnightntwrk/proof-server:latest` and `:8.1.0`
+are currently the same digest, and a `created=1970-01-01` timestamp on that
+image is a reproducible-build artifact, *not* a stale image). Second — the one
+that actually bit us — **stale DUST state**: if the dust sync is still settling
+when the transaction is built, the spend proof references a merkle root that is
+being superseded. The symptom in the logs is `dust=` flipping `true → false →
+true` near the end of the sync. The fix is freshness, not versions: re-run, and
+submit while the state is fresh. Our failing run showed exactly that flip; the
+successful run had `dust=true` stable, with nothing else changed.
 
 **Use a wallet with nothing in it you can't afford to lose.** The deploy
 dependency logs the wallet seed to stdout as part of its normal, unconditional
@@ -223,13 +272,18 @@ the failure mode this whole system exists to prevent.
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
 | Red team round 1 | **12 of 13 findings fixed**, [full report](./docs/RED_TEAM_ROUND_1.md) |
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
-| On-chain attestation (deploy + call from the app) | **Not wired yet** — the contract compiles, the client integration does not exist |
+| Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
+| Calling `attest` from the app | **Not wired** — the contract is deployed, but `attest_case` / `POST /api/attest` still compute a local commitment and do not call it |
 | Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
 The honest bottom line: the expert's side of the boundary runs and is tested,
-and the circuit compiles into real proving keys — but nothing has been deployed
-to a network and `attest_case` is still a stub that returns an explicit error
-rather than pretending.
+the circuit compiles into real proving keys, and the contract is deployed and
+live on `preview`. What does **not** yet exist is the last hop — `attest_case`
+and `POST /api/attest` still compute a commitment locally and return
+`local_pending_contract`; neither calls the deployed contract's `attest`
+circuit. A deployed contract nobody calls is a deployed contract, not a working
+attestation, and this table says so rather than letting "deployed" imply
+"working end to end".
 
 ## Repository
 
