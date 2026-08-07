@@ -54,9 +54,10 @@ later layers extend it, they don't gate it.
    `MALICE` verdict cannot be attested without `corroboration_count >= 2`. Any
    attempt to attest `MALICE` from a single source fails to produce a proof at all.
 4. **Interfaces.** A local frontend (loopback server, no hosted backend) exposes
-   three actions — seal, attest, verify — and a parallel MCP server exposes the
-   same actions as tools, following the same shape as a crypto wallet: the asset
-   is a sealed case, not a token.
+    three actions — seal, attest, verify — and a parallel MCP server exposes the
+    same actions as tools, following the same shape as a crypto wallet: the asset
+    is a sealed case, not a token. The frontend is developed with mandatory
+    Test-Driven Development; see `docs/FRONTEND_TDD.md`.
 5. **Tests and simulation.** Threshold tests, corroboration-gate tests,
    determinism tests (same input twice → same fingerprint), and adversarial tests
    (truncate the custody chain, tamper with a field, submit a mismatched
@@ -192,9 +193,11 @@ que funciona — las capas siguientes lo extienden, no lo condicionan.
    `corroboration_count >= 2`. Cualquier intento de atestar `MALICE` con una sola
    fuente directamente no produce una prueba.
 4. **Interfaces.** Un frontend local (servidor loopback, sin backend hosteado)
-   expone tres acciones — sellar, atestar, verificar — y un servidor MCP paralelo
-   expone las mismas acciones como tools, siguiendo la misma forma que una
-   wallet cripto: el activo es un caso sellado, no un token.
+    expone tres acciones — sellar, atestar, verificar — y un servidor MCP paralelo
+    expone las mismas acciones como tools, siguiendo la misma forma que una
+    wallet cripto: el activo es un caso sellado, no un token. El frontend se
+    desarrolla con Test-Driven Development obligatorio; ver
+    `docs/FRONTEND_TDD.md`.
 5. **Tests y simulación.** Tests de umbrales, del gate de corroboración, de
    determinismo (mismo input dos veces → mismo fingerprint), y tests
    adversariales (truncar la cadena de custodia, alterar un campo, enviar un

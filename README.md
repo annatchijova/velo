@@ -222,7 +222,8 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`FAQ`](./docs/FAQ.md) · [`BUSINESS`](./docs/BUSINESS.md) ·
 [`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
-[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md)
+[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are
