@@ -65,17 +65,20 @@ witness corroborationCountWitness(): Uint<0..17>;
  * actually holds, and that if the declared verdict is MALICE, at least
  * two independent sources corroborate it.
  *
- * FLAGGED FOR RED TEAM: the commitment scheme below computes
- * persistentHash over a 2-element vector of [fingerprint, salt] to match
- * the C = persistentHash(bundle_fingerprint, salt) formula in
- * 00_VELO_MASTER.md sec 5, exactly as documented there. The compact
- * skill's own "Pattern 1: Commitment" example uses persistentCommit(v,
- * nonce) instead, which is the more idiomatic Compact stdlib helper for
- * this exact hiding+binding shape. Both should be cryptographically
- * equivalent in spirit; confirm during red team which one the compiler
- * / stdlib actually expects, and which one avoids brute-forcing risk
- * given bundleFingerprint is already a 32-byte hash (large space) rather
- * than a small value like a raw verdict integer would be.
+ * FLAGGED FOR REVIEW / COMPILE TIME: the commitment below computes
+ * persistentHash over a 3-element vector [fingerprint, custodyTip, salt]
+ * — extended from the 2-element [fingerprint, salt] form documented in
+ * 00_VELO_MASTER.md sec 5 after red team F3 showed that form left the
+ * custody chain unanchored. Three open questions for the compiler:
+ *   1. persistentHash(vector) vs persistentCommit(value, nonce) — the
+ *      compact skill's "Pattern 1: Commitment" uses the latter, which is
+ *      the idiomatic stdlib helper for hiding+binding. Both should be
+ *      equivalent in spirit; brute-force risk is low either way because
+ *      fingerprint and tip are already 32-byte hashes, not small values.
+ *   2. Whether Vector<3, Bytes<32>> compiles and hashes as expected.
+ *   3. Whether disclose() is genuinely required (vs a no-op) on values
+ *      that are already public circuit arguments — used it anyway
+ *      because the skill's own bulletin-board example does.
  */
 export circuit attest(caseCommitment: Bytes<32>, verdict: Verdict): [] {
   const fingerprint = bundleFingerprint();

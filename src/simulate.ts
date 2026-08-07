@@ -111,7 +111,7 @@ async function main() {
   step("CUSTODY CHAIN", `${custodyCheck.valid} — ${custodyCheck.reason}`);
   step("DOES NOT ESTABLISH", verification.doesNotEstablish);
 
-  section("THE MOMENT THAT MATTERS — trying to force a MALICE without enough corroboration");
+  section("REFUSAL 1 — trying to force a MALICE without enough corroboration");
   console.log("\nSame kind of evidence, but only ONE independent source this time.");
   const insufficientCase: Artifact[] = [maliceCase[1]!]; // only the cron artifact — a single source
   const insufficientResults = runAllDetectors(insufficientCase);
@@ -127,6 +127,24 @@ async function main() {
     insufficientScore.verdict === "MALICE"
       ? "\n  !! THIS WOULD BE A BUG — MALICE reached with < 2 sources !!"
       : "\n  Correctly refused. The Daubert corroboration gate held — this is not a promise, it's a constraint.",
+  );
+
+  section("REFUSAL 2 — the SAME evidence, with no chain of custody");
+  console.log("\nByte-for-byte the same artifacts that produced MALICE above.");
+  console.log("The only thing removed: the record of how the evidence was acquired.");
+  const noCustodyScore = score({
+    detectorResults: runAllDetectors(maliceCase),
+    artifacts: maliceCase,
+    devilAdvocate,
+    custodyValid: false,
+  });
+  step("VERDICT WITH CUSTODY", result.verdict);
+  step("VERDICT WITHOUT CUSTODY", noCustodyScore.verdict);
+  step("WHY", noCustodyScore.reasoning);
+  console.log(
+    noCustodyScore.verdict === "ABSTAIN"
+      ? "\n  Identical evidence, opposite outcome. Admissibility is a property of the process,\n  not of how incriminating the evidence looks. A finding nobody can trace back to a\n  lawful acquisition is not a weaker finding — it is an inadmissible one."
+      : "\n  !! THIS WOULD BE A BUG — a verdict was reached without a custody chain !!",
   );
 
   section("Done.");
