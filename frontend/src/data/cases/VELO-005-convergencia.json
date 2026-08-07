@@ -1,0 +1,74 @@
+{
+  "case_id": "VELO-005",
+  "name": "The Four-Source Convergence",
+  "description": "Compromise confirmed by three engine-corroborated sources: memory (process injection posing as itself in lsass.exe), network (traffic contradicting the host's declared state), and disk (a beacon DLL with tampered timestamps posing as Windows Defender). A fourth source, TPM boot attestation, rules out pre-boot compromise as context — the current detector suite has no hardware-attestation category, so it isn't counted toward the engine's numeric corroboration.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 3,
+  "devil_advocate": "Each source alone could have a benign explanation, but the independent convergence points to the same actor and timeline. The TPM rules out pre-boot compromise.",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T13:55:00Z", "detail": "EDR + network alerts correlated to one host." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T14:30:00Z", "detail": "Memory image, pcap, disk image and TPM quote acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T15:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
+  "artifacts": [
+    {
+      "id": "v005-memory",
+      "type": "process",
+      "timestamp": "2026-04-10T14:00:00Z",
+      "source": "memory_forensics",
+      "process": "lsass.exe",
+      "path": "C:\\Windows\\System32\\lsass.exe",
+      "entropyMilliBits": 6400,
+      "markers": ["process_masquerade"],
+      "description": "PID 2244 injected into lsass.exe, presenting as the legitimate process while running injected code. Kernel structure anomaly confirmed.",
+      "provenanceChain": ["sha256:v005mem01", "sha256:examiner01"]
+    },
+    {
+      "id": "v005-network",
+      "type": "dns_record",
+      "timestamp": "2026-04-10T14:00:15Z",
+      "source": "network_capture",
+      "process": "dns_client",
+      "path": "dns://c2-domain.evil",
+      "entropyMilliBits": 5200,
+      "markers": ["network_vs_host"],
+      "description": "DNS beacon every 300s ± 45s, consistent with Cobalt Strike's default beacon — the host has no declared reason to be contacting this domain at all.",
+      "provenanceChain": ["sha256:v005pcap01"]
+    },
+    {
+      "id": "v005-disk",
+      "type": "file",
+      "timestamp": "2026-04-10T14:00:30Z",
+      "source": "disk_image",
+      "process": "windef.exe",
+      "path": "C:\\Windows\\System32\\windef.dll",
+      "entropyMilliBits": 7100,
+      "markers": ["timestamps_stomped"],
+      "description": "Beacon DLL found in System32 posing as Windows Defender, with file timestamps altered to match legitimate system files. Hash matches a known beacon.",
+      "provenanceChain": ["sha256:v005img01", "sha256:sector01"]
+    },
+    {
+      "id": "v005-tpm",
+      "type": "log",
+      "timestamp": "2026-04-10T14:01:00Z",
+      "source": "hardware_attestation",
+      "process": "tpm",
+      "path": "tpm://pcr_quote",
+      "entropyMilliBits": 2500,
+      "markers": [],
+      "description": "TPM PCR0 and PCR7 valid. Boot integrity intact. The attack is post-boot, runtime injection. No markers: this artifact shows the ABSENCE of anomaly (a clean boot), which is context that rules out a rival hypothesis, not something any of the 5 anomaly-detectors can score.",
+      "provenanceChain": ["sha256:v005tpm01"]
+    }
+  ],
+  "expected_fractures": [
+    "PROCESS_MASQUERADE",
+    "NETWORK_HOST_CONTRADICTION",
+    "TIMESTAMPS_STOMPED"
+  ],
+  "peirce_chain": {
+    "firstness": "Four independent artifacts pointing to the same compromise.",
+    "secondness": "Low cross-correlation: these sources cannot have been fabricated together.",
+    "thirdness": "Cobalt Strike beacon with process injection confirmed. Reliable evidence."
+  },
+  "demo_quote": "Four independent sources converge in the story; three of them are what the engine's detector suite can actually score today. The TPM's clean reading is real corroboration in the forensic sense — it rules out a rival hypothesis — even though it doesn't move the engine's corroborationCount. That gap is worth naming honestly rather than papering over."
+}

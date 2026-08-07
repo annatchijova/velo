@@ -10,6 +10,11 @@
     "test": "tsc -p . && node --test dist/tests/*.test.js",
     "simulate": "tsc -p . && node dist/src/simulate.js"
   },
+  "workspaces": ["frontend"],
+  "exports": {
+    "./*": "./dist/src/*",
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^3.23.0"

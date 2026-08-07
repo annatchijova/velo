@@ -1,0 +1,20 @@
+{
+  "perito_id": "VELO-PERITO-001",
+  "public_alias": "Perito-A7F3",
+  "jurisdiction_model": "AR",
+  "specialty": "Digital forensics",
+  "accrediting_body_synthetic": "Rionegro Sur Professional Council of Computer Sciences (fictional)",
+  "credential_id_synthetic": "CPCI-RNS-INF-04821",
+  "matriculation_year": 2018,
+  "years_active": 8,
+  "valid_from": "2024-03-01T00:00:00Z",
+  "valid_until": "2027-03-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 42,
+  "cases_attested": ["VELO-001", "VELO-002", "VELO-011"],
+  "credential_status_at_attestation": {
+    "VELO-001": "VALID",
+    "VELO-002": "VALID",
+    "VELO-011": "VALID"
+  },
+  "notes": "Happy path of the Argentine model: current license, tenure and recognized specialty satisfied, continuing education up to date. Serves as the baseline case to prove the credential passes membership + validity without friction. VELO-011 doubles as the counterpart of VELO-PERITO-006's VELO-012 in the own-vs-others visibility fixture: each examiner should see the other's case only as {case_id, expected_verdict, expected_corroboration_count}."
+}
