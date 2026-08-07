@@ -212,13 +212,58 @@ Related: the same discipline in `.claude/skills/red-teaming-zk-attestation-syste
 already said *"a mitigation is not a fix"* about third-party root causes. It
 should also have said: **verify a mitigation in the runtime it ships in.**
 
-### Status
+### The second twist: the test had the same bug, and hid it with a green check
 
-The rewritten wrapper passes 10/10 under Node — which is exactly what the
-broken version scored, so that number means very little here. It is **not**
-confirmed until `bun run scripts/verify-f16-seed-redaction.mjs` passes on a
-machine with Bun. Until then F16 is treated as live: the seed is exposed, and
-the deploy wallet must be disposable.
+Running the rewritten wrapper under Bun produced this:
+
+```
+Wallet seed: 0000000000000000000000000000000000000000000000000000000000000042
+Wallet seed: 0000000000000000000000000000000000000000000000000000000000000042
+Wallet seed: 0000000000000000000000000000000000000000000000000000000000000042
+PASS — inside wrapper: raw seed never reaches the stream
+FAIL — inside wrapper: the redaction marker is what got written
+```
+
+Read those five lines together. The seed printed **three times, in full**, and
+directly underneath, the assertion that the seed never reaches the stream
+**passed**.
+
+It passed because the script captured output by replacing
+`process.stdout.write` and inspecting what that received — the exact mechanism
+Bun bypasses. The capture array stayed empty, and `!"".includes(seed)` is
+`true`. The test had the same blind spot as the code it was testing, and the
+blind spot converted into a green check.
+
+**A check that observes nothing passes everything.** The *failing* assertions
+in that run were the honest ones; the passing one was the dangerous one, and it
+is the one that would have been quoted as evidence.
+
+### What actually fixed it
+
+Two separate things, and only one of them was the wrapper:
+
+1. **The wrapper** now patches `console.*` as well as the stream writers. That
+   was necessary but, on its own, unprovable.
+2. **The verification stopped intercepting anything.** It now spawns a child
+   process, lets it write to a real pipe, and greps the bytes that actually
+   came out. That is runtime-agnostic *by construction* — it tests observable
+   output instead of a mechanism assumed to carry that output. It also asserts
+   the child produced output at all, so an empty capture can never again read
+   as success.
+
+### Status — VERIFIED in both runtimes (2026-08-07)
+
+```
+bun  run scripts/verify-f16-seed-redaction.mjs    -> 10/10  [runtime: bun]
+node --experimental-strip-types  (same script)    -> 10/10  [runtime: node]
+```
+
+Covering `console.info` (the dependency's exact call), `console.log`, a direct
+`process.stdout.write`, that unrelated output survives, and that redaction
+stops once the wrapper is removed.
+
+Unchanged by any of this: it is a mitigation around a third-party default, not
+a fix of the upstream defect, and the deploy wallet should still be disposable.
 
 ---
 
@@ -323,8 +368,37 @@ afirmación simplemente era falsa, y se descubrió porque alguien corrió lo rea
 y leyó la salida — igual que F5 (un corpus de demo que nunca había pasado por
 su propio motor), una ronda antes.
 
-**Estado.** El wrapper reescrito pasa 10/10 bajo Node — que es exactamente lo
-que sacaba la versión rota, así que ese número acá vale poco. No está
-confirmado hasta que `bun run scripts/verify-f16-seed-redaction.mjs` pase en
-una máquina con Bun. Hasta entonces F16 se trata como vivo: el seed queda
-expuesto y la wallet de deploy tiene que ser descartable.
+**El segundo giro: el test tenía el mismo bug, y lo tapó con un check en
+verde.** Corriendo el wrapper reescrito bajo Bun salió esto:
+
+```
+Wallet seed: 0000...042
+Wallet seed: 0000...042
+Wallet seed: 0000...042
+PASS — inside wrapper: raw seed never reaches the stream
+```
+
+El seed se imprimió **tres veces, entero**, y justo debajo la aserción de que
+el seed nunca llega al stream **pasó**. Pasó porque el script capturaba
+reemplazando `process.stdout.write` — el mecanismo exacto que Bun se saltea.
+El array de captura quedó vacío, y `!"".includes(seed)` es `true`. El test
+tenía el mismo punto ciego que el código que testeaba, y ese punto ciego se
+convirtió en un check verde.
+
+**Un check que no observa nada aprueba todo.** Las aserciones que *fallaron*
+en ese run eran las honestas; la que pasó era la peligrosa, y es la que se
+habría citado como evidencia.
+
+**Qué lo arregló de verdad.** Dos cosas, y solo una era el wrapper: (1) el
+wrapper ahora parchea `console.*` además de los streams — necesario pero, solo,
+imposible de probar; (2) la verificación **dejó de interceptar**: lanza un
+subproceso, lo deja escribir a un pipe real, y busca en los bytes que
+realmente salieron. Eso es agnóstico del runtime por construcción — testea la
+salida observable en vez de un mecanismo que se asume que la transporta. Y
+además verifica que el hijo produjo salida, así una captura vacía nunca más
+puede leerse como éxito.
+
+**Estado — VERIFICADO en ambos runtimes (2026-08-07):** 10/10 bajo Bun y 10/10
+bajo Node. Lo que no cambia: sigue siendo una mitigación alrededor de un
+default de terceros, no un arreglo del defecto upstream, y la wallet de deploy
+debería seguir siendo descartable.
