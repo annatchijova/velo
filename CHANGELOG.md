@@ -7,28 +7,80 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
-### Added
+## [0.1.0] - 2026-08-07
 
-- Development conventions adopted across the repository:
-  - [Husky](https://typicode.github.io/husky/) `commit-msg` hook running
-    `commitlint` to enforce [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
-  - `commitlint` configuration extending `@commitlint/config-conventional`.
-  - This `CHANGELOG.md`, following the Keep a Changelog 1.1.0 format.
-  - `CONTRIBUTING.md` documenting the commit, versioning, and changelog rules.
-- `prepare` script (`husky`) so the git hooks are installed on `npm install`.
-
-## [0.1.0] - 2026-08-08
-
-Initial project state after Midnight Hack Buenos Aires (7–8 August 2026).
+Initial project state — the full initial-development milestone from Midnight
+Hack Buenos Aires (7–8 August 2026). This release covers every commit from the
+first one to the current HEAD; nothing has been released or tagged prior to
+this point, so the entire history is grouped under the initial `0.1.0`.
 
 ### Added
 
-- Deterministic forensic attestation engine with the Daubert corroboration gate.
-- Local sealing, hash-chained custody, and a standalone offline verifier.
-- MCP server exposing the engine as wallet-style tools.
-- Compact contract (`contracts/velo.compact`) that compiles to real proving keys.
-- Loopback-only HTTP server and Next.js frontend.
-- Documentation set (architecture, glossary, cases, FAQ, roadmap, red team reports).
+- **Engine.** Deterministic forensic attestation engine with the Daubert
+  corroboration gate — five detectors, exact rational arithmetic, no floats on
+  the decision path.
+- **Sealing.** Local sealing: canonicalization, hash-chained custody, sealed
+  bundles, and a standalone offline verifier (`dist/src/seal/verify.js`).
+- **MCP.** MCP server exposing the engine as wallet-style tools
+  (`list_my_cases`, `get_case`, `seal_case`, `verify_commitment`,
+  `attest_case`).
+- **Contract.** Compact zero-knowledge contract (`contracts/velo.compact`)
+  with prover and verifier keys, compiling on AVX2 hardware;
+  `scripts/compile-contract.sh` for one-command builds.
+- **Witnesses.** Circuit witnesses (TypeScript side) bound to the generated
+  bindings.
+- **Web.** Loopback-only HTTP server (`npm run web`) and Next.js frontend
+  sharing `src/core/operations.ts`.
+- **Simulation.** `src/simulate.ts` end-to-end demo showing both refusal
+  moments (insufficient corroboration and missing custody).
+- **Deploy.** Contract deploy tooling for the preview network.
+- **Frontend tests.** Vitest + Playwright scripts and dependencies, plus a
+  TDD workflow document.
+- **Corpus.** Synthetic case corpus (13 cases, zero PII) and 6 synthetic
+  expert-witness profiles.
+- **Documentation.** Bilingual documentation set — architecture, glossary,
+  cases, FAQ, roadmap, red team reports, business case and identity/credential
+  design decisions; pitch decks with extracted backgrounds.
+- **Conventions.** Development conventions: Husky `commit-msg` hook running
+  commitlint, `CHANGELOG.md`, `CONTRIBUTING.md`, `AGENTS.md`.
 
-[Unreleased]: https://github.com/Dahgoth/velo/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Dahgoth/velo/releases/tag/v0.1.0
+### Changed
+
+- Cases/peritos corpus translated to English; engine drift fixed (finding F5).
+- README rewritten with an architecture diagram; docs aligned with the F3
+  commitment change.
+- Glossary rewritten for readers without forensics/law/crypto backgrounds.
+- Corpus and orchestration single-sourced across the MCP server, HTTP server,
+  and CLI.
+- FAQ decks aligned with the pitch's framing and credential scope.
+
+### Removed
+
+- Redundant loopback HTTP server superseded by shared operations; shared
+  `caseId` validator.
+- `frontend/lib` — orphaned duplicate pointing at the wrong network.
+- Internal-only files excluded from the submission (`PROGRESS_LOCAL.md`,
+  `GUION_VIDEO.md`).
+
+### Fixed
+
+- Red team round 1: 12 of 13 findings fixed, verified against the live code.
+- Red team round 2: promise-vs-guarantee audit against README/ARCHITECTURE
+  claims.
+- Vacuous constraint in the circuit: verdict and corroboration count now bound
+  into the commitment.
+- `corroborationCountWitness` bigint mismatch against the compiled circuit.
+- Stale contract-compilation claims in `RED_TEAM_ROUND_1.md`.
+- Pitch deck overclaims: the ZK credential is designed, not delivered.
+- Custody-chain truncation detection gap documented and tested.
+- Witnesses wired to the real generated bindings.
+
+### Security
+
+- Loopback server binds to `127.0.0.1` only, by design — a machine holding a
+  victim's evidence must not open a port to its network.
+- Red team round 3: CSRF on the loopback/frontend seal-adjacent routes
+  (finding F14) fixed.
+
+[Unreleased]: https://github.com/annatchijova/velo/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/annatchijova/velo/releases/tag/v0.1.0
