@@ -6,9 +6,24 @@
   "expected_corroboration_count": 0,
   "devil_advocate": "",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-07-20T09:00:00Z", "detail": "Routine daily log review, nothing flagged." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-07-20T09:30:00Z", "detail": "Sample of the day's file, network and system logs acquired for baseline." },
-    { "eventType": "ANALYZED", "timestamp": "2026-07-20T10:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-07-20T09:00:00Z",
+      "detail": "Routine daily log review, nothing flagged.",
+      "detail_es": "Revisión diaria de rutina, nada marcado."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-07-20T09:30:00Z",
+      "detail": "Sample of the day's file, network and system logs acquired for baseline.",
+      "detail_es": "Muestra de los logs de archivos, red y sistema del día, adquirida como línea de base."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-07-20T10:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -21,7 +36,10 @@
       "entropyMilliBits": 3800,
       "markers": [],
       "description": "Office spreadsheet. Normal content.",
-      "provenanceChain": ["sha256:v010doc01"]
+      "provenanceChain": [
+        "sha256:v010doc01"
+      ],
+      "description_es": "Planilla de cálculo de oficina. Contenido normal."
     },
     {
       "id": "v010-browser",
@@ -33,7 +51,10 @@
       "entropyMilliBits": 4200,
       "markers": [],
       "description": "Routine browsing to technical documentation.",
-      "provenanceChain": ["sha256:v010net02"]
+      "provenanceChain": [
+        "sha256:v010net02"
+      ],
+      "description_es": "Navegación rutinaria a documentación técnica."
     },
     {
       "id": "v010-syslog",
@@ -45,7 +66,10 @@
       "entropyMilliBits": 4500,
       "markers": [],
       "description": "Normal log entries: services started, regular scheduled tasks.",
-      "provenanceChain": ["sha256:v010log03"]
+      "provenanceChain": [
+        "sha256:v010log03"
+      ],
+      "description_es": "Entradas de log normales: servicios iniciados, tareas programadas regulares."
     }
   ],
   "expected_fractures": [],
@@ -54,5 +78,13 @@
     "secondness": "No detector fires; no inconsistencies.",
     "thirdness": "No evidence of malice, not even of suspicion."
   },
-  "demo_quote": "Most days have no incidents. VELO doesn't invent threats where none exist."
+  "demo_quote": "Most days have no incidents. VELO doesn't invent threats where none exist.",
+  "name_es": "Día Normal de Oficina",
+  "description_es": "Línea base benigna. Documentos de oficina, navegación web rutinaria, logs de sistema normales. Sin marcadores temporales, anti-forenses o inconsistencias.",
+  "demo_quote_es": "La mayoría de los días no hay incidentes. VELO no inventa amenazas donde no las hay.",
+  "peirce_chain_es": {
+    "firstness": "Actividad de oficina ordinaria.",
+    "secondness": "Ningún detector dispara; no hay inconsistencias.",
+    "thirdness": "No hay evidencia de malicia ni siquiera de sospecha."
+  }
 }

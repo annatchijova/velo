@@ -154,12 +154,12 @@ const dict = {
     "hero.step1Sub": "evidence never moves",
     "hero.step2Label": "Fingerprinted",
     "hero.step2Sub": "deterministic hash",
-    "hero.step3Label": "Attested on-chain",
-    "hero.step3Sub": "commitment only",
-    "hero.step4Label": "Verified",
-    "hero.step4Sub": "ZK proof stands",
+    "hero.step3Label": "Attestation",
+    "hero.step3Sub": "commitment only — not deployed yet",
+    "hero.step4Label": "Verified locally",
+    "hero.step4Sub": "hashes recompute; on-chain proof pending",
     "hero.sealedCase": "sealed case",
-    "hero.chainLive": "chain live",
+    "hero.chainLive": "local demo",
     "hero.commitment": "commitment",
     "hero.saltHidden": "salt hidden",
 
@@ -329,12 +329,12 @@ const dict = {
     "hero.step1Sub": "la evidencia nunca se mueve",
     "hero.step2Label": "Con fingerprint",
     "hero.step2Sub": "hash determinista",
-    "hero.step3Label": "Atestado on-chain",
-    "hero.step3Sub": "solo el commitment",
-    "hero.step4Label": "Verificado",
-    "hero.step4Sub": "la prueba ZK se sostiene",
+    "hero.step3Label": "Atestación",
+    "hero.step3Sub": "solo el commitment — todavía sin desplegar",
+    "hero.step4Label": "Verificado localmente",
+    "hero.step4Sub": "los hashes recomputan; prueba on-chain pendiente",
     "hero.sealedCase": "caso sellado",
-    "hero.chainLive": "cadena en vivo",
+    "hero.chainLive": "demo local",
     "hero.commitment": "commitment",
     "hero.saltHidden": "salt oculto",
 
@@ -399,4 +399,21 @@ export function useI18n() {
   const ctx = useContext(I18nContext);
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
+}
+
+/**
+ * Picks the Spanish sibling of a corpus field when the UI is in Spanish,
+ * falling back to the English one.
+ *
+ * The synthetic corpus is bilingual in place — `name` / `name_es` on the
+ * same object — rather than as a parallel set of translated files. A
+ * second copy of the corpus is exactly the duplication red team F5 was
+ * about, and it drifted once already.
+ *
+ * The fallback is deliberate: a case that has not been translated yet
+ * shows English rather than an empty panel. A missing translation should
+ * degrade to readable, never to blank.
+ */
+export function localized<T>(lang: Lang, en: T, es: T | undefined): T {
+  return lang === "es" && es !== undefined ? es : en;
 }

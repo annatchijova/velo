@@ -6,9 +6,24 @@
   "expected_corroboration_count": 2,
   "devil_advocate": "The change looks like a readability improvement, but its effect is to silence authentication errors. A commit with such small surface and such high impact requires adversarial review.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T22:40:00Z", "detail": "Post-deploy auth-failure spike with zero alerts flagged the discrepancy." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T23:10:00Z", "detail": "Git history, diff, and auth log acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T23:30:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T22:40:00Z",
+      "detail": "Post-deploy auth-failure spike with zero alerts flagged the discrepancy.",
+      "detail_es": "Un pico de fallos de autenticación posterior al deploy, con cero alertas, marcó la discrepancia."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T23:10:00Z",
+      "detail": "Git history, diff, and auth log acquired.",
+      "detail_es": "Historial de git, diff y log de autenticación adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T23:30:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,14 @@
       "process": "git",
       "path": "/repo/deploy.sh",
       "entropyMilliBits": 4100,
-      "markers": ["documentary_fabrication"],
+      "markers": [
+        "documentary_fabrication"
+      ],
       "description": "Commit 'Cleaning up redundant logs'. +1 line, 0 removed. Author: devops@corp.com. The commit message documents an innocuous change; the actual diff does something else entirely — a fabricated record of intent.",
-      "provenanceChain": ["sha256:v008git01"]
+      "provenanceChain": [
+        "sha256:v008git01"
+      ],
+      "description_es": "Commit 'Limpiando logs redundantes'. +1 línea, 0 removidas. Autor: devops@corp.com."
     },
     {
       "id": "v008-diff",
@@ -33,7 +53,10 @@
       "entropyMilliBits": 3500,
       "markers": [],
       "description": "Added line: 'auth_check() 2>/dev/null || true'. Silences pam_authenticate; if there's an error, it continues as if nothing happened. Context — the mechanism, not itself a scored contributor.",
-      "provenanceChain": ["sha256:v008diff02"]
+      "provenanceChain": [
+        "sha256:v008diff02"
+      ],
+      "description_es": "Línea agregada: 'auth_check() 2>/dev/null || true'. Silencia pam_authenticate; si hay error, continúa como si nada."
     },
     {
       "id": "v008-silence",
@@ -43,9 +66,14 @@
       "process": "deploy_service",
       "path": "/var/log/auth.log",
       "entropyMilliBits": 1200,
-      "markers": ["log_cleared"],
+      "markers": [
+        "log_cleared"
+      ],
       "description": "47 authentication failures in the post-deploy window. No 4625 event generated. The authentication module's alerting was silenced going forward — functionally equivalent to clearing the trail for everything after the deploy.",
-      "provenanceChain": ["sha256:v008log03"]
+      "provenanceChain": [
+        "sha256:v008log03"
+      ],
+      "description_es": "47 fallos de autenticación en ventana post-deploy. Ningún evento 4625 generado. El módulo de autenticación está silenciado."
     }
   ],
   "expected_fractures": [
@@ -57,5 +85,14 @@
     "secondness": "The added line silences authentication errors and forces fail-open.",
     "thirdness": "A minimal change with maximum security impact, disguised as a refactor."
   },
-  "demo_quote": "A single line can open a door. VELO detects that the surface of the change doesn't match its impact on the authentication function."
+  "demo_quote": "A single line can open a door. VELO detects that the surface of the change doesn't match its impact on the authentication function.",
+  "name_es": "La Mise en Place Alterada",
+  "description_es": "Commit en deploy.sh con mensaje 'limpiando logs redundantes'. Una sola línea agregada redirige stderr de auth_check a /dev/null con || true, silenciando fallos de autenticación y causando fail-open.",
+  "devil_advocate_es": "El cambio parece una mejora de legibilidad, pero su efecto es silenciar errores de autenticación. Un commit con tan poca superficie y tan alto impacto requiere revisión adversarial.",
+  "demo_quote_es": "Una sola línea puede abrir una puerta. VELO detecta que la superficie del cambio no coincide con su impacto en la función de autenticación.",
+  "peirce_chain_es": {
+    "firstness": "Commit inocuo de limpieza de logs.",
+    "secondness": "La línea agregada silencia errores de autenticación y fuerza fail-open.",
+    "thirdness": "Un cambio mínimo con impacto máximo en seguridad, disfrazado de refactor."
+  }
 }

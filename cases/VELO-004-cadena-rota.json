@@ -17,7 +17,10 @@
       "entropyMilliBits": 6900,
       "markers": [],
       "description": "SHA-256 matches known malware. VirusTotal: 47/70 detections. BUT there's no acquisition record and no chain root. No markers set: the engine's detector suite has no provenance category — inadmissibility here comes entirely from custodyEvents being empty, not from a fired detector.",
-      "provenanceChain": ["ORPHANED"]
+      "provenanceChain": [
+        "ORPHANED"
+      ],
+      "description_es": "SHA-256 coincide con malware conocido. VirusTotal: 47/70 detecciones. PERO no hay registro de adquisición ni chain root."
     },
     {
       "id": "v004-timestamp",
@@ -29,7 +32,10 @@
       "entropyMilliBits": 5500,
       "markers": [],
       "description": "Creation timestamp matches a known beacon interval. But the chain of custody has a single orphaned hash, with no parent disk image.",
-      "provenanceChain": ["sha256:partial_chain_ORPHANED"]
+      "provenanceChain": [
+        "sha256:partial_chain_ORPHANED"
+      ],
+      "description_es": "Timestamp de creación coincide con intervalo de beacon conocido. Pero la cadena de custodia tiene un solo hash huérfano, sin imagen de disco padre."
     }
   ],
   "expected_fractures": [
@@ -40,5 +46,13 @@
     "secondness": "No acquisition record, no examiner signature, no root for the chain of custody.",
     "thirdness": "Without a root of trust it can't be verified that the evidence wasn't planted or modified. Inadmissible."
   },
-  "demo_quote": "High-quality evidence without a chain of custody is inadmissible. VELO doesn't get seduced by the hash; it demands provenance. `PROVENANCE_BREAK` here is narrative documentation, not a detector fracture — score() short-circuits to ABSTAIN as soon as custodyEvents is empty, before any of the 5 detectors run."
+  "demo_quote": "High-quality evidence without a chain of custody is inadmissible. VELO doesn't get seduced by the hash; it demands provenance. `PROVENANCE_BREAK` here is narrative documentation, not a detector fracture — score() short-circuits to ABSTAIN as soon as custodyEvents is empty, before any of the 5 detectors run.",
+  "name_es": "La Cadena Rota",
+  "description_es": "Hash de archivo coincide con malware conocido (47/70 en VirusTotal). Pero no existe registro de adquisición, no hay firma del perito y la cadena de provenance no tiene raíz. Bajo Daubert, la evidencia es inadmisible.",
+  "demo_quote_es": "Evidencia de alta calidad sin cadena de custodia es inadmisible. VELO no se deja seducir por el hash; exige provenance.",
+  "peirce_chain_es": {
+    "firstness": "47/70 detecciones en VirusTotal — señal aparentemente fuerte.",
+    "secondness": "No hay acquisition record, firma de perito, ni root de la cadena de custodia.",
+    "thirdness": "Sin root of trust no se puede verificar que la evidencia no fue plantada o modificada. Inadmisible."
+  }
 }

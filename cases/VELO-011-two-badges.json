@@ -6,9 +6,24 @@
   "expected_corroboration_count": 1,
   "devil_advocate": "",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-05-02T14:05:00Z", "detail": "Physical access system flagged a simultaneous remote login for the same badge holder." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-05-02T14:30:00Z", "detail": "Badge log and VPN gateway log acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-05-02T15:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-05-02T14:05:00Z",
+      "detail": "Physical access system flagged a simultaneous remote login for the same badge holder.",
+      "detail_es": "El sistema de acceso físico marcó un login remoto simultáneo para el mismo titular de credencial."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-05-02T14:30:00Z",
+      "detail": "Badge log and VPN gateway log acquired.",
+      "detail_es": "Log de credenciales y log del gateway VPN adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-05-02T15:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -21,7 +36,10 @@
       "entropyMilliBits": 2900,
       "markers": [],
       "description": "Badge #4471 (employee J. Ortega) grants access to datacenter door 3 in Building A. Context — establishes the physical claim the VPN login contradicts.",
-      "provenanceChain": ["sha256:v011badge01"]
+      "provenanceChain": [
+        "sha256:v011badge01"
+      ],
+      "description_es": "La credencial #4471 (empleado J. Ortega) habilita el acceso a la puerta 3 del datacenter en el Edificio A. Contexto — establece la afirmación física que el login de VPN contradice."
     },
     {
       "id": "v011-vpn",
@@ -31,9 +49,14 @@
       "process": "openvpn",
       "path": "conn://190.15.88.6:1194",
       "entropyMilliBits": 5400,
-      "markers": ["network_vs_host"],
+      "markers": [
+        "network_vs_host"
+      ],
       "description": "VPN login using the same employee's credentials from a residential IP 900km from Building A, 5 seconds after the badge event — the network state contradicts the physical-presence state for the same identity.",
-      "provenanceChain": ["sha256:v011vpn02"]
+      "provenanceChain": [
+        "sha256:v011vpn02"
+      ],
+      "description_es": "Login de VPN con las credenciales del mismo empleado desde una IP residencial a 900 km del Edificio A, 5 segundos después del evento de credencial — el estado de red contradice el estado de presencia física para la misma identidad."
     }
   ],
   "expected_fractures": [
@@ -44,5 +67,13 @@
     "secondness": "Physical travel at that distance in that time is impossible; one signal is false.",
     "thirdness": "Either the badge or the VPN credential was cloned or shared — the identity binding is broken. But it's one contradiction, from one detector, and no second independent source to corroborate which credential is the fake."
   },
-  "demo_quote": "A body can't be in two places 900km apart within five seconds — that part is physically certain. What VELO won't do is call it MALICE off a single contradiction: strong signal, one source, SUSPICION. The same corroboration gate that holds for log-fabrication cases holds here too."
+  "demo_quote": "A body can't be in two places 900km apart within five seconds — that part is physically certain. What VELO won't do is call it MALICE off a single contradiction: strong signal, one source, SUSPICION. The same corroboration gate that holds for log-fabrication cases holds here too.",
+  "name_es": "Las Dos Credenciales",
+  "description_es": "El log de acceso físico muestra la credencial de un empleado entrando al datacenter del Edificio A a las 14:00:00. Cinco segundos después, los logs de autenticación VPN muestran las credenciales del mismo empleado iniciando sesión desde una IP residencial a 900 km. Una sola persona no puede estar en dos lugares al mismo tiempo.",
+  "demo_quote_es": "Un cuerpo no puede estar en dos lugares a 900 km de distancia en cinco segundos — esa parte es físicamente cierta. Lo que VELO no hace es llamarlo MALICE por una sola contradicción: señal fuerte, una fuente, SUSPICION. El mismo gate de corroboración que rige para los casos de fabricación de logs rige también acá.",
+  "peirce_chain_es": {
+    "firstness": "Dos señales de presencia para la misma identidad, con 5 segundos y 900 km de diferencia.",
+    "secondness": "El traslado físico a esa distancia en ese tiempo es imposible; una de las dos señales es falsa.",
+    "thirdness": "O la credencial física o la de VPN fue clonada o compartida — la vinculación de identidad está rota. Pero es una contradicción, de un solo detector, y no hay una segunda fuente independiente que corrobore cuál de las dos credenciales es la falsa."
+  }
 }

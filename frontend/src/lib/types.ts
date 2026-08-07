@@ -40,6 +40,7 @@ export interface Artifact {
   entropyMilliBits: number;
   markers: Marker[];
   description: string;
+  description_es?: string;
   provenanceChain: string[];
 }
 
@@ -47,6 +48,7 @@ export interface CustodyEvent {
   eventType: string;
   timestamp: string;
   detail: string;
+  detail_es?: string;
 }
 
 export interface PeirceChain {
@@ -58,15 +60,20 @@ export interface PeirceChain {
 export interface CaseFile {
   case_id: string;
   name: string;
+  name_es?: string;
   description: string;
+  description_es?: string;
   expected_verdict: Verdict;
   expected_corroboration_count: number;
   devil_advocate: string;
+  devil_advocate_es?: string;
   custodyEvents: CustodyEvent[];
   artifacts: Artifact[];
   expected_fractures: string[];
   peirce_chain: PeirceChain;
+  peirce_chain_es?: PeirceChain;
   demo_quote: string;
+  demo_quote_es?: string;
 }
 
 export type CredentialPeriod = {

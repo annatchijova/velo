@@ -17,7 +17,10 @@
       "entropyMilliBits": 5000,
       "markers": [],
       "description": "PDF report alleging exfiltration, dropped into the intake folder with no submitter metadata and no upload record. No markers set: the engine has no provenance detector — this case abstains purely because custodyEvents is empty.",
-      "provenanceChain": ["ORPHANED"]
+      "provenanceChain": [
+        "ORPHANED"
+      ],
+      "description_es": "Informe en PDF que alega exfiltración, depositado en la carpeta de ingreso sin metadatos de remitente y sin registro de subida. Sin markers: el motor no tiene detector de proveniencia — este caso abstiene únicamente porque custodyEvents está vacío."
     }
   ],
   "expected_fractures": [
@@ -28,5 +31,13 @@
     "secondness": "No submitter, no acquisition record, no root of trust.",
     "thirdness": "An unverifiable claim, however serious, cannot be admitted as evidence."
   },
-  "demo_quote": "A case with no chain of custody isn't evidence yet — it's a rumor with a PDF attached. VELO won't attest to it, and no examiner has claimed it either. `PROVENANCE_BREAK` here is documentation, not detector output — ABSTAIN comes from the empty custodyEvents, same mechanism as VELO-004."
+  "demo_quote": "A case with no chain of custody isn't evidence yet — it's a rumor with a PDF attached. VELO won't attest to it, and no examiner has claimed it either. `PROVENANCE_BREAK` here is documentation, not detector output — ABSTAIN comes from the empty custodyEvents, same mechanism as VELO-004.",
+  "name_es": "La Entrega Anónima",
+  "description_es": "Aparece un archivo sin firmar en una carpeta compartida de ingreso de evidencia, con una nota que afirma que prueba una exfiltración de datos por parte de un empleado nombrado. Sin registro de adquisición, sin identidad de quien lo entregó, sin cadena de custodia de ningún tipo — el archivo llegó desde ningún lugar responsable.",
+  "demo_quote_es": "Un caso sin cadena de custodia todavía no es evidencia: es un rumor con un PDF adjunto. VELO no lo va a atestar, y ningún perito lo reclamó tampoco. `PROVENANCE_BREAK` acá es documentación, no salida de un detector — el ABSTAIN viene de que custodyEvents está vacío, el mismo mecanismo que en VELO-004.",
+  "peirce_chain_es": {
+    "firstness": "Un documento que hace una afirmación seria, sin origen rastreable.",
+    "secondness": "Sin remitente, sin registro de adquisición, sin raíz de confianza.",
+    "thirdness": "Una afirmación no verificable, por más seria que sea, no puede admitirse como evidencia."
+  }
 }

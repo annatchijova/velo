@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Artifact, ArtifactType } from "@/lib/types";
 import { shortHash, formatDate } from "@/lib/utils";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, localized } from "@/lib/i18n";
 
 const TYPE_ICON: Record<ArtifactType, LucideIcon> = {
   file: FileText,
@@ -21,7 +21,7 @@ const TYPE_ICON: Record<ArtifactType, LucideIcon> = {
 };
 
 export function ArtifactList({ artifacts }: { artifacts: Artifact[] }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <div className="space-y-3">
       {artifacts.map((a) => {
@@ -40,7 +40,7 @@ export function ArtifactList({ artifacts }: { artifacts: Artifact[] }) {
                   </span>
                   <span className="text-[11.5px] text-ink-400">{formatDate(a.timestamp)}</span>
                 </div>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-700">{a.description}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-700">{localized(lang, a.description, a.description_es)}</p>
                 <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11.5px] text-ink-500">
                   <span className="truncate">
                     <span className="font-semibold text-ink-400">{t("field.source")}</span> {a.source}

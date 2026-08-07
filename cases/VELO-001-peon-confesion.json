@@ -6,9 +6,24 @@
   "expected_corroboration_count": 4,
   "devil_advocate": "The public confession could explain human error, but the cron job created 5 minutes earlier demonstrates premeditation. The exfiltration under a service identity breaks the good-faith narrative.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-03-15T14:20:00Z", "detail": "Incident flagged after the self-report mail." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-03-15T15:00:00Z", "detail": "Mail, registry, memory and network captures acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-03-15T16:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-03-15T14:20:00Z",
+      "detail": "Incident flagged after the self-report mail.",
+      "detail_es": "Incidente marcado tras el mail de auto-denuncia."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-03-15T15:00:00Z",
+      "detail": "Mail, registry, memory and network captures acquired.",
+      "detail_es": "Capturas de mail, registro, memoria y red adquiridas."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-03-15T16:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,14 @@
       "process": "sift_mail_gateway",
       "path": "mail://analista_senior@corp.com",
       "entropyMilliBits": 4500,
-      "markers": ["narrative_poisoning"],
+      "markers": [
+        "narrative_poisoning"
+      ],
       "description": "Urgent mail self-reporting an SSH session left open for 4 hours. Tone of extreme remorse.",
-      "provenanceChain": ["sha256:v001mail01"]
+      "provenanceChain": [
+        "sha256:v001mail01"
+      ],
+      "description_es": "Mail urgente auto-denunciando sesión SSH abierta durante 4 horas. Tono de arrepentimiento extremo."
     },
     {
       "id": "v001-cron",
@@ -31,9 +51,14 @@
       "process": "sift_windows_registry",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\SystemUpdate",
       "entropyMilliBits": 3200,
-      "markers": ["effect_before_cause"],
+      "markers": [
+        "effect_before_cause"
+      ],
       "description": "Scheduled task created 5 minutes BEFORE the confession mail. Creation timestamp precedes the public self-report.",
-      "provenanceChain": ["sha256:v001cron02"]
+      "provenanceChain": [
+        "sha256:v001cron02"
+      ],
+      "description_es": "Tarea programada creada 5 minutos ANTES del mail de confesión. Timestamp de creación precede a la denuncia pública."
     },
     {
       "id": "v001-process",
@@ -43,9 +68,15 @@
       "process": "svchost.exe",
       "path": "C:\\Windows\\System32\\svchost.exe",
       "entropyMilliBits": 5100,
-      "markers": ["process_masquerade", "unusual_path"],
+      "markers": [
+        "process_masquerade",
+        "unusual_path"
+      ],
       "description": "svchost.exe with PID 4824 maintains a persistent connection to external IP 185.220.101.42 under a system service identity.",
-      "provenanceChain": ["sha256:v001mem03"]
+      "provenanceChain": [
+        "sha256:v001mem03"
+      ],
+      "description_es": "svchost.exe con PID 4824 mantiene conexión persistente a IP externa 185.220.101.42 bajo identidad de servicio de sistema."
     },
     {
       "id": "v001-network",
@@ -55,9 +86,14 @@
       "process": "svchost.exe",
       "path": "conn://185.220.101.42:443",
       "entropyMilliBits": 6800,
-      "markers": ["network_vs_host"],
+      "markers": [
+        "network_vs_host"
+      ],
       "description": "2.3GB of HTTPS traffic to an external IP during the benign-audit window — the host's declared purpose (a routine audit) contradicts the network's actual behavior (bulk exfiltration).",
-      "provenanceChain": ["sha256:v001net04"]
+      "provenanceChain": [
+        "sha256:v001net04"
+      ],
+      "description_es": "Tráfico HTTPS de 2.3GB hacia IP externa durante ventana de auditoría benigna."
     }
   ],
   "expected_fractures": [
@@ -72,5 +108,14 @@
     "secondness": "The malicious cron job exists 5 minutes before the mail. The chronology breaks the accidental-error narrative.",
     "thirdness": "The confession IS the attack: emotional distraction covering the technical exfiltration."
   },
-  "demo_quote": "A good-faith confession cannot be caused by a cron job created before the confession. The premeditation is structurally irrefutable."
+  "demo_quote": "A good-faith confession cannot be caused by a cron job created before the confession. The premeditation is structurally irrefutable.",
+  "name_es": "El Sacrificio del Peón",
+  "description_es": "Analista senior envía mail auto-denunciando una sesión SSH abierta para construir coartada de honestidad extrema. Un cron job malicioso fue creado 5 minutos ANTES del mail y durante la 'auditoría benigna' el proceso exfiltra 2.3GB bajo identidad de servicio.",
+  "devil_advocate_es": "La confesión pública podría explicar un error humano, pero el cron job creado 5 minutos antes demuestra premeditación. La exfiltración bajo identidad de servicio rompe la narrativa de buena fe.",
+  "demo_quote_es": "Una confesión de buena fe no puede ser causada por un cron job creado antes de la confesión. La premeditación es estructuralmente irrefutable.",
+  "peirce_chain_es": {
+    "firstness": "Mail de auto-denuncia con tono de urgencia y arrepentimiento.",
+    "secondness": "El cron job malicioso existe 5 minutos antes del mail. La cronología rompe la narrativa de error accidental.",
+    "thirdness": "La confesión ES el ataque: distracción emocional que cubre la exfiltración técnica."
+  }
 }
