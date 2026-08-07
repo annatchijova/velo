@@ -1,0 +1,43 @@
+{
+  "case_id": "VELO-006",
+  "name": "El Vacío Quirúrgico",
+  "description": "Archivo de 2KB en /tmp fue borrado con shred -n 7 -z -u. La asimetría entre el tamaño insignificante y el esfuerzo de destrucción indica que el contenido era valioso y el actor sabía que podría ser forenseado.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "Un usuario legítimo raramente usa shred siete pasadas. La herramienta y el patrón indican conocimiento forense y intención de destruir evidencia.",
+  "artifacts": [
+    {
+      "id": "v006-deletion",
+      "type": "log",
+      "timestamp": "2026-04-10T16:45:00Z",
+      "source": "audit_log",
+      "process": "shred",
+      "path": "/tmp/note.txt",
+      "entropy": 3.8,
+      "markers": ["surgical_deletion", "anti_forensic_marker"],
+      "description": "Comando 'shred -n 7 -z -u /tmp/note.txt'. 7 pasadas de sobreescritura + zeroing para archivo de 2KB.",
+      "provenance_chain": ["sha256:v006audit01"]
+    },
+    {
+      "id": "v006-recovered",
+      "type": "file",
+      "timestamp": "2026-04-10T16:46:00Z",
+      "source": "disk_image",
+      "process": "carver",
+      "path": "/dev/sda1",
+      "entropy": 7.9,
+      "markers": ["high_entropy", "recovered_fragment"],
+      "description": "Fragmento recuperado del archivo muestra contenido de alta entropía. Metadata del filesystem indica que el inode fue reutilizado inmediatamente.",
+      "provenance_chain": ["sha256:v006disk02"]
+    }
+  ],
+  "expected_fractures": [
+    "SURGICAL_DELETION"
+  ],
+  "peirce_chain": {
+    "firstness": "Archivo pequeño destruido con método militar.",
+    "secondness": "La asimetría tamaño/esfuerzo no tiene explicación legítima.",
+    "thirdness": "El actor intentó eliminar evidencia de alto valor. La destrucción misma es evidencia."
+  },
+  "demo_quote": "Nadie pasa siete veces un borrador de 2KB. El esfuerzo de destrucción revela el valor de lo que se quiso ocultar."
+}

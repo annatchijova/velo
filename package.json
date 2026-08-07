@@ -1,0 +1,21 @@
+{
+  "name": "velo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VELO — zero-knowledge forensic attestation on Midnight",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "tsc -p . && node --test dist/tests/*.test.js",
+    "simulate": "tsc -p . && node dist/src/simulate.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -1,0 +1,257 @@
+VELO — Casos explicados 
+============================================
+
+------------------------------------------------------------------------------
+
+CASO 1 — El Sacrificio del Peón
+Veredicto: MALICE
+
+¿Qué pasó?
+Un analista senior manda un mail urgente a todos diciendo "cometí un error
+gRAVE, dejé una sesión SSH abierta 4 horas, por favor revoquen mis accesos".
+Suena como alguien muy honesto que se auto-denuncia.
+
+¿Qué detecta VELO?
+Pero VELO encuentra que 5 minutos ANTES de ese mail alguien creó una tarea
+programada (un cron job) en la máquina. Y durante la "auditoría benigna"
+que se hizo por su confesión, un proceso con nombre de sistema empezó a
+mandar 2.3 GB por HTTPS a una IP rara.
+
+¿Por qué es MALICE?
+La confesión no puede ser la causa de un cron job que existía antes de la
+confesión. Es como si alguien gritara "¡me robaron!" pero la caja fuerte se
+había abierto antes de que empezara el supuesto robo. La confesión ES la
+distracción. La premeditación es irrefutable.
+
+Analogía fintech:
+Es un exchange que anuncia públicamente "tuvimos un bug menor" mientras
+por detrás un cron job ya había empezado a mover fondos a una cold wallet
+externa.
+
+------------------------------------------------------------------------------
+
+CASO 2 — La Subasta de Logs Uniformes
+Veredicto: SUSPICION
+
+¿Qué pasó?
+Aparecen 50 entradas de log de fallos de login, una cada 2.000 segundos,
+con precisión de milésima. Un sistema simple dice: "50 intentos fallidos =
+ataque de fuerza bruta".
+
+¿Qué detecta VELO?
+VELO mira la memoria y no encuentra ningún programa de fuerza bruta
+ corriendo, ni ninguna conexión de red que explique esos intentos. Los
+logs son demasiado perfectos: los humanos y los ataques reales tienen
+varianza, no intervalos exactos de 2.000s.
+
+¿Por qué es SUSPICION y no MALICE?
+Hay una señal fuerte (los logs), pero solo UNA fuente. No hay corroboración
+independiente. VELO no eleva a MALICE si no hay al menos dos fuentes.
+
+Analogía fintech:
+Una cuenta muestra 50 órdenes de venta idénticas separadas exactamente 2
+segundos. Parece manipulación, pero si no hay registro de quién las emitió
+ni desde dónde, no podés cerrar la posición. Tenés sospecha, no prueba.
+
+------------------------------------------------------------------------------
+
+CASO 3 — El Falso Flag
+Veredicto: MALICE
+
+¿Qué pasó?
+Hay un ataque real confirmado: alguien inyectó código en un proceso de
+Windows y robó credenciales de memoria (LSASS). Pero encima del ataque,
+encontraron strings en cirílico que apuntan a un actor ruso.
+
+¿Qué detecta VELO?
+Los strings cirílicos están demasiado limpios, demasiado perfectos,
+inconsistentes con el nivel técnico del ataque. Es como si un ladrón
+profesional dejara su tarjeta de identificación en la escena del crimen.
+
+¿Por qué es MALICE?
+El ataque es real, pero la atribución es plantada. La malicia no es rusa;
+la malicia es de quien plantó la bandera falsa para desviar la investigación.
+
+Analogía fintech:
+Una wallet hace un drain real de fondos, pero deja metadatos que apuntan a
+un exchange conocido. Si los metadatos son demasiado obvios y no cuadran
+con la técnica del ataque, es probable que alguien quiera incriminar al
+exchange.
+
+------------------------------------------------------------------------------
+
+CASO 4 — La Cadena Rota
+Veredicto: ABSTAIN
+
+¿Qué pasó?
+Se encuentra un archivo cuyo hash coincide con malware conocido: 47 de 70
+motores de antivirus lo detectan. Suena como evidencia de peso.
+
+¿Qué detecta VELO?
+Pero no hay registro de quién lo extrajo, no hay firma del perito, no hay
+foto del disco original, no hay cadena de custodia. Es como encontrar un
+arma del crimen en la calle sin saber de dónde salió.
+
+¿Por qué es ABSTAIN?
+Sin provenance, la evidencia es inadmisible. VELO no se deja seducir por el
+hash. Bajo la regla Daubert, si no podés probar que no fue plantada, no
+entrás.
+
+Analogía fintech:
+Alguien presenta una transacción de 10 millones como prueba de fraude, pero
+no puede decir de qué bloque salió, qué wallet la firmó ni cuándo fue
+minada. Es solo un número en pantalla.
+
+------------------------------------------------------------------------------
+
+CASO 5 — La Convergencia de Cuatro Fuentes
+Veredicto: MALICE
+
+¿Qué pasó?
+Una máquina está comprometida, pero la evidencia viene de cuatro lugares
+independientes:
+1. Memoria: hay inyección de código en lsass.exe.
+2. Red: hay un beacon DNS cada 5 minutos a un dominio malicioso.
+3. Disco: hay una DLL maliciosa haciéndose pasar por Windows Defender.
+4. TPM (chip de hardware): confirma que el arranque fue limpio, así que el
+   ataque no fue antes de encender la máquina.
+
+¿Por qué es MALICE?
+Cuatro fuentes independientes apuntan al mismo compromiso. No pueden haber
+sido fabricadas juntas. Es el caso estrella de corroboración.
+
+Analogía fintech:
+Para mover fondos de una custodia institucional se requieren 3 de 4 firmas.
+Acá tenés 4 firmas independientes que dicen lo mismo.
+
+------------------------------------------------------------------------------
+
+CASO 6 — El Vacío Quirúrgico
+Veredicto: MALICE
+
+¿Qué pasó?
+Encontraron que un archivo de 2KB en /tmp fue borrado con "shred" usando
+7 pasadas de sobreescritura más zeroing. Es el método militar para borrar
+discos.
+
+¿Qué detecta VELO?
+La asimetría entre el tamaño del archivo (2KB, un texto corto) y el esfuerzo
+para destruirlo no tiene sentido legítimo. Nadie pasa 7 veces un borrador.
+
+¿Por qué es MALICE?
+El esfuerzo de destrucción revela el valor de lo que se quiso ocultar.
+
+Analogía fintech:
+Alguien paga 50.000 dólares en comisiones para mover 100 dólares entre
+wallets. La operación en sí no importa; el esfuerzo desproporcionado delata
+que está lavando algo.
+
+------------------------------------------------------------------------------
+
+CASO 7 — El Ventrílocuo
+Veredicto: MALICE
+
+¿Qué pasó?
+Un proceso llamado svchost.exe está corriendo. Tiene hash válido y firma
+digital de Microsoft. Suena legítimo. Pero está ejecutándose desde
+C:\Users\Public\Downloads, su proceso padre es cmd.exe, y mantiene conexión
+persistente a una IP rara.
+
+¿Qué detecta VELO?
+El binario es real, pero el contexto es falso. Es como un ladrón que usa
+un uniforme de policía original: el uniforme es auténtico, pero está en el
+lugar equivocado, con la actitud equivocada y pidiendo cosas que no
+corresponden.
+
+¿Por qué es MALICE?
+La firma digital válida no limpia el comportamiento anómalo.
+
+Analogía fintech:
+Una API key legítima de una institución grande hace transferencias desde
+una IP en un país donde no opera y a una cuenta nunca antes usada. La key
+es real, pero el contexto delata el abuso.
+
+------------------------------------------------------------------------------
+
+CASO 8 — La Mise en Place Alterada
+Veredicto: MALICE
+
+¿Qué pasó?
+Un commit en el repositorio dice "limpiando logs redundantes". Es un cambio
+de una sola línea en deploy.sh: redirige los errores de autenticación a
+/dev/null y agrega "|| true", que hace que el script siga como si nada aunque
+la autenticación falle.
+
+¿Qué detecta VELO?
+La superficie es mínima e inocente, pero el impacto es catastrófico: todo
+fallo de autenticación queda silenciado. Después del deploy hay 47 fallos de
+login que no generaron ninguna alerta.
+
+¿Por qué es MALICE?
+Un cambio mínimo con impacto máximo en seguridad, disfrazado de limpieza.
+
+Analogía fintech:
+Alguien propone "cambiar un comentario" en el smart contract de una
+custodia, pero en realidad modifica una línea que hace que las firmas
+requeridas pasen de 3 a 0 en cierto caso límite.
+
+------------------------------------------------------------------------------
+
+CASO 9 — El Cebo del Falso Layman
+Veredicto: SUSPICION
+
+¿Qué pasó?
+Un usuario de administración manda ticket de soporte diciendo "no sé qué
+toqué, pantalla negra con letras verdes, no entro al Excel". La captura que
+adjunta muestra un exploit de kernel (dirty pipe) ejecutándose al 45%.
+
+¿Qué detecta VELO?
+Un usuario "no técnico" no puede llegar accidentalmente a ejecutar un
+exploit de kernel. Pero VELO revisa la memoria y no encuentra el proceso,
+ni el historial de comandos, ni la descarga del exploit. Solo hay la
+captura.
+
+¿Por qué es SUSPICION y no MALICE?
+Es una señal muy fuerte de teatro forense, pero una sola fuente. Hace falta
+una segunda corroboración para MALICE.
+
+Analogía fintech:
+Alguien publica una captura de pantalla mostrando una transacción sospechosa
+en un exchange, pero no hay registro en la blockchain, no hay hash, no hay
+firma. Puede ser verdad o puede ser un montaje.
+
+------------------------------------------------------------------------------
+
+CASO 10 — Día Normal de Oficina
+Veredicto: NOISE
+
+¿Qué pasó?
+Una mañana común: se abre una planilla, se navega a documentación técnica,
+se escriben logs normales del sistema. Nada extraño.
+
+¿Qué detecta VELO?
+Ningún detector dispara. No hay inconsistencias temporales, no hay
+anti-forense, no hay anomalías de ruta o proceso.
+
+¿Por qué es NOISE?
+No hay evidencia de malicia ni de sospecha. VELO no inventa amenazas.
+
+Analogía fintech:
+Un día sin alertas de fraude, sin movimientos inusuales, sin órdenes
+anómalas. Todo en rango normal.
+
+------------------------------------------------------------------------------
+
+Resumen de veredictos
+---------------------
+
+MALICE    : casos 1, 3, 5, 6, 7, 8
+SUSPICION : casos 2, 9
+ABSTAIN   : caso 4
+NOISE     : caso 10
+
+La regla de oro:
+- MALICE necesita score alto Y al menos 2 fuentes independientes.
+- SUSPICION es señal fuerte pero sin corroboración.
+- ABSTAIN es evidencia que no se puede admitir.
+- NOISE es actividad normal.

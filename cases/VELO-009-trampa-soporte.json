@@ -1,0 +1,55 @@
+{
+  "case_id": "VELO-009",
+  "name": "El Cebo del Falso Layman",
+  "description": "Usuario de administración envía ticket de soporte simulando incompetencia digital. La captura adjunta muestra un exploit dirty pipe a medio ejecutar. Sin embargo, no hay historial bash, no hay descarga previa, no hay proceso en memoria. Una sola fuente no alcanza para MALICE.",
+  "expected_verdict": "SUSPICION",
+  "expected_corroboration_count": 1,
+  "devil_advocate": "",
+  "artifacts": [
+    {
+      "id": "v009-ticket",
+      "type": "log",
+      "timestamp": "2026-01-16T09:15:22Z",
+      "source": "ticket_system",
+      "process": "helpdesk",
+      "path": "ticket://SUP-2026-084",
+      "entropy": 4.7,
+      "markers": ["competence_theater", "single_source"],
+      "description": "Ticket: 'No sé qué toqué, pantalla negra con letras verdes, no entro al Excel'. Adjunto: screenshot.png.",
+      "provenance_chain": ["sha256:v009tick01"]
+    },
+    {
+      "id": "v009-image",
+      "type": "file",
+      "timestamp": "2026-01-16T09:16:10Z",
+      "source": "vision_ocr",
+      "process": "screenshot.png",
+      "path": "/tickets/SUP-2026-084/screenshot.png",
+      "entropy": 6.8,
+      "markers": ["competence_theater", "exploit_visible"],
+      "description": "Captura: terminal Linux con CVE-2022-0847 (dirty pipe) al 45%. Requiere conocimiento avanzado de C para llegar a ese estado.",
+      "provenance_chain": ["sha256:v009img02"]
+    },
+    {
+      "id": "v009-memory",
+      "type": "process",
+      "timestamp": "2026-01-16T09:17:00Z",
+      "source": "memory_forensics",
+      "process": "bash",
+      "path": "/bin/bash",
+      "entropy": 3.2,
+      "markers": ["no_corroboration"],
+      "description": "Memory scan: no hay historial bash con wget/chmod/exploit. No hay proceso sospechoso activo. No hay conexión DNS a dominio reciente.",
+      "provenance_chain": ["sha256:v009mem03"]
+    }
+  ],
+  "expected_fractures": [
+    "COMPETENCE_THEATER"
+  ],
+  "peirce_chain": {
+    "firstness": "Ticket de usuario no técnico con captura de exploit kernel.",
+    "secondness": "No hay corroboración técnica: sin historial, sin proceso, sin red.",
+    "thirdness": "Hay señal fuerte de teatro forense, pero una sola fuente. El sistema se resiste a elevar a MALICE."
+  },
+  "demo_quote": "La captura es alarmante, pero sin memoria, sin red y sin proceso que la corrobore, VELO se queda en SUSPICION. La regla Daubert exige dos fuentes."
+}

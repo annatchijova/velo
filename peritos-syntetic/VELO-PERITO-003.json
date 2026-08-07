@@ -1,0 +1,18 @@
+{
+  "perito_id": "VELO-PERITO-003",
+  "public_alias": "Perito-E81D",
+  "jurisdiction_model": "AR",
+  "specialty": "Informática forense",
+  "accrediting_body_synthetic": "Colegio de Ingeniería en Sistemas de Costa Nueva (ficticio)",
+  "credential_id_synthetic": "CISCN-INF-2019-00734",
+  "matriculation_year": 2015,
+  "years_active": 11,
+  "valid_from": "2023-09-01T00:00:00Z",
+  "valid_until": "2026-09-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 50,
+  "cases_attested": ["VELO-005"],
+  "credential_status_at_attestation": {
+    "VELO-005": "VALID"
+  },
+  "notes": "Primera opinión independiente sobre VELO-005 (caso de convergencia multi-fuente). Diseñado junto con VELO-PERITO-004 para ejercitar Capa 7: dos peritos atestan el mismo case_commitment sin verse entre sí ni ver el análisis del otro — el contrato solo registra coincidencia o contradicción de veredicto, nunca el contenido."
+}

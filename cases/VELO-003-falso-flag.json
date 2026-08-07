@@ -1,0 +1,55 @@
+{
+  "case_id": "VELO-003",
+  "name": "El Falso Flag",
+  "description": "Compromiso real confirmado: process hollowing en svchost.exe y LSASS credential dumping. Sobre ese ataque real, el operador plantó strings cirílicos cuya limpieza contradice el perfil técnico observado. La malicia no es rusa; es del planter.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "El process hollowing y el credential dumping son evidencia estructural real de intrusión. Los strings cirílicos son plantados para desviar la atribución.",
+  "artifacts": [
+    {
+      "id": "v003-memory",
+      "type": "process",
+      "timestamp": "2026-04-10T03:14:00Z",
+      "source": "memory_forensics",
+      "process": "svchost.exe",
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "entropy": 6.5,
+      "markers": ["process_hollowing", "memory_injection"],
+      "description": "Process hollowing confirmado en svchost.exe. Reflective DLL injection detectado. Evidencia estructural difícil de falsificar.",
+      "provenance_chain": ["sha256:v003mem01"]
+    },
+    {
+      "id": "v003-lsass",
+      "type": "process",
+      "timestamp": "2026-04-10T03:15:10Z",
+      "source": "memory_forensics",
+      "process": "lsass.exe",
+      "path": "C:\\Windows\\System32\\lsass.exe",
+      "entropy": 5.8,
+      "markers": ["credential_dumping"],
+      "description": "LSASS credential dumping detectado. Compromiso activo confirmado.",
+      "provenance_chain": ["sha256:v003lsass02"]
+    },
+    {
+      "id": "v003-strings",
+      "type": "file",
+      "timestamp": "2026-04-10T03:16:00Z",
+      "source": "static_analysis",
+      "process": "dropper.exe",
+      "path": "/tmp/dropper.bin",
+      "entropy": 7.2,
+      "markers": ["false_flag_attribution", "attribution_mismatch"],
+      "description": "Strings cirílicos inyectados en dropper. Perfil lingüístico demasiado prístino, inconsistente con el OPSEC técnico observado.",
+      "provenance_chain": ["sha256:v003str03"]
+    }
+  ],
+  "expected_fractures": [
+    "FALSE_FLAG_ATTRIBUTION_MISMATCH"
+  ],
+  "peirce_chain": {
+    "firstness": "Ataque real confirmado + atribución cirílica plantada.",
+    "secondness": "Los markers culturales son demasiado limpios para el nivel de OPSEC técnico del atacante.",
+    "thirdness": "El ataque real fue usado como lienzo para desviar la culpa. La malicia es la desinformación, no la nacionalidad."
+  },
+  "demo_quote": "Una bandera falsa verdadera tiene el ataque presente. VELO separa la evidencia técnica real de la atribución plantada."
+}
