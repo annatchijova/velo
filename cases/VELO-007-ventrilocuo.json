@@ -1,0 +1,44 @@
+{
+  "case_id": "VELO-007",
+  "name": "El Ventrílocuo",
+  "description": "svchost.exe con hash válido y firma Microsoft ejecutándose desde C:\\Users\\Public\\Downloads, con parent cmd.exe y conexión persistente a IP en país inusual. El proceso es legítimo, la configuración no.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "svchost.exe es un binario legítimo, pero su ruta, parent process y conexión C2 son anómalos. El atacante usa el binario como marioneta.",
+  "artifacts": [
+    {
+      "id": "v007-process",
+      "type": "process",
+      "timestamp": "2026-04-10T17:20:00Z",
+      "source": "memory_forensics",
+      "process": "svchost.exe",
+      "path": "C:\\Users\\Public\\Downloads\\svchost.exe",
+      "entropy": 5.5,
+      "markers": ["process_masquerade", "unusual_path", "parent_anomaly"],
+      "description": "svchost.exe ejecutándose desde Downloads, no desde System32. Parent process: cmd.exe. Hash válido, firma Microsoft válida.",
+      "provenance_chain": ["sha256:v007mem01"]
+    },
+    {
+      "id": "v007-network",
+      "type": "network",
+      "timestamp": "2026-04-10T17:25:00Z",
+      "source": "network_capture",
+      "process": "svchost.exe",
+      "path": "conn://185.220.101.77:443",
+      "entropy": 6.2,
+      "markers": ["c2_connection", "geographic_anomaly"],
+      "description": "Conexión HTTPS persistente cada 60 segundos a IP en país sin operaciones de la empresa.",
+      "provenance_chain": ["sha256:v007pcap02"]
+    }
+  ],
+  "expected_fractures": [
+    "PROCESS_MASQUERADE",
+    "NETWORK_VS_HOST"
+  ],
+  "peirce_chain": {
+    "firstness": "Proceso legítimo en ruta inusual con parent sospechoso.",
+    "secondness": "Conexión C2 persistente a IP geográficamente anómala.",
+    "thirdness": "El atacante usa un binario confiable como marioneta. La firma válida no limpia el comportamiento."
+  },
+  "demo_quote": "Una firma digital válida no hace legítima una ejecución. El contexto —ruta, parent, red— delata al ventrílocuo."
+}

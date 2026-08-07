@@ -1,0 +1,18 @@
+{
+  "perito_id": "VELO-PERITO-004",
+  "public_alias": "Perito-F102",
+  "jurisdiction_model": "US",
+  "specialty": "Digital forensics (cert-based)",
+  "accrediting_body_synthetic": "Meridian Institute for Digital Forensic Certification (ficticio, análogo a IACIS)",
+  "credential_id_synthetic": "MIDFC-CFCE-2020-08841",
+  "matriculation_year": 2020,
+  "years_active": 6,
+  "valid_from": "2024-06-01T00:00:00Z",
+  "valid_until": "2027-06-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 40,
+  "cases_attested": ["VELO-005"],
+  "credential_status_at_attestation": {
+    "VELO-005": "VALID"
+  },
+  "notes": "Segunda opinión ciega sobre VELO-005, independiente de VELO-PERITO-003 (otra jurisdicción, otra especialidad de acreditación). Ambos deberían converger en MALICE dado que VELO-005 tiene 4 fuentes corroborantes (memoria + red + disco + TPM) — el pitch de Capa 7 muestra coincidencia entre dos peritos que nunca se comunicaron, sin revelar el análisis de ninguno."
+}

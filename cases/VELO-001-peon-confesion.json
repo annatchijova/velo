@@ -1,0 +1,68 @@
+{
+  "case_id": "VELO-001",
+  "name": "El Sacrificio del Peón",
+  "description": "Analista senior envía mail auto-denunciando una sesión SSH abierta para construir coartada de honestidad extrema. Un cron job malicioso fue creado 5 minutos ANTES del mail y durante la 'auditoría benigna' el proceso exfiltra 2.3GB bajo identidad de servicio.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 3,
+  "devil_advocate": "La confesión pública podría explicar un error humano, pero el cron job creado 5 minutos antes demuestra premeditación. La exfiltración bajo identidad de servicio rompe la narrativa de buena fe.",
+  "artifacts": [
+    {
+      "id": "v001-mail",
+      "type": "log",
+      "timestamp": "2026-03-15T14:30:00Z",
+      "source": "mail_gateway",
+      "process": "sift_mail_gateway",
+      "path": "mail://analista_senior@corp.com",
+      "entropy": 4.5,
+      "markers": ["effect_event", "narrative_poisoning"],
+      "description": "Mail urgente auto-denunciando sesión SSH abierta durante 4 horas. Tono de arrepentimiento extremo.",
+      "provenance_chain": ["sha256:v001mail01"]
+    },
+    {
+      "id": "v001-cron",
+      "type": "registry",
+      "timestamp": "2026-03-15T14:25:00Z",
+      "source": "windows_registry",
+      "process": "sift_windows_registry",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\SystemUpdate",
+      "entropy": 3.2,
+      "markers": ["cause_event", "effect_before_cause", "anti_forensic_setup"],
+      "description": "Tarea programada creada 5 minutos ANTES del mail de confesión. Timestamp de creación precede a la denuncia pública.",
+      "provenance_chain": ["sha256:v001cron02"]
+    },
+    {
+      "id": "v001-process",
+      "type": "process",
+      "timestamp": "2026-03-15T14:30:00Z",
+      "source": "memory_forensics",
+      "process": "svchost.exe",
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "entropy": 5.1,
+      "markers": ["process_masquerade", "unusual_path"],
+      "description": "svchost.exe con PID 4824 mantiene conexión persistente a IP externa 185.220.101.42 bajo identidad de servicio de sistema.",
+      "provenance_chain": ["sha256:v001mem03"]
+    },
+    {
+      "id": "v001-network",
+      "type": "network",
+      "timestamp": "2026-03-15T14:35:00Z",
+      "source": "network_capture",
+      "process": "svchost.exe",
+      "path": "conn://185.220.101.42:443",
+      "entropy": 6.8,
+      "markers": ["exfiltration", "network_anomaly"],
+      "description": "Tráfico HTTPS de 2.3GB hacia IP externa durante ventana de auditoría benigna.",
+      "provenance_chain": ["sha256:v001net04"]
+    }
+  ],
+  "expected_fractures": [
+    "TEMPORAL_CAUSALITY_VIOLATION",
+    "NARRATIVE_POISONING_DETECTED"
+  ],
+  "peirce_chain": {
+    "firstness": "Mail de auto-denuncia con tono de urgencia y arrepentimiento.",
+    "secondness": "El cron job malicioso existe 5 minutos antes del mail. La cronología rompe la narrativa de error accidental.",
+    "thirdness": "La confesión ES el ataque: distracción emocional que cubre la exfiltración técnica."
+  },
+  "demo_quote": "Una confesión de buena fe no puede ser causada por un cron job creado antes de la confesión. La premeditación es estructuralmente irrefutable."
+}

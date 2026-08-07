@@ -1,0 +1,43 @@
+{
+  "case_id": "VELO-004",
+  "name": "La Cadena Rota",
+  "description": "Hash de archivo coincide con malware conocido (47/70 en VirusTotal). Pero no existe registro de adquisición, no hay firma del perito y la cadena de provenance no tiene raíz. Bajo Daubert, la evidencia es inadmisible.",
+  "expected_verdict": "ABSTAIN",
+  "expected_corroboration_count": 0,
+  "devil_advocate": "",
+  "artifacts": [
+    {
+      "id": "v004-hash",
+      "type": "file",
+      "timestamp": "2026-04-10T13:00:00Z",
+      "source": "hash_database",
+      "process": "generate_forensic_hash",
+      "path": "/evidence/suspicious_binary.exe",
+      "entropy": 6.9,
+      "markers": ["known_malware_hash"],
+      "description": "SHA-256 coincide con malware conocido. VirusTotal: 47/70 detecciones. PERO no hay registro de adquisición ni chain root.",
+      "provenance_chain": ["ORPHANED"]
+    },
+    {
+      "id": "v004-timestamp",
+      "type": "file",
+      "timestamp": "2026-04-10T13:00:05Z",
+      "source": "file_system",
+      "process": "read_evidence",
+      "path": "/evidence/suspicious_binary.exe",
+      "entropy": 5.5,
+      "markers": ["orphaned_provenance"],
+      "description": "Timestamp de creación coincide con intervalo de beacon conocido. Pero la cadena de custodia tiene un solo hash huérfano, sin imagen de disco padre.",
+      "provenance_chain": ["sha256:partial_chain_ORPHANED"]
+    }
+  ],
+  "expected_fractures": [
+    "PROVENANCE_BREAK"
+  ],
+  "peirce_chain": {
+    "firstness": "47/70 detecciones en VirusTotal — señal aparentemente fuerte.",
+    "secondness": "No hay acquisition record, firma de perito, ni root de la cadena de custodia.",
+    "thirdness": "Sin root of trust no se puede verificar que la evidencia no fue plantada o modificada. Inadmisible."
+  },
+  "demo_quote": "Evidencia de alta calidad sin cadena de custodia es inadmisible. VELO no se deja seducir por el hash; exige provenance."
+}

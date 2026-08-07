@@ -1,0 +1,19 @@
+{
+  "perito_id": "VELO-PERITO-001",
+  "public_alias": "Perito-A7F3",
+  "jurisdiction_model": "AR",
+  "specialty": "Informática forense",
+  "accrediting_body_synthetic": "Consejo Profesional de Ciencias Informáticas de Rionegro Sur (ficticio)",
+  "credential_id_synthetic": "CPCI-RNS-INF-04821",
+  "matriculation_year": 2018,
+  "years_active": 8,
+  "valid_from": "2024-03-01T00:00:00Z",
+  "valid_until": "2027-03-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 42,
+  "cases_attested": ["VELO-001", "VELO-002"],
+  "credential_status_at_attestation": {
+    "VELO-001": "VALID",
+    "VELO-002": "VALID"
+  },
+  "notes": "Camino feliz del modelo argentino: matrícula vigente, antigüedad y especialidad reconocida cumplidas, capacitación continua al día. Sirve como caso base para probar que la credencial pasa membership + vigencia sin fricciones."
+}

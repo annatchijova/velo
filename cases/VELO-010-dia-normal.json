@@ -1,0 +1,53 @@
+{
+  "case_id": "VELO-010",
+  "name": "Día Normal de Oficina",
+  "description": "Línea base benigna. Documentos de oficina, navegación web rutinaria, logs de sistema normales. Sin marcadores temporales, anti-forenses o inconsistencias.",
+  "expected_verdict": "NOISE",
+  "expected_corroboration_count": 0,
+  "devil_advocate": "",
+  "artifacts": [
+    {
+      "id": "v010-doc",
+      "type": "file",
+      "timestamp": "2026-07-20T09:00:00Z",
+      "source": "file_system",
+      "process": "libreoffice",
+      "path": "/home/usuario/documentos/informe_mensual.ods",
+      "entropy": 3.8,
+      "markers": [],
+      "description": "Planilla de cálculo de oficina. Contenido normal.",
+      "provenance_chain": ["sha256:v010doc01"]
+    },
+    {
+      "id": "v010-browser",
+      "type": "network",
+      "timestamp": "2026-07-20T09:15:00Z",
+      "source": "network_capture",
+      "process": "chrome.exe",
+      "path": "https://docs.midnight.network",
+      "entropy": 4.2,
+      "markers": [],
+      "description": "Navegación rutinaria a documentación técnica.",
+      "provenance_chain": ["sha256:v010net02"]
+    },
+    {
+      "id": "v010-syslog",
+      "type": "log",
+      "timestamp": "2026-07-20T09:20:00Z",
+      "source": "system_log",
+      "process": "systemd-journal",
+      "path": "/var/log/syslog",
+      "entropy": 4.5,
+      "markers": [],
+      "description": "Entradas de log normales: servicios iniciados, tareas programadas regulares.",
+      "provenance_chain": ["sha256:v010log03"]
+    }
+  ],
+  "expected_fractures": [],
+  "peirce_chain": {
+    "firstness": "Actividad de oficina ordinaria.",
+    "secondness": "Ningún detector dispara; no hay inconsistencias.",
+    "thirdness": "No hay evidencia de malicia ni siquiera de sospecha."
+  },
+  "demo_quote": "La mayoría de los días no hay incidentes. VELO no inventa amenazas donde no las hay."
+}

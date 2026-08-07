@@ -1,0 +1,65 @@
+{
+  "case_id": "VELO-005",
+  "name": "La Convergencia de Cuatro Fuentes",
+  "description": "Compromiso confirmado por cuatro fuentes independientes: memory (process injection en lsass.exe), network (DNS beacon a C2), disk (beacon DLL con hash conocido) y TPM (boot integrity intacta). Baja correlación cruzada, alta confianza.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 4,
+  "devil_advocate": "Cada fuente por sí sola podría tener explicación benigna, pero la convergencia independiente apunta al mismo actor y timeline. El TPM descarta compromiso pre-boot.",
+  "artifacts": [
+    {
+      "id": "v005-memory",
+      "type": "process",
+      "timestamp": "2026-04-10T14:00:00Z",
+      "source": "memory_forensics",
+      "process": "lsass.exe",
+      "path": "C:\\Windows\\System32\\lsass.exe",
+      "entropy": 6.4,
+      "markers": ["process_injection", "kernel_anomaly"],
+      "description": "PID 2244 inyectado en lsass.exe. Kernel structure anomaly confirmado.",
+      "provenance_chain": ["sha256:v005mem01", "sha256:examiner01"]
+    },
+    {
+      "id": "v005-network",
+      "type": "dns_record",
+      "timestamp": "2026-04-10T14:00:15Z",
+      "source": "network_capture",
+      "process": "dns_client",
+      "path": "dns://c2-domain.evil",
+      "entropy": 5.2,
+      "markers": ["c2_beacon", "network_anomaly"],
+      "description": "DNS beacon cada 300s ± 45s. Consistente con beacon default de Cobalt Strike.",
+      "provenance_chain": ["sha256:v005pcap01"]
+    },
+    {
+      "id": "v005-disk",
+      "type": "file",
+      "timestamp": "2026-04-10T14:00:30Z",
+      "source": "disk_image",
+      "process": "windef.exe",
+      "path": "C:\\Windows\\System32\\windef.dll",
+      "entropy": 7.1,
+      "markers": ["known_malware_hash", "legitimate_impersonation"],
+      "description": "Beacon DLL encontrada en System32 haciéndose pasar por Windows Defender. Hash coincide con beacon conocido.",
+      "provenance_chain": ["sha256:v005img01", "sha256:sector01"]
+    },
+    {
+      "id": "v005-tpm",
+      "type": "log",
+      "timestamp": "2026-04-10T14:01:00Z",
+      "source": "hardware_attestation",
+      "process": "tpm",
+      "path": "tpm://pcr_quote",
+      "entropy": 2.5,
+      "markers": ["tpm_attestation_valid"],
+      "description": "TPM PCR0 y PCR7 válidos. Boot integrity intacta. El ataque es post-boot, runtime injection.",
+      "provenance_chain": ["sha256:v005tpm01"]
+    }
+  ],
+  "expected_fractures": [],
+  "peirce_chain": {
+    "firstness": "Cuatro artefactos independientes apuntando al mismo compromiso.",
+    "secondness": "Baja correlación cruzada: estas fuentes no pueden haber sido fabricadas juntas.",
+    "thirdness": "Cobalt Strike beacon con process injection confirmado. Evidencia confiable."
+  },
+  "demo_quote": "Cuatro fuentes independientes convergen. Ninguna explica sola el caso, pero juntas forman una prueba que resiste la duda razonable."
+}

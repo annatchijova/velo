@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p .",
-    "test": "tsc -p . && node --test dist/tests/*.test.js"
+    "test": "tsc -p . && node --test dist/tests/*.test.js",
+    "simulate": "tsc -p . && node dist/src/simulate.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

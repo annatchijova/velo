@@ -1,0 +1,44 @@
+{
+  "case_id": "VELO-002",
+  "name": "La Subasta de Logs Uniformes",
+  "description": "Cincuenta entradas de log reportan AuthFailure con intervalos exactos de 2.000 segundos y entropía idéntica. Un sistema naive vería 50 fallos y concluiría ataque de fuerza bruta. Pero la memoria no muestra ningún proceso que genere esos eventos.",
+  "expected_verdict": "SUSPICION",
+  "expected_corroboration_count": 1,
+  "devil_advocate": "",
+  "artifacts": [
+    {
+      "id": "v002-logs",
+      "type": "log",
+      "timestamp": "2026-04-10T11:00:00Z",
+      "source": "system_log",
+      "process": "authd",
+      "path": "/var/log/auth.log",
+      "entropy": 3.145,
+      "markers": ["statistical_uniformity", "temporal_entropy_null"],
+      "description": "50 eventos AuthFailure con intervalos 2.000s ± 0.001s y entropía 3.145 ± 0.002. Inhumana precisión.",
+      "provenance_chain": ["sha256:v002logs01"]
+    },
+    {
+      "id": "v002-memory",
+      "type": "process",
+      "timestamp": "2026-04-10T11:01:40Z",
+      "source": "memory_forensics",
+      "process": "systemd",
+      "path": "/proc",
+      "entropy": 4.0,
+      "markers": ["log_vs_memory"],
+      "description": "Memory scan: NO hay herramienta de fuerza bruta en ejecución. No hay sockets de red que coincidan con la IP origen de los logs.",
+      "provenance_chain": ["sha256:v002mem02"]
+    }
+  ],
+  "expected_fractures": [
+    "STATISTICAL_UNIFORMITY",
+    "LOG_VS_MEMORY"
+  ],
+  "peirce_chain": {
+    "firstness": "50 AuthFailure log entries con near-perfect 2s intervals.",
+    "secondness": "Memoria no confirma proceso atacante; los logs no tienen contraparte técnica.",
+    "thirdness": "Los logs son fabricados mediante inyección scriptada. Hay señal fuerte pero no corroboración independiente."
+  },
+  "demo_quote": "Un sistema naive ve 50 fallos y grita MALICE. VELO detecta que la varianza temporal es inhumana y que la memoria contradice los logs. Señal fuerte, pero una sola fuente: SUSPICION."
+}
