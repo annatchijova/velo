@@ -102,14 +102,28 @@ Two closed reasons, not a preference:
 
 ### What the proof does and does not establish
 
-The proof establishes that the published verdict was not altered after sealing
-and that the corroboration rule was actually satisfied — a structural,
-cryptographic guarantee, not a claim resting on trust in the expert. It does
-**not** establish that the expert's original analysis was performed honestly;
-that remains a human and judicial responsibility, exactly as with any forensic
-report today. VELO removes the possibility of *post-hoc* tampering with a sealed
-verdict — it does not remove the possibility of a corrupt expert at the moment of
-analysis.
+The proof establishes that a verdict consistent with the Daubert-inspired
+corroboration gate was bound, at the moment of attestation, to a specific
+analysis fingerprint and custody tip, and that this binding cannot be altered
+afterward — a structural, cryptographic guarantee. It does **not** establish
+that the fingerprint corresponds to a real engine run on real evidence: that
+binding exists today only in the TypeScript caller (`src/witness/witnesses.ts`),
+not inside the circuit, which — by the nature of a ZK circuit — proves a
+relationship *between whatever witness values it is given*, not that those
+values describe anything that actually happened. A prover who bypasses the
+normal calling code and hand-supplies witness bytes can produce a valid proof
+for evidence that was never analyzed. Closing that gap requires a
+witness-provenance mechanism (an engine signature, an expert accreditation
+credential, or an environment attestation) that does not exist yet — see
+`docs/RED_TEAM_ROUND_2.md` (finding G1) and the roadmap.
+
+Separately, and independently of the above: it does **not** establish that the
+expert's original analysis was performed honestly; that remains a human and
+judicial responsibility, exactly as with any forensic report today. VELO
+removes the possibility of *post-hoc* tampering with a sealed verdict — it does
+not remove the possibility of a corrupt expert at the moment of analysis, and it
+does not (yet) remove the possibility of no real analysis having happened at
+all.
 
 ---
 

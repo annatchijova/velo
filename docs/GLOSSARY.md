@@ -30,11 +30,12 @@ hashed in, the same commitment can never carry two different verdicts, so an
 attestation cannot be silently overwritten — a correction has to be a new,
 visibly different commitment.
 
-**Corroboration count / Daubert gate** — The number of independent sources
-supporting a finding. A `MALICE` verdict cannot be attested unless
-`corroboration_count >= 2`; the engine downgrades to `SUSPICION` before sealing
-if the count is insufficient. Named after the Daubert standard for admissible
-expert evidence.
+**Corroboration count / Daubert gate** — The number of sources supporting a
+finding, declared independent by the analyst and distinct by provenance-chain
+root (not cryptographically verified as independent — see `docs/RED_TEAM_ROUND_2.md`,
+finding G3). A `MALICE` verdict cannot be attested unless `corroboration_count
+>= 2`; the engine downgrades to `SUSPICION` before sealing if the count is
+insufficient. Named after the Daubert standard for admissible expert evidence.
 
 **Custody chain** — The hash-linked sequence of events in a case's lifecycle,
 from a genesis entry bound to the `case_id` onward. Each entry seals the

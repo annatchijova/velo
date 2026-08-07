@@ -98,11 +98,12 @@ witness corroborationCountWitness(): Uint<0..17>;
  *      not needed.
  *   4. `disclose()` on already-public values is accepted.
  *
- * KNOWN, NOT FIXED: re-attesting an identical (analysis, verdict, count)
- * triple recomputes the same commitment and increments attestationCount
- * again. Harmless to the record — the ledger entry is unchanged — but it
- * double-counts. Decide at integration whether to reject a commitment
- * already present.
+ * FIXED (red team round 2, G2): re-attesting an identical (analysis,
+ * verdict, count) triple recomputed the same commitment and incremented
+ * attestationCount again — harmless to the ledger entry itself, but a
+ * public counter that should mean "how many attestations exist" became
+ * provably wrong. Now rejected: see the membership assert immediately
+ * before the insert below.
  */
 export circuit attest(verdict: Verdict): [] {
   const fingerprint = bundleFingerprint();
@@ -128,6 +129,13 @@ export circuit attest(verdict: Verdict): [] {
     corroborationCount as Field as Bytes<32>,
     salt
   ]);
+
+  // Red team G2: re-attesting an identical tuple recomputed the same
+  // commitment and inserted again, silently inflating attestationCount
+  // (the ledger entry itself was unchanged, but the public counter of
+  // "how many attestations exist" became provably wrong). Fail closed
+  // instead: a second attest() for the same commitment is rejected.
+  assert(!caseVerdicts.member(disclose(commitment)), "this attestation already exists");
 
   caseVerdicts.insert(disclose(commitment), disclose(verdict));
   attestationCount.increment(1);

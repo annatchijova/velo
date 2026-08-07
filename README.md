@@ -27,16 +27,20 @@ Every digital forensics workflow in production picks one. VELO picks neither.
 The expert runs a deterministic engine on their own machine, seals the result,
 and publishes **only a commitment and a zero-knowledge proof**. The proof
 establishes two things at once: that the published verdict really corresponds
-to the sealed analysis, and that the legal admissibility rule was satisfied —
-*at least two independent corroborating sources for a `MALICE` verdict*.
+to the sealed analysis, and that a formalized admissibility criterion inspired
+by the Daubert standard was satisfied —
+*at least two sources, declared independent by the analyst and distinct by
+provenance-chain root, for a `MALICE` verdict*.
 
 That rule is not a policy note or a code review convention. It is a constraint
 inside the circuit: **an attestation that violates it cannot be produced at
-all.**
+all.** (What the circuit cannot see is *where* the source count came from —
+see "What the proof does and does not establish" below and
+`docs/RED_TEAM_ROUND_2.md`.)
 
 ```mermaid
 flowchart TB
-    subgraph local["THE EXPERT'S MACHINE — nothing here ever leaves"]
+    subgraph local["THE EXPERT'S MACHINE — raw evidence never leaves"]
         direction TB
         EV["Raw evidence<br/><i>disk images, captures, logs</i>"]
         ENG["Deterministic engine<br/><i>5 detectors, exact rational arithmetic</i>"]
@@ -68,8 +72,10 @@ flowchart TB
     style EV stroke-dasharray: 5 5
 ```
 
-The evidence never crosses the boundary. What crosses is a hash and a proof
-about it.
+The raw evidence never crosses the boundary. What crosses is a commitment, the
+declared verdict, a timestamp, and a proof about them — that is enough for
+anyone watching the chain to learn that an investigation existed, roughly when,
+and its outcome category, even without seeing the case itself.
 
 ## The part that makes it real: the system refuses
 
