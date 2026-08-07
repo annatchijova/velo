@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELO — Arquitectura / Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pergamino:#EDE7DA;
+    --pergamino-2:#E4DDCC;
+    --tinta:#1C1A17;
+    --velo:#3A3F4B;
+    --velo-2:#2E323C;
+    --sello:#8B3A2F;
+    --plata:#C9C4B8;
+    --plata-dim:#9C978A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--pergamino);
+    color:var(--tinta);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    padding:0 0 80px 0;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .serif{font-family:'Source Serif 4',serif;}
+
+  /* language toggle */
+  body.lang-es .en{display:none;}
+  body.lang-en .es{display:none;}
+
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    max-width:1180px; margin:0 auto; padding:28px 32px 0 32px;
+  }
+  .topbar .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--plata-dim);
+  }
+  .lang-toggle{
+    display:flex; border:1px solid var(--velo); border-radius:3px; overflow:hidden;
+  }
+  .lang-toggle button{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.08em;
+    background:transparent; border:none; color:var(--velo);
+    padding:7px 14px; cursor:pointer;
+  }
+  .lang-toggle button.active{
+    background:var(--velo); color:var(--pergamino);
+  }
+
+  header.masthead{
+    max-width:1180px; margin:0 auto; padding:18px 32px 40px 32px;
+    border-bottom:1px solid var(--plata);
+  }
+  header.masthead h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:40px;
+    letter-spacing:-0.01em;
+  }
+  header.masthead h1 .accent{color:var(--sello);}
+  header.masthead p.sub{
+    margin-top:10px;
+    font-family:'Source Serif 4',serif;
+    font-style:italic;
+    font-size:18px;
+    color:var(--velo);
+    max-width:640px;
+  }
+
+  section{
+    max-width:1180px; margin:0 auto; padding:48px 32px 0 32px;
+  }
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--sello);
+    margin-bottom:6px;
+  }
+  .section-title{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:24px;
+    margin-bottom:18px;
+  }
+  .lede{
+    font-size:15px; line-height:1.7; color:var(--tinta); max-width:820px;
+    margin-bottom:22px;
+  }
+
+  /* ---- dual ledger split ---- */
+  .veil-frame{
+    border:1px solid var(--velo);
+    display:grid;
+    grid-template-columns: 1fr 92px 1fr;
+    min-height:360px;
+  }
+  .zone{
+    padding:30px 30px 26px 30px;
+    display:flex; flex-direction:column;
+  }
+  .zone.public{
+    background:var(--pergamino);
+  }
+  .zone.private{
+    background:
+      repeating-linear-gradient(135deg, rgba(237,231,218,0.045) 0 2px, transparent 2px 9px),
+      var(--velo);
+    color:var(--pergamino);
+  }
+  .zone .zone-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .zone.public .zone-eyebrow{color:var(--sello);}
+  .zone.private .zone-eyebrow{color:var(--plata);}
+
+  .zone h3{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:21px;
+    margin-top:6px;
+  }
+  .zone .zone-caption{
+    font-family:'Source Serif 4',serif;
+    font-style:italic;
+    font-size:13.5px;
+    margin-top:4px;
+  }
+  .zone.public .zone-caption{color:var(--velo);}
+  .zone.private .zone-caption{color:var(--plata);}
+
+  .field-list{
+    margin-top:22px;
+    list-style:none;
+    flex:1;
+  }
+  .field-list li{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;
+    padding:10px 0;
+    border-top:1px solid var(--plata);
+  }
+  .zone.private .field-list li{
+    border-top:1px solid rgba(237,231,218,0.22);
+    font-style:italic;
+    color:var(--pergamino);
+    opacity:.92;
+  }
+  .field-list li:last-child{border-bottom:1px solid var(--plata);}
+  .zone.private .field-list li:last-child{border-bottom:1px solid rgba(237,231,218,0.22);}
+
+  .zone-foot{
+    margin-top:20px; padding-top:14px;
+    font-size:12.5px; line-height:1.6;
+    border-top:1px dashed;
+  }
+  .zone.public .zone-foot{border-color:var(--plata); color:var(--velo);}
+  .zone.private .zone-foot{border-color:rgba(237,231,218,0.22); color:var(--plata);}
+  .zone-foot .foot-label{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em;
+    text-transform:uppercase; display:block; margin-bottom:4px;
+  }
+
+  /* boundary column */
+  .boundary{
+    position:relative;
+    background:var(--pergamino-2);
+    border-left:1px solid var(--velo);
+    border-right:1px solid var(--velo);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .boundary .disclose-pill{
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.1em;
+    color:var(--pergamino);
+    background:var(--sello);
+    padding:16px 8px;
+    border-radius:2px;
+  }
+  .boundary .ticker{
+    position:absolute; top:14px; left:0; right:0;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:8.5px; letter-spacing:.02em;
+    color:var(--plata-dim);
+    word-break:break-all;
+    padding:0 4px;
+  }
+
+  /* veil crossing */
+  .crossing{
+    margin-top:26px;
+    border:1px solid var(--velo);
+    border-top:none;
+    background:var(--pergamino);
+    padding:22px 30px;
+    display:flex; align-items:center; gap:18px;
+    flex-wrap:wrap;
+  }
+  .crossing .silhouette{
+    font-family:'Source Serif 4',serif; font-style:italic;
+    color:var(--velo); font-size:14px;
+    background:repeating-linear-gradient(135deg, rgba(58,63,75,0.09) 0 2px, transparent 2px 9px);
+    padding:8px 14px; border:1px solid var(--plata);
+  }
+  .crossing .arrow{color:var(--sello); font-family:'IBM Plex Mono',monospace; font-size:15px;}
+  .crossing .hashval{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--tinta);
+    background:var(--pergamino-2); border:1px solid var(--plata);
+    padding:8px 14px;
+  }
+  .crossing .cap{
+    flex-basis:100%;
+    font-size:12.5px; color:var(--velo); margin-top:4px;
+  }
+
+  /* proof panel */
+  .proof-panel{
+    margin-top:44px;
+    border:1px solid var(--velo);
+    padding:28px 30px;
+    background:var(--pergamino-2);
+  }
+  .proof-panel .section-label{margin-bottom:10px;}
+  .proof-panel p{
+    font-size:14.5px; line-height:1.75; max-width:900px;
+  }
+  .proof-panel .claim{
+    margin-top:16px; padding-left:16px; border-left:2px solid var(--sello);
+    font-family:'Source Serif 4',serif; font-style:italic; font-size:14.5px; color:var(--tinta);
+    max-width:820px;
+  }
+
+  /* peirce triad */
+  .triad{
+    margin-top:44px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:1px;
+    background:var(--velo);
+    border:1px solid var(--velo);
+  }
+  .triad .cell{
+    background:var(--pergamino);
+    padding:26px 22px;
+  }
+  .triad .cell .stage-eng{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--sello);
+  }
+  .triad .cell .stage-tag{
+    font-family:'Source Serif 4',serif; font-style:italic; font-size:13px; color:var(--velo);
+    margin-top:2px;
+  }
+  .triad .cell .stage-body{
+    margin-top:16px; font-size:14.5px; line-height:1.5;
+  }
+  .triad .cell:not(:last-child){position:relative;}
+
+  /* layer map */
+  .layers{margin-top:44px;}
+  .layer-row{
+    display:grid;
+    grid-template-columns:56px 1fr 120px;
+    align-items:center;
+    border-top:1px solid var(--plata);
+    padding:14px 0;
+    gap:18px;
+  }
+  .layer-row:last-child{border-bottom:1px solid var(--plata);}
+  .layer-num{
+    font-family:'Source Serif 4',serif; font-weight:600; font-size:22px; color:var(--sello);
+  }
+  .layer-name{font-size:14.5px; line-height:1.5;}
+  .layer-name .layer-title{font-weight:600;}
+  .layer-state{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em;
+    text-align:right;
+  }
+  .layer-state.valid{color:var(--tinta);}
+  .layer-state.pending{color:var(--plata-dim); font-style:italic;}
+
+  /* custody chain */
+  .chain-wrap{
+    margin-top:44px; overflow-x:auto; padding-bottom:6px;
+  }
+  .chain-strip{
+    display:flex; align-items:center; min-width:max-content;
+  }
+  .chain-node{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    border:1px solid var(--velo);
+    background:var(--pergamino);
+    padding:10px 14px;
+    white-space:nowrap;
+  }
+  .chain-node.genesis{background:var(--sello); color:var(--pergamino); border-color:var(--sello);}
+  .chain-node.tip{background:var(--velo); color:var(--pergamino); border-color:var(--velo);}
+  .chain-link{
+    color:var(--plata-dim); font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:0 8px;
+  }
+  .chain-caption{
+    margin-top:12px; font-size:12.5px; color:var(--velo); max-width:700px; line-height:1.6;
+  }
+
+  /* footer two-column */
+  .footnotes{
+    margin-top:56px;
+    display:grid; grid-template-columns:1fr 1fr; gap:1px;
+    background:var(--plata);
+    border-top:1px solid var(--plata);
+    border-bottom:1px solid var(--plata);
+  }
+  .footnotes .fn{
+    background:var(--pergamino);
+    padding:24px 26px;
+  }
+  .footnotes .fn h4{
+    font-family:'Source Serif 4',serif; font-weight:600; font-size:15px; margin-bottom:8px;
+  }
+  .footnotes .fn p{font-size:13px; line-height:1.65; color:var(--velo);}
+
+  footer.colophon{
+    max-width:1180px; margin:36px auto 0 auto; padding:0 32px;
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--plata-dim);
+    letter-spacing:.04em;
+  }
+
+  @media (max-width:820px){
+    .veil-frame{grid-template-columns:1fr; }
+    .boundary{padding:10px 0;}
+    .boundary .disclose-pill{writing-mode:horizontal-tb;}
+    .triad{grid-template-columns:1fr;}
+    .footnotes{grid-template-columns:1fr;}
+    .layer-row{grid-template-columns:40px 1fr; grid-template-areas:"num name" ". state";}
+    .layer-state{text-align:left;}
+  }
+</style>
+</head>
+<body class="lang-es">
+
+<div class="topbar">
+  <div class="kicker">VELO / MIDNIGHT · <span class="es">documento de arquitectura</span><span class="en">architecture document</span></div>
+  <div class="lang-toggle">
+    <button id="btn-es" class="active" onclick="setLang('es')">ES</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <h1 class="es">VELO — <span class="accent">dos ledgers</span>, un límite</h1>
+  <h1 class="en">VELO — <span class="accent">two ledgers</span>, one boundary</h1>
+  <p class="sub es">Separar lo que debe ser demostrable de lo que debe ser privado. El perito no publica la evidencia ni pide que le crean por su palabra: sella localmente y prueba, con criptografía, que el veredicto no fue alterado y que la regla de corroboración se cumplió.</p>
+  <p class="sub en">Separating what must be provable from what must be private. The expert does not publish the evidence, nor ask to be trusted on their word: they seal locally and prove, cryptographically, that the verdict was not altered and that the corroboration rule was satisfied.</p>
+</header>
+
+<!-- DUAL LEDGER -->
+<section>
+  <div class="section-label es">principio de diseño</div>
+  <div class="section-label en">design principle</div>
+  <div class="section-title es">El límite entre lo público y lo privado</div>
+  <div class="section-title en">The boundary between public and private</div>
+
+  <div class="veil-frame">
+    <div class="zone public">
+      <span class="zone-eyebrow es">público — ledger on-chain</span>
+      <span class="zone-eyebrow en">public — on-chain ledger</span>
+      <h3 class="es">Lo que se publica</h3>
+      <h3 class="en">What gets published</h3>
+      <p class="zone-caption es">Cualquiera, para siempre, inmutable.</p>
+      <p class="zone-caption en">Anyone, forever, immutable.</p>
+      <ul class="field-list">
+        <li>commitment</li>
+        <li class="es">veredicto declarado</li><li class="en">declared verdict</li>
+        <li>attestation_count</li>
+        <li>case_commitment</li>
+      </ul>
+      <div class="zone-foot">
+        <span class="foot-label es">prueba</span><span class="foot-label en">proves</span>
+        <span class="es">Que existe una atestación y que sigue las reglas.</span>
+        <span class="en">That an attestation exists and follows the rules.</span>
+      </div>
+    </div>
+
+    <div class="boundary">
+      <div class="ticker mono">92af0c…e281c · 4d5b1a…f309e · 7c02aa…91b4d · 92af0c…e281c</div>
+      <div class="disclose-pill">disclose()</div>
+    </div>
+
+    <div class="zone private">
+      <span class="zone-eyebrow es">privado — witness, solo en la máquina del perito</span>
+      <span class="zone-eyebrow en">private — witness, expert's machine only</span>
+      <h3 class="es">Lo que nunca sale</h3>
+      <h3 class="en">What never leaves</h3>
+      <p class="zone-caption es">Nadie salvo el perito, nunca sale de la máquina.</p>
+      <p class="zone-caption en">Nobody but the expert, never leaves the machine.</p>
+      <ul class="field-list">
+        <li>bundle_fingerprint</li>
+        <li class="es">detalle del verdict</li><li class="en">verdict detail</li>
+        <li>corroboration_count</li>
+        <li>secret_salt</li>
+      </ul>
+      <div class="zone-foot">
+        <span class="foot-label es">prueba</span><span class="foot-label en">proves</span>
+        <span class="es">Nada directamente — es el insumo de una prueba ZK.</span>
+        <span class="en">Nothing directly — it is the input to a ZK proof.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="crossing">
+    <div class="silhouette es">silueta privada (bundle sellado)</div>
+    <div class="silhouette en">private silhouette (sealed bundle)</div>
+    <div class="arrow">→</div>
+    <div class="hashval">commitment = persistentHash(bundle_fingerprint, salt)</div>
+    <div class="cap es">El cruce del velo: la silueta privada se comprime en un hash que cruza hacia el lado público. Es la visualización literal de <em>hiding</em> + <em>binding</em>, no una animación decorativa.</div>
+    <div class="cap en">The crossing of the veil: the private silhouette compresses into a hash that crosses to the public side. It is the literal visualization of <em>hiding</em> + <em>binding</em>, not a decorative animation.</div>
+  </div>
+</section>
+
+<!-- CIRCUIT -->
+<section>
+  <div class="proof-panel">
+    <div class="section-label es">el contrato Compact</div>
+    <div class="section-label en">the Compact contract</div>
+    <p class="es">El circuito no vuelve a correr el análisis forense ni hashea el bundle completo de evidencia dentro de la prueba — ambas cosas son innecesarias e imprácticas. Prueba una afirmación más acotada y suficiente:</p>
+    <p class="en">The circuit does not re-run the forensic analysis and does not hash the full evidence bundle inside the proof — both are unnecessary and impractical. It proves a narrower, sufficient claim:</p>
+    <p class="claim es">el perito conoce un <span class="mono">bundle_fingerprint</span> cuyo commitment es el que se publicó, el veredicto publicado está ligado a ese fingerprint, y si el veredicto es <span class="mono">MALICE</span>, existen al menos dos fuentes de corroboración independientes.</p>
+    <p class="claim en">the expert knows a <span class="mono">bundle_fingerprint</span> whose commitment is the one published, the published verdict is bound to that fingerprint, and if the verdict is <span class="mono">MALICE</span>, at least two independent corroborating sources exist.</p>
+  </div>
+</section>
+
+<!-- PEIRCE TRIAD -->
+<section>
+  <div class="section-label es">pipeline de prueba</div>
+  <div class="section-label en">proof pipeline</div>
+  <div class="section-title es">Una jerarquía epistémica, no tres pasos</div>
+  <div class="section-title en">An epistemic hierarchy, not three steps</div>
+
+  <div class="triad">
+    <div class="cell">
+      <div class="stage-eng">Firstness</div>
+      <div class="stage-tag es">el signo</div>
+      <div class="stage-tag en">the sign</div>
+      <div class="stage-body es">Evidencia sellada localmente.</div>
+      <div class="stage-body en">Evidence sealed locally.</div>
+    </div>
+    <div class="cell">
+      <div class="stage-eng">Secondness</div>
+      <div class="stage-tag es">el hecho</div>
+      <div class="stage-tag en">the fact</div>
+      <div class="stage-body es">Corroboración (≥2 fuentes independientes).</div>
+      <div class="stage-body en">Corroboration (≥2 independent sources).</div>
+    </div>
+    <div class="cell">
+      <div class="stage-eng">Thirdness</div>
+      <div class="stage-tag es">la ley</div>
+      <div class="stage-tag en">the law</div>
+      <div class="stage-body es">Veredicto + regla Daubert impuesta en el circuito.</div>
+      <div class="stage-body en">Verdict + Daubert rule enforced in the circuit.</div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER MAP -->
+<section>
+  <div class="section-label es">mapa de capas</div>
+  <div class="section-label en">layer map</div>
+  <div class="section-title es">Capas ordenadas — cada una deja un producto que funciona</div>
+  <div class="section-title en">Ordered layers — each one leaves a working product</div>
+  <p class="lede es">Las capas siguientes extienden el producto, no lo condicionan. Las capas 1–5 son el alcance del hackathon (código net-new); 6–8 entran solo si el tiempo alcanza.</p>
+  <p class="lede en">Later layers extend the product, they don't gate it. Layers 1–5 are hackathon scope (net-new code); 6–8 are scoped in only as time allows.</p>
+
+  <div class="layers">
+    <div class="layer-row">
+      <div class="layer-num">01</div>
+      <div class="layer-name"><span class="layer-title es">Motor forense determinista</span><span class="layer-title en">Deterministic forensic engine</span> — <span class="es">detectores → veredicto NOISE/SUSPICION/MALICE/ABSTAIN, racionales exactos, nunca floats.</span><span class="en">detectors → verdict NOISE/SUSPICION/MALICE/ABSTAIN, exact rationals, never floats.</span></div>
+      <div class="layer-state valid es">VÁLIDO</div><div class="layer-state valid en">BUILT</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">02</div>
+      <div class="layer-name"><span class="layer-title es">Sellado local</span><span class="layer-title en">Local sealing</span> — <span class="es">bundle canonicalizado → bundle_hash (con timestamp) y analysis_fingerprint (sin timestamp).</span><span class="en">canonicalized bundle → bundle_hash (with timestamp) and analysis_fingerprint (without).</span></div>
+      <div class="layer-state valid es">VÁLIDO</div><div class="layer-state valid en">BUILT</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">03</div>
+      <div class="layer-name"><span class="layer-title es">El contrato Compact (el gate)</span><span class="layer-title en">The Compact contract (the gate)</span> — <span class="es">publica commitment + veredicto; MALICE sin corroboration_count ≥ 2 no produce prueba.</span><span class="en">publishes commitment + verdict; MALICE without corroboration_count ≥ 2 fails to produce a proof.</span></div>
+      <div class="layer-state valid es">VÁLIDO</div><div class="layer-state valid en">BUILT</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">04</div>
+      <div class="layer-name"><span class="layer-title es">Interfaces</span><span class="layer-title en">Interfaces</span> — <span class="es">frontend local (loopback, sin backend hosteado) + servidor MCP: sellar, atestar, verificar.</span><span class="en">local frontend (loopback, no hosted backend) + MCP server: seal, attest, verify.</span></div>
+      <div class="layer-state valid es">VÁLIDO</div><div class="layer-state valid en">BUILT</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">05</div>
+      <div class="layer-name"><span class="layer-title es">Tests y simulación</span><span class="layer-title en">Tests and simulation</span> — <span class="es">umbrales, gate de corroboración, determinismo, casos adversariales.</span><span class="en">thresholds, corroboration gate, determinism, adversarial cases.</span></div>
+      <div class="layer-state valid es">VÁLIDO</div><div class="layer-state valid en">BUILT</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">06</div>
+      <div class="layer-name"><span class="layer-title es">Divulgación selectiva</span><span class="layer-title en">Selective disclosure</span> — <span class="es">un juez con autorización pide la evidencia; el perito aprueba o rechaza explícitamente.</span><span class="en">a judge with standing requests the evidence; the expert grants or denies explicitly.</span></div>
+      <div class="layer-state pending es">PENDIENTE — si el alcance lo permite</div><div class="layer-state pending en">PENDING — scope permitting</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">07</div>
+      <div class="layer-name"><span class="layer-title es">Credencial anónima del perito</span><span class="layer-title en">Anonymous expert credential</span> — <span class="es">prueba de membresía vía Merkle, sin revelar qué perito atestó.</span><span class="en">membership proof via Merkle, without revealing which expert attested.</span></div>
+      <div class="layer-state pending es">PENDIENTE — si el alcance lo permite</div><div class="layer-state pending en">PENDING — scope permitting</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-num">08</div>
+      <div class="layer-name"><span class="layer-title es">Segunda opinión ciega</span><span class="layer-title en">Blind second opinion</span> — <span class="es">un segundo perito atesta el mismo case_commitment sin ver el análisis del primero.</span><span class="en">a second expert attests the same case_commitment without seeing the first's analysis.</span></div>
+      <div class="layer-state pending es">PENDIENTE — si el alcance lo permite</div><div class="layer-state pending en">PENDING — scope permitting</div>
+    </div>
+  </div>
+</section>
+
+<!-- CUSTODY CHAIN -->
+<section>
+  <div class="section-label es">cadena de custodia</div>
+  <div class="section-label en">custody chain</div>
+  <div class="section-title es">Cada entrada sella a la anterior</div>
+  <div class="section-title en">Each entry seals the previous one</div>
+
+  <div class="chain-wrap">
+    <div class="chain-strip">
+      <div class="chain-node genesis es">génesis · case_id</div>
+      <div class="chain-node genesis en">genesis · case_id</div>
+      <div class="chain-link">─▶</div>
+      <div class="chain-node">entry_hash₁</div>
+      <div class="chain-link">─▶</div>
+      <div class="chain-node">entry_hash₂</div>
+      <div class="chain-link">─▶</div>
+      <div class="chain-node">entry_hash₃</div>
+      <div class="chain-link">─▶</div>
+      <div class="chain-node tip">chain_tip</div>
+    </div>
+  </div>
+  <p class="chain-caption es"><span class="mono">entry_hash = hash(contenido, prev_hash)</span> — la entrada génesis queda atada al case_id para que una cadena no pueda injertarse en un caso distinto. El chain_tip detecta truncamiento silencioso: borrar las últimas N entradas cambia el tip.</p>
+  <p class="chain-caption en"><span class="mono">entry_hash = hash(content, prev_hash)</span> — the genesis entry is bound to the case_id so a chain cannot be grafted onto an unrelated case. The chain_tip detects silent truncation: dropping the last N entries changes the tip.</p>
+</section>
+
+<!-- FOOTNOTES -->
+<section>
+  <div class="footnotes">
+    <div class="fn">
+      <h4 class="es">Qué prueba la prueba y qué no</h4>
+      <h4 class="en">What the proof does and does not establish</h4>
+      <p class="es">Que el veredicto publicado no fue alterado después del sellado y que la corroboración se cumplió — una garantía criptográfica, no confianza en el perito. No prueba que el análisis original fue honesto: eso sigue siendo responsabilidad humana y judicial.</p>
+      <p class="en">That the published verdict was not altered after sealing and that corroboration was satisfied — a cryptographic guarantee, not trust in the expert. It does not prove the original analysis was honest: that remains a human and judicial responsibility.</p>
+    </div>
+    <div class="fn">
+      <h4 class="es">Por qué no IPFS o Arweave</h4>
+      <h4 class="en">Why not IPFS or Arweave</h4>
+      <p class="es">El cifrado de hoy no es privacidad para siempre, y una purga judicial no puede ejecutarse sobre una red p2p permanente. La evidencia cruda vive air-gapped, dentro de la custodia de la institución; solo el commitment y la prueba viajan al ledger.</p>
+      <p class="en">Today's encryption is not privacy forever, and a judicial purge cannot be executed against a permanent p2p network. Raw evidence stays air-gapped, inside the holding institution's custody; only the commitment and the proof travel to the ledger.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <span class="es">VELO · arquitectura basada en ARCHITECTURE.md · Midnight / Compact · generado 2026-08-07</span>
+  <span class="en">VELO · architecture based on ARCHITECTURE.md · Midnight / Compact · generated 2026-08-07</span>
+</footer>
+
+<script>
+  function setLang(lang){
+    document.body.classList.remove('lang-es','lang-en');
+    document.body.classList.add('lang-'+lang);
+    document.getElementById('btn-es').classList.toggle('active', lang==='es');
+    document.getElementById('btn-en').classList.toggle('active', lang==='en');
+    document.documentElement.lang = lang;
+  }
+</script>
+
+</body>
+</html>
