@@ -134,9 +134,37 @@ Rules for agents:
   `!` after the type) bumps MAJOR.
 - The packages are `private`, so nothing is published to npm; the release
   artifacts are the git tag and the GitHub Release.
+- Merges to `main` are squash merges and release-please reads only what is on
+  `main`: a PR's squash subject (the **PR title** for multi-commit PRs)
+  becomes its changelog entry. Title every PR as a Conventional Commit; the
+  `PR title` workflow enforces this.
 - Configuration lives in `release-please-config.json` (changelog section
   mapping follows Keep a Changelog) and `.release-please-manifest.json`
   (current versions).
+
+## PRDs and ADRs
+
+Significant decisions require written artifacts **before** implementation:
+
+- A **PRD** in `docs/prd/prd-NNNN-short-name.md` — problem, requirements,
+  scope, and non-goals.
+- An **ADR** in `docs/decisions/adr-NNNN-short-name.md` — options considered,
+  evidence, trade-offs, decision, and consequences.
+
+Significant decisions include, at least: adopting or replacing a tool,
+framework, or external service; architecture or data-model changes;
+CI/release-infrastructure changes; and anything that spans modules or
+constrains future work.
+
+Rules for agents:
+
+- The PRD and ADR ship in the same pull request as the implementation; the
+  ADR status is `Proposed` until that PR merges (merging is the acceptance).
+- A decision that overrides an earlier ADR gets a new numbered ADR that
+  references and supersedes the old one; never rewrite the old ADR.
+- Empirical claims in an ADR (tool behavior, bug status) must record how they
+  were verified. ADR-0001 and PRD-0001 (release automation) are the
+  reference examples.
 
 ## Pull request process
 
@@ -186,4 +214,7 @@ Rules for agents:
   sections.
 - **Release automation** — release-please maintains a release pull request per
   pending release; merging it tags and publishes a GitHub Release.
+- **PRDs and ADRs** — significant decisions (tooling, architecture,
+  CI/release infrastructure) ship with a PRD in `docs/prd/` and an ADR in
+  `docs/decisions/`, accepted by merging the implementing PR.
 - **Pull request requirement** — see the section at the top of this file.
