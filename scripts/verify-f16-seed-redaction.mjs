@@ -7,9 +7,15 @@
 // @effectstream/midnight-contracts' buildWalletAndWaitForFunds).
 //
 //   node --experimental-strip-types scripts/verify-f16-seed-redaction.mjs
+//   bun run scripts/verify-f16-seed-redaction.mjs
 //
-// Node 22+ (type stripping). deploy/ is deliberately outside the tsc/node
-// build pipeline, so this is how that module gets exercised without Bun.
+// RUN IT UNDER BUN TOO, and treat that as the one that counts: the deploy
+// scripts run under Bun, and the first version of this mitigation passed
+// every check here under Node while redacting nothing at all on the first
+// real Bun run. Node routes console.* through process.stdout.write; Bun
+// does not. Verifying in the wrong runtime is how a mitigation gets
+// documented as working while the seed prints in full.
+// See docs/RED_TEAM_ROUND_4.md F16 and docs/LEARNINGS.md L2.
 import {
   redactSeed,
   withSeedRedaction,
@@ -49,7 +55,11 @@ process.stdout.write = (c) => {
 };
 
 await withSeedRedaction(async () => {
+  // console.info is the exact call the dependency makes: it does
+  // `const log = console; log.info(\`Wallet seed: ${seed}\`)`.
+  console.info(`Wallet seed: ${FAKE_SEED}`);
   console.log(`Wallet seed: ${FAKE_SEED}`);
+  process.stdout.write(`Wallet seed: ${FAKE_SEED}\n`);
 });
 const duringWrapper = captured.join("");
 

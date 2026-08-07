@@ -27,7 +27,7 @@ CODE FACT · PLAUSIBLE HYPOTHESIS · CONFIRMED BY INDUCTION · FALSIFIED
 
 | ID | Severity | Level | Module | Finding | Status |
 |----|----------|-------|--------|---------|--------|
-| F16 | **Critical** | CODE FACT (exact pinned dependency version, not executed live) | `@effectstream/midnight-contracts@0.103.2` (third-party), triggered unconditionally by `deploy/deploy-contract.ts` | The wallet seed used to deploy is printed to stdout in plaintext on every run — `log.info(\`Wallet seed: ${seed}\`)`, no flag to suppress it | **MITIGATED** (stdout/stderr redaction wrapper — the upstream bug itself is not VELO's to fix) |
+| F16 | **Critical** | **CONFIRMED BY INDUCTION** (observed live on a real deploy run, 2026-08-07) | `@effectstream/midnight-contracts@0.103.2` (third-party), triggered unconditionally by `deploy/deploy-contract.ts` | The wallet seed used to deploy is printed to stdout in plaintext on every run — `log.info(\`Wallet seed: ${seed}\`)`, no flag to suppress it | **MITIGATION FAILED ON FIRST REAL RUN, then rewritten — the rewrite is NOT yet verified under Bun.** See the F16 remediation subsection. |
 | F17 | High | CODE FACT | `deploy/network-config.ts:27` | A hardcoded fallback password (`"velo-local-dev-password-16"`), committed to a public repo, protects the local on-disk **signing-key** store when `MIDNIGHT_STORAGE_PASSWORD` isn't set — which is the undocumented default path, since no doc tells an operator to set it | **FIXED** |
 | F18 | Low (documentation gap, not a vulnerability by itself) | CODE FACT | `deploy/deploy-contract.ts:7` | Points to a README "Deploying" section that does not exist anywhere in the repo — the one place that could have warned an operator about F16/F17 before they ran the script doesn't exist | **FIXED** |
 
@@ -35,7 +35,7 @@ CODE FACT · PLAUSIBLE HYPOTHESIS · CONFIRMED BY INDUCTION · FALSIFIED
 
 ## Findings
 
-### F16 — The deploying wallet's seed is logged in plaintext on every run — MITIGATED
+### F16 — The deploying wallet's seed is logged in plaintext on every run — CONFIRMED live; first mitigation FAILED
 
 **Severity:** Critical · **Level:** CODE FACT, read directly in the exact pinned dependency version — not executed (no funded wallet available in this environment to run the real deploy against `preview`) · **Bucket:** software vulnerability in a third-party dependency, triggered unconditionally by VELO's own call into it.
 
@@ -68,7 +68,25 @@ CODE FACT · PLAUSIBLE HYPOTHESIS · CONFIRMED BY INDUCTION · FALSIFIED
 - **Mitigation applied (not a fix — the root cause lives in a dependency this repo doesn't control):**
   1. The config-object log line now destructures `walletSeed` out and logs `{ ...safeNetworkConfig, walletSeed: "[REDACTED]" }` instead of the raw object. This one *is* a real fix — it's VELO's own call site.
   2. The `deployMidnightContract(...)` call is wrapped in a `process.stdout.write`/`process.stderr.write` interceptor (`redactSeed`, matching `/wallet\s*seed:?\s*\S+/gi`) for the duration of the call only, restored in a `finally` block. This catches the dependency's own `log.info` call without patching `node_modules` (not installed in this environment; this is a Bun-only package) or waiting on an upstream fix.
-- **Verification:** no funded wallet was available to run the actual deploy, so this was verified by induction against the exact logic, not the live call: a standalone script exercising the real regex and wrap/restore code against genuine `process.stdout`/`stderr.write` calls (not mocks), simulating the dependency's exact log format (`Wallet seed: <value>`) via both `console.log` and `console.info` (Node routes both through the same `stdout.write`). 4/4 checks passed — the raw seed never appears in captured output, the redaction marker confirms the line was caught rather than silently dropped, unrelated output passes through untouched, and the writers are restored afterward. Separately confirmed the config-object fix: a fake `walletSeed` does not appear anywhere in the logged object. **Still not verified: an actual live deploy run** — this mitigation has not seen a real invocation of `buildWalletAndWaitForFunds` yet. Treat it as a strong safety net, not a substitute for using a disposable wallet.
+- **Verification at the time (Node only):** no funded wallet was available, so the wrapper was exercised by a standalone script against genuine `process.stdout`/`stderr.write` calls under **Node**. It passed every check, and the finding was recorded as MITIGATED.
+
+#### THAT MITIGATION FAILED ON THE FIRST REAL RUN (2026-08-07)
+
+The finding itself is now **CONFIRMED BY INDUCTION** rather than CODE FACT — a real deploy against `preview`, on a funded wallet, printed the seed exactly as predicted. It also printed it *through the mitigation*:
+
+```
+Registering NIGHT for DUST generation. Network config: {
+  ...
+  walletSeed: "[REDACTED]",          <-- VELO's own log line: worked
+}
+Building wallet using modular SDK
+Wallet seed: efc3574f16b9713b6e...   <-- the dependency's line: NOT redacted
+```
+
+- **Why it failed:** the wrapper patched `process.stdout.write`. **Node** routes `console.log`/`console.info` through that; **Bun does not** — it implements `console` natively and writes to the file descriptor directly, bypassing the JS-level stream method entirely. The deploy scripts run under Bun *by design* (documented at the top of `deploy-contract.ts`), so the mitigation was verified in a runtime the code never actually executes in.
+- **The methodological error, stated plainly:** a green check in the wrong runtime is not evidence. This is the same class of mistake this project's red team rounds exist to catch — F8 (two copies of a function, one drifted), F5 (a corpus that had never been run through the engine it claimed to match). The check passed, the claim was recorded, and the claim was false. It was caught only because someone ran the real thing and read the output.
+- **Rewritten mitigation:** `withSeedRedaction` now patches **both** the `console.*` methods (`log`/`info`/`warn`/`error`/`debug`/`trace`) *and* the raw stream writers, restoring all of them in `finally`. Patching the console object works because the dependency does `const log = console` — it holds a reference to the same object whose methods get replaced.
+- **Verification status of the rewrite: INCOMPLETE.** It passes 10/10 under Node (`node --experimental-strip-types scripts/verify-f16-seed-redaction.mjs`), and the test now exercises `console.info` and a direct `process.stdout.write` explicitly. **But 10/10 under Node is exactly what the broken version scored.** The only verification that counts is `bun run scripts/verify-f16-seed-redaction.mjs` on a machine with Bun, which this one does not have. Until that runs, F16 is **not** mitigated — treat the seed as exposed and use a disposable wallet, which is the standing advice regardless.
 
 ---
 
