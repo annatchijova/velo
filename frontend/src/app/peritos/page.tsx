@@ -123,11 +123,11 @@ export default function PeritosPage() {
 
             <div className="mt-4 border-t border-ink-900/5 pt-3">
               <p className="text-[10.5px] font-extrabold uppercase tracking-wide text-ink-400">
-                Attestations
+                {t("peritos.attestations")}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {p.cases_attested.length === 0 && (
-                  <span className="text-[12px] italic text-ink-400">none</span>
+                  <span className="text-[12px] italic text-ink-400">{t("common.none")}</span>
                 )}
                 {p.cases_attested.map((cid) => {
                   const st = STATUS_STYLE[p.credential_status_at_attestation[cid] ?? "VALID"];
@@ -141,7 +141,7 @@ export default function PeritosPage() {
                     >
                       <Icon className="h-3 w-3" />
                       {cid}
-                      <span className="opacity-70">· {isActiveAtAttestation(p, cid) ? "valid" : "expired"}</span>
+                      <span className="opacity-70">· {isActiveAtAttestation(p, cid) ? t("status.valid") : t("status.expired")}</span>
                     </Link>
                   );
                 })}

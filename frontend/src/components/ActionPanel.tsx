@@ -25,10 +25,10 @@ import { VerdictBadge } from "@/components/VerdictBadge";
 type TamperMode = "none" | "verdict" | "fingerprint" | "truncate";
 type Step = "idle" | "sealing" | "sealed" | "attesting" | "attested" | "verifying" | "verified";
 
-const TAMPER_OPTIONS: { mode: TamperMode; label: string; icon: typeof Wand2 }[] = [
-  { mode: "verdict", label: "Swap verdict", icon: Wand2 },
-  { mode: "fingerprint", label: "Corrupt fingerprint", icon: FileX2 },
-  { mode: "truncate", label: "Truncate custody chain", icon: Link2Off },
+const TAMPER_OPTIONS: { mode: TamperMode; labelKey: "action.swapVerdict" | "action.corruptFingerprint" | "action.truncateCustody"; icon: typeof Wand2 }[] = [
+  { mode: "verdict", labelKey: "action.swapVerdict", icon: Wand2 },
+  { mode: "fingerprint", labelKey: "action.corruptFingerprint", icon: FileX2 },
+  { mode: "truncate", labelKey: "action.truncateCustody", icon: Link2Off },
 ];
 
 export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
@@ -52,9 +52,9 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
       setVerification(null);
       setTamper("none");
       setStep("sealed");
-      push("Bundle sealed locally — nothing has touched the network.", "success");
+      push(t("toast.sealedSuccess"), "success");
     } catch (err) {
-      push(err instanceof Error ? err.message : "Sealing failed", "error");
+      push(err instanceof Error ? err.message : t("toast.sealingFailed"), "error");
     } finally {
       setBusy(false);
     }
@@ -63,7 +63,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
   async function handleAttest() {
     if (!bundle) return;
     if (!isAttestor) {
-      push("Attestation requires a connected Midnight wallet.", "error");
+      push(t("toast.attestRequiresWallet"), "error");
       return;
     }
     setBusy(true);
@@ -72,10 +72,10 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
       const res = await attestCase(bundle, session?.name ?? "wallet");
       setAttestation(res);
       setStep("attested");
-      push("Commitment computed — the verdict is bound to the sealed fingerprint.", "success");
+      push(t("toast.commitmentComputed"), "success");
     } catch (err) {
       setStep("sealed");
-      push(err instanceof Error ? err.message : "Attestation failed", "error");
+      push(err instanceof Error ? err.message : t("toast.attestationFailed"), "error");
     } finally {
       setBusy(false);
     }
@@ -91,12 +91,12 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
       setVerification(res);
       setStep("verified");
       if (!res.internallyConsistent) {
-        push(`Tamper detected — ${res.reasons.length} reason(s) verification failed.`, "error");
+        push(`${t("toast.tamperDetectedPrefix")} — ${res.reasons.length} ${t("toast.reasonsVerificationFailed")}`, "error");
       } else {
-        push("Bundle verified offline — hashes recomputed and match.", "success");
+        push(t("toast.verifiedOffline"), "success");
       }
     } catch (err) {
-      push(err instanceof Error ? err.message : "Verification failed", "error");
+      push(err instanceof Error ? err.message : t("toast.verificationFailed"), "error");
     } finally {
       setBusy(false);
     }
@@ -108,13 +108,13 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
     <div className="card-solid rounded-3xl p-6 shadow-soft">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">
-          Examiner workflow
+          {t("action.examinerWorkflow")}
         </h2>
         <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-400">
           <span
             className={`h-2 w-2 rounded-full ${walletRequired ? "bg-amber-500" : "bg-emerald-500"}`}
           />
-          {walletRequired ? "wallet required to attest" : `${session?.name} connected`}
+          {walletRequired ? t("action.walletRequired") : `${session?.name} ${t("action.connected")}`}
         </div>
       </div>
 
@@ -130,7 +130,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
           ) : (
             <Lock className="h-4 w-4" />
           )}
-          {t("detail.seal")} — run the deterministic engine
+          {t("detail.seal")} — {t("action.runEngine")}
         </button>
       </div>
 
@@ -147,10 +147,10 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
               <VerdictBadge verdict={bundle.verdict} size="md" />
               <div className="text-[12.5px]">
                 <p className="text-ink-500">
-                  score <span className="font-mono font-bold text-ink-900">{bundle.score}</span>
+                  {t("action.score")} <span className="font-mono font-bold text-ink-900">{bundle.score}</span>
                 </p>
                 <p className="text-ink-500">
-                  corroboration{" "}
+                  {t("action.corroboration")}{" "}
                   <span className="font-mono font-bold text-ink-900">
                     {bundle.corroborationCount}
                   </span>
@@ -184,7 +184,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-              {t("detail.attest")} {walletRequired ? "· connect wallet first" : `· ${session?.name}`}
+              {t("detail.attest")} {walletRequired ? `· ${t("action.connectFirst")}` : `· ${session?.name}`}
             </button>
 
             {attestation && (
@@ -216,7 +216,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
                 <span className="text-[11px] font-bold uppercase tracking-wide text-ink-400">
                   {t("detail.verify")}
                 </span>
-                <span className="text-[10.5px] text-ink-400">try to break it</span>
+                <span className="text-[10.5px] text-ink-400">{t("action.tryBreak")}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -225,9 +225,9 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
                   className="btn-primary flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-bold"
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Verify pristine
+                  {t("action.verifyPristine")}
                 </button>
-                {TAMPER_OPTIONS.map(({ mode, label, icon: Icon }) => (
+                {TAMPER_OPTIONS.map(({ mode, labelKey, icon: Icon }) => (
                   <button
                     key={mode}
                     onClick={() => handleVerify(mode)}
@@ -237,7 +237,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5 text-verdict-malice" />
-                    {label}
+                    {t(labelKey)}
                   </button>
                 ))}
               </div>
@@ -265,8 +265,8 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
                     }`}
                   >
                     {verification.internallyConsistent
-                      ? "Verification passed — the bundle is untampered."
-                      : "Tampering detected — verification failed."}
+                      ? t("verify.passed")
+                      : t("verify.tamperedFailed")}
                   </p>
                 </div>
                 {verification.reasons.length > 0 && (

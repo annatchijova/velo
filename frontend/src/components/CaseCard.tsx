@@ -28,13 +28,13 @@ export function CaseCard({ caseFile }: { caseFile: CaseFile }) {
       <div className="mt-4 flex items-center gap-4 border-t border-ink-900/5 pt-3 text-[11.5px] text-ink-500">
         <span className="inline-flex items-center gap-1.5">
           <Layers className="h-3.5 w-3.5 text-brand-indigo" />
-          {caseFile.expected_corroboration_count} source
-          {caseFile.expected_corroboration_count === 1 ? "" : "s"}
+          {caseFile.expected_corroboration_count}{" "}
+          {t(caseFile.expected_corroboration_count === 1 ? "cases.source" : "cases.sources")}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <FileText className="h-3.5 w-3.5 text-brand-indigo" />
-          {caseFile.artifacts.length} artifact
-          {caseFile.artifacts.length === 1 ? "" : "s"}
+          {caseFile.artifacts.length}{" "}
+          {t(caseFile.artifacts.length === 1 ? "cases.artifact" : "cases.artifacts")}
         </span>
         <span className="ml-auto inline-flex items-center gap-1 text-[12px] font-bold text-brand-deep transition group-hover:translate-x-0.5">
           {t("cases.open") ?? "Open"}

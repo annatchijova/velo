@@ -96,11 +96,11 @@ export default function CaseDetailPage() {
               {matches ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-verdict-noiseBg px-2.5 py-1 text-[10.5px] font-bold text-verdict-noise">
                   <ShieldAlert className="h-3 w-3" />
-                  engine reproduces it
+                  {t("detail.engineReproduces")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[10.5px] font-bold text-amber-700">
-                  mismatch
+                  {t("detail.mismatch")}
                 </span>
               )}
             </span>
@@ -173,7 +173,7 @@ export default function CaseDetailPage() {
             </div>
             {engine && !engine.custodyValid && (
               <p className="mt-3 rounded-xl bg-verdict-abstainBg px-3 py-2 text-[12px] font-semibold leading-relaxed text-verdict-abstain">
-                {engine.custodyReason ?? "Custody chain invalid."}
+                {engine.custodyReason ?? t("detail.custodyInvalid")}
               </p>
             )}
             {caseFile.devil_advocate && (
@@ -199,8 +199,8 @@ export default function CaseDetailPage() {
                 {t("detail.custody")}
               </h2>
               <span className="text-[11px] text-ink-400">
-                {caseFile.custodyEvents.length} event
-                {caseFile.custodyEvents.length === 1 ? "" : "s"}
+                {caseFile.custodyEvents.length}{" "}
+                {t(caseFile.custodyEvents.length === 1 ? "detail.event" : "detail.events")}
               </span>
             </div>
             <div className="mt-4">

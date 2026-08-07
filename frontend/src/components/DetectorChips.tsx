@@ -1,19 +1,15 @@
 import { Check, X } from "lucide-react";
 import type { DetectorResult } from "@/lib/types";
+import { useI18n } from "@/lib/i18n";
 
-export const DETECTOR_LABELS: Record<string, string> = {
-  temporal: "Temporal",
-  cross_source: "Cross-source",
-  anti_forensic: "Anti-forensic",
-  narrative: "Narrative",
-  process: "Process / path",
-};
+const DETECTOR_KEYS = new Set(["temporal", "cross_source", "anti_forensic", "narrative", "process"]);
 
 export function DetectorChips({ detectors }: { detectors: DetectorResult[] }) {
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {detectors.map((d) => {
-        const label = DETECTOR_LABELS[d.name] ?? d.name;
+        const label = DETECTOR_KEYS.has(d.name) ? t(`detector.${d.name}` as never) : d.name;
         return (
           <div
             key={d.name}
