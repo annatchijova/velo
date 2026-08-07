@@ -28,6 +28,7 @@ Same as Round 1: **CODE FACT** (read in the code/docs, as written) · **PLAUSIBL
 | G7 | Low-medium | PLAUSIBLE HYPOTHESIS | No rule-version binding — if the corroboration threshold changes later (2 sources → 3), old attestations carry no marker of which rule they were checked against | **DOCUMENTED AS A KNOWN LIMITATION** |
 | G8 | Low (roadmap, not a defect) | CODE FACT | No revocation model for an expert's credential/accreditation — not a defect today because no accreditation credential exists yet (it's explicitly future work in `README.md`'s stretch goals) | **DOCUMENTED AS A KNOWN LIMITATION** |
 | G9 | N/A (business framing, not security) | — | The natural buyer is an institution (lab, insurer, prosecutor's office, law firm), not an individual expert — a product-framing note, not a vulnerability | **NOTED, not a finding** |
+| G10 | Medium (messaging) | CODE FACT | `devil_advocate` is gated on `.trim().length === 0` — any non-empty string satisfies it. GLOSSARY described it as "the strongest innocent explanation considered," which the code cannot verify | **FIXED (language)** + roadmap |
 
 ---
 
@@ -139,6 +140,19 @@ Same as Round 1: **CODE FACT** (read in the code/docs, as written) · **PLAUSIBL
 ### G9 — Product framing: the buyer is an institution, not the individual expert (noted, not a security finding)
 
 Not a vulnerability. Recorded because it changes how the "wallet" framing should be pitched: an individual forensic expert is unlikely to be the one budgeting for this. The realistic buyers — forensic labs, insurers, prosecutors' offices, law firms — want *organizational* attestation infrastructure with per-expert accountability inside it, not a personal wallet product. The wallet metaphor (Section "This is a wallet, not a vault" in the onboarding doc) remains the right *interface* framing for the demo — it is what makes the ZK mechanics legible to a non-cryptographer judge — but the pitch's business-viability section should name the institutional buyer explicitly rather than implying an individual expert is the customer.
+
+---
+
+### G10 — `devil_advocate` is gated on non-emptiness, not on being an actual counter-argument
+
+**Severity:** Medium, messaging (same genre as G3) · **Level:** CODE FACT · **Bucket:** promise vs. what is actually checked.
+
+- **The exact claim (`docs/GLOSSARY.md`):** `devil_advocate` is described as "a mandatory field on any `MALICE` verdict recording the strongest innocent explanation that was considered, and why it was rejected." That describes what the field is *for*, not what the code verifies it *contains*.
+- **Code fact:** `src/engine/scorer.ts`'s gate is `if (devilAdvocate.trim().length === 0)` — degrade to `SUSPICION` only when the field is empty after trimming whitespace. `src/mcp/server.ts`'s schema is `devilAdvocate: z.string().default("")` — no `.min()`, no content check of any kind. A `devilAdvocate` of `"x"`, `"n/a"`, or `"looks fine"` passes the gate exactly as well as a genuine, evidence-grounded counter-argument — the engine cannot tell the difference between "the analyst seriously considered and rejected an innocent explanation" and "the analyst typed one character to get past a form field."
+- **Why this is the same shape as G3:** G3 found that `corroborationCount` is trusted as analyst-declared rather than cryptographically verified as independent. G10 is the same gap one field over: `devilAdvocate` is trusted as analyst-declared *adversarial content* rather than verified as actually adversarial. Both are cases where a Daubert-inspired gate checks a cheap proxy (a number, a non-empty string) for an expensive property (independence, genuine self-scrutiny) that nothing in the current build can actually verify.
+- **Why this is not cheaply fixable, and why that's the honest answer rather than a punt:** a length minimum or keyword heuristic (`length > 40`, contains "however"/"alternative") is trivially gameable by padding or keyword-stuffing, and would create false confidence — a heuristic that *looks* like a check is worse than an honest non-check, because it changes the failure mode from "obviously absent" to "deceptively present." An LLM-graded quality check would need the model in the decision path, which is the exact architectural line this project (and this discipline's own `llm-out-of-the-loop` principle) draws against: a model can read a counter-argument correctly and still be wrong about whether it's genuine, and a MALICE verdict cannot depend on that judgment being infallible.
+- **Fix applied (language, this round):** `docs/GLOSSARY.md`'s `devil_advocate` entry now states the actual guarantee: *"the engine only verifies the field is non-empty after trimming — it cannot verify the explanation is genuine, evidence-grounded, or was seriously considered. That verification is human and judicial, the same as with any expert's stated reasoning today."*
+- **Documented as a known limitation, roadmap:** the honest mitigation available today is procedural, not cryptographic — a human reviewer (or, later, the second-expert blind-review layer already on the stretch-goal list) reading whether the stated counter-argument is substantive. A structured `devilAdvocateResult` object (`alternativeHypothesisTested: boolean`, `contradictionsChecked: boolean`, `reviewerSignature`) would at least make the *shape* of a real review checkable, without pretending to verify its *content* — worth designing alongside G1's witness-provenance work, since both are instances of "the circuit can check a shape, not a truth."
 
 ---
 
