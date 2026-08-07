@@ -37,3 +37,4 @@ npm-debug.log*
 # Claude Code — local, per-machine permissions, not team config.
 # .claude/skills/ IS committed on purpose (part of the submission).
 .claude/settings.local.json
+midnight-level-db-deploy/
