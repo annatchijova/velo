@@ -1,10 +1,10 @@
 // VELO — Capa 2: the gate.
 //
-// NOT YET COMPILED from this machine (no Compact toolchain here — per
-// team decision, compilation happens after adversarial review, not
-// through compile-fix-compile iteration). Written to the best of the
-// compact skill's documented patterns; every place a specific compiler
-// behavior could not be verified from here is flagged inline.
+// COMPILES: verified with compact 0.31.1 (compiler CLI 0.5.1) on
+// 2026-08-07 — both circuits, prover and verifier keys generated, exit
+// 0. Reproduce with `bash scripts/compile-contract.sh` on a CPU with
+// AVX2 (the zkir backend needs it; without AVX2 it dies with SIGILL
+// after type-checking, which is a hardware limit, not a contract bug).
 //
 // What this proves:
 //   1. The prover knows the private values behind the published
@@ -84,22 +84,19 @@ witness corroborationCountWitness(): Uint<0..17>;
  * cannot be silently overwritten by re-attesting the same key. A
  * correction has to be a new, visibly different commitment.
  *
- * FLAGGED FOR COMPILE TIME — four things this file could not verify:
- *   1. `persistentHash<Vector<N, Bytes<32>>>` vs `persistentCommit(v,
- *      nonce)`. The skill's "Pattern 1: Commitment" uses the latter as
- *      the idiomatic hiding+binding helper. The Vector form is used here
- *      because it hashes several heterogeneous values together, which is
- *      what this commitment needs; brute-force risk is low either way
- *      since fingerprint and tip are already 32-byte hashes.
- *   2. Whether `Vector<6, Bytes<32>>` compiles and hashes as expected.
- *   3. Whether `verdict as Field as Bytes<32>` is a legal cast for an
- *      enum. The skill documents this chain for a Counter
- *      (`sequence as Field as Bytes<32>`) but not for an enum. If the
- *      compiler rejects it, the documented fallback is to hash a struct
- *      instead of a Vector, keeping each field in its own type.
- *   4. Whether `disclose()` is genuinely required (vs a no-op) on values
- *      that are already public — used anyway, following the skill's own
- *      bulletin-board example.
+ * RESOLVED AT COMPILE TIME (2026-08-07, compact 0.31.1). All four
+ * assumptions this file could not check from the authoring machine were
+ * accepted by the compiler:
+ *   1. `persistentHash<Vector<N, Bytes<32>>>` compiles. (Whether
+ *      `persistentCommit` would be more idiomatic is now a style
+ *      question, not a correctness risk — brute-force is not a concern
+ *      either way since fingerprint and tip are already 32-byte hashes.)
+ *   2. `Vector<6, Bytes<32>>` compiles.
+ *   3. `verdict as Field as Bytes<32>` IS a legal cast for an enum —
+ *      this was the assumption most likely to fail, since the pattern is
+ *      documented for Counter and not for enums. The struct fallback is
+ *      not needed.
+ *   4. `disclose()` on already-public values is accepted.
  *
  * KNOWN, NOT FIXED: re-attesting an identical (analysis, verdict, count)
  * triple recomputes the same commitment and increments attestationCount

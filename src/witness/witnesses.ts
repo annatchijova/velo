@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import type { WitnessContext } from "@midnight-ntwrk/compact-runtime";
 import type { SealedBundle } from "../seal/bundle.js";
 import { attestationPayload } from "../seal/bundle.js";
 
@@ -22,16 +23,18 @@ import { attestationPayload } from "../seal/bundle.js";
  * commitment is published. It cannot be re-chosen later to make a
  * different verdict pass the Daubert gate.
  *
- * PARTIALLY VERIFIED AGAINST THE COMPILER: the contract now compiles
- * (contracts/managed/velo/contract/index.d.ts exists). The predicted
- * mismatch showed up exactly as expected — the generated `Witnesses<PS>`
- * binds `corroborationCountWitness` to `bigint`, not `number` — and is
- * fixed below (`BigInt(...)` at the return boundary). The `context`
- * parameter below is still typed structurally (`{ privateState }`)
- * rather than imported as `WitnessContext<Ledger, PS>` from the
- * generated bindings; that reconciliation is still open. Everything
- * else here — the salt lifecycle, the hex/byte conversion, the
- * validation — is independent of that and is unit-tested.
+ * VERIFIED AGAINST THE GENERATED BINDINGS (compact 0.31.1, 2026-08-07).
+ * `WitnessContext` is imported from `@midnight-ntwrk/compact-runtime`
+ * rather than guessed at. Reconciling with the real API caught one
+ * genuine mismatch: `corroborationCountWitness` returns a **bigint**,
+ * not a number — Compact integers cross into TypeScript as bigint no
+ * matter how small their declared range. That error typechecked
+ * perfectly on its own and would only have surfaced when wired to the
+ * contract.
+ *
+ * Still NOT verified: nothing here has been run against a live circuit.
+ * The shapes match; the behaviour under a real proof has not been
+ * observed.
  */
 
 const BYTES_32 = 32;
@@ -117,7 +120,7 @@ export function getOrCreateSalt(state: VeloPrivateState, caseId: string): { stat
  */
 const MAX_CORROBORATION = 17;
 
-export function checkCorroborationCount(count: number): number {
+export function checkCorroborationCount(count: number): bigint {
   if (!Number.isSafeInteger(count) || count < 0) {
     throw new WitnessError(`corroborationCount must be a non-negative integer, got ${count}`);
   }
@@ -127,15 +130,25 @@ export function checkCorroborationCount(count: number): number {
         `widen the witness type in contracts/velo.compact before allowing this many independent sources`,
     );
   }
-  return count;
+  return BigInt(count);
 }
 
-/** The four private values one attestation needs. */
+/**
+ * The four private values one attestation needs.
+ *
+ * `corroborationCount` is a **bigint**, not a number: the generated
+ * bindings type `corroborationCountWitness` as returning
+ * `[PS, bigint]`. Compact's integers map to bigint in TypeScript
+ * regardless of how small their declared range is, so `Uint<0..17>`
+ * still crosses the boundary as a bigint. This was a real mismatch in
+ * the first version of this file — it typechecked fine on its own and
+ * would only have failed when wired to the actual contract.
+ */
 export interface AttestationWitnesses {
   bundleFingerprint: Bytes32;
   custodyTip: Bytes32;
   bundleSalt: Bytes32;
-  corroborationCount: number;
+  corroborationCount: bigint;
 }
 
 /**
@@ -166,35 +179,69 @@ export function witnessesForBundle(
 }
 
 /**
- * Shape the Midnight runtime is expected to call — one function per
- * declared witness, each receiving the private state and returning the
- * value.
+ * The witness object the generated `Contract` constructor takes.
  *
- * The real WitnessContext type comes from the generated bindings, which
- * do not exist until the contract compiles. `context` is typed loosely
- * here on purpose rather than guessed at precisely: a wrong-but-specific
- * type would look verified when it is not.
+ * Matches the shape the compiler emitted in
+ * `contracts/managed/velo/contract/index.d.ts`:
+ *
+ *   export type Witnesses<PS> = {
+ *     bundleFingerprint(context: WitnessContext<Ledger, PS>): [PS, Uint8Array];
+ *     bundleSalt(context: WitnessContext<Ledger, PS>): [PS, Uint8Array];
+ *     custodyTip(context: WitnessContext<Ledger, PS>): [PS, Uint8Array];
+ *     corroborationCountWitness(context: WitnessContext<Ledger, PS>): [PS, bigint];
+ *   }
+ *
+ * `Ledger` is generated per-contract, so `WitnessContext`'s ledger
+ * parameter is left at its `any` default here rather than importing
+ * build output into source — none of these witnesses reads the ledger.
+ *
+ * The bundle is captured by closure rather than stored in private state:
+ * an attestation is about one specific sealed bundle, and threading it
+ * through the private state would make it possible to attest bundle A
+ * while the state still points at bundle B.
  */
-export function makeWitnessImplementations(bundle: SealedBundle) {
+export function makeWitnesses(bundle: SealedBundle): VeloWitnesses {
+  const forBundle = (privateState: VeloPrivateState) => witnessesForBundle(privateState, bundle);
+
   return {
-    bundleFingerprint: ({ privateState }: { privateState: VeloPrivateState }) => {
-      const { state, witnesses } = witnessesForBundle(privateState, bundle);
-      return [state, witnesses.bundleFingerprint] as const;
+    bundleFingerprint: ({ privateState }: WitnessContext<any, VeloPrivateState>) => {
+      const { state, witnesses } = forBundle(privateState);
+      return [state, witnesses.bundleFingerprint];
     },
-    custodyTip: ({ privateState }: { privateState: VeloPrivateState }) => {
-      const { state, witnesses } = witnessesForBundle(privateState, bundle);
-      return [state, witnesses.custodyTip] as const;
+    bundleSalt: ({ privateState }: WitnessContext<any, VeloPrivateState>) => {
+      const { state, witnesses } = forBundle(privateState);
+      return [state, witnesses.bundleSalt];
     },
-    bundleSalt: ({ privateState }: { privateState: VeloPrivateState }) => {
-      const { state, witnesses } = witnessesForBundle(privateState, bundle);
-      return [state, witnesses.bundleSalt] as const;
+    custodyTip: ({ privateState }: WitnessContext<any, VeloPrivateState>) => {
+      const { state, witnesses } = forBundle(privateState);
+      return [state, witnesses.custodyTip];
     },
-    corroborationCountWitness: ({ privateState }: { privateState: VeloPrivateState }) => {
-      const { state, witnesses } = witnessesForBundle(privateState, bundle);
-      // The compiled circuit's Uint<0..17> witness is bound as `bigint` in
-      // the generated TypeScript (contracts/managed/velo/contract/index.d.ts),
-      // not `number` — confirmed once the contract actually compiled.
-      return [state, BigInt(witnesses.corroborationCount)] as const;
+    corroborationCountWitness: ({ privateState }: WitnessContext<any, VeloPrivateState>) => {
+      const { state, witnesses } = forBundle(privateState);
+      return [state, witnesses.corroborationCount];
     },
   };
 }
+
+export interface VeloWitnesses {
+  bundleFingerprint(context: WitnessContext<any, VeloPrivateState>): [VeloPrivateState, Uint8Array];
+  bundleSalt(context: WitnessContext<any, VeloPrivateState>): [VeloPrivateState, Uint8Array];
+  custodyTip(context: WitnessContext<any, VeloPrivateState>): [VeloPrivateState, Uint8Array];
+  corroborationCountWitness(context: WitnessContext<any, VeloPrivateState>): [VeloPrivateState, bigint];
+}
+
+/**
+ * The commitment is NOT computed here, on purpose.
+ *
+ * `@midnight-ntwrk/compact-runtime` does expose `persistentHash`, so it
+ * would be possible — but reproducing the circuit's exact preimage also
+ * requires reproducing `pad(32, "velo:attestation:v1")` and the
+ * `Field -> Bytes<32>` cast byte-for-byte, and neither encoding is
+ * exported or documented. A commitment computed from a guessed encoding
+ * would be worse than none: it would look correct everywhere and simply
+ * never match what the circuit publishes.
+ *
+ * The commitment is read from the circuit's own output instead. If an
+ * off-circuit version is ever needed, verify it against a real circuit
+ * run before trusting a single byte of it.
+ */
