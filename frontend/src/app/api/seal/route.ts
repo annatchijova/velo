@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
-import { runAllDetectors } from "velo/engine/detectors.js";
-import { score } from "velo/engine/scorer.js";
-import {
-  createCustodyChain,
-  appendCustodyEvent,
-  verifyCustodyChain,
-} from "velo/seal/custody.js";
-import { sealBundle, verifyBundle, attestationPayload } from "velo/seal/bundle.js";
+import { analyzeCase, sealAnalysis } from "velo/core/operations.js";
+import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { Fraction } from "velo/engine/fraction.js";
 import type { Artifact, CustodyEvent, DetectorResult, ScoreResult } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+/**
+ * The engine's orchestration lives in velo/core/operations.ts, shared
+ * with the MCP server. This route only translates between HTTP and that
+ * module.
+ *
+ * It used to assemble the custody chain and derive `custodyValid` here,
+ * with its own copy of those rules. They matched the engine's copy
+ * exactly — which is what red team F8 looked like right up until the two
+ * copies stopped matching. The rule that decides whether evidence is
+ * admissible is not a thing to hold two versions of.
+ */
 
 interface SealBody {
   caseId: string;
@@ -59,14 +65,6 @@ function serializeScore(s: {
   };
 }
 
-function buildCustody(caseId: string, events: CustodyEvent[]) {
-  let chain = createCustodyChain(caseId);
-  for (const ev of events) {
-    chain = appendCustodyEvent(chain, ev.eventType as never, ev.timestamp, ev.detail);
-  }
-  return chain;
-}
-
 export async function POST(req: Request) {
   let body: SealBody;
   try {
@@ -79,47 +77,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "caseId and artifacts are required" }, { status: 400 });
   }
 
-  const scenario = body.scenario ?? "engine-only";
-
-  // 1. Run the deterministic engine over the evidence (server-side, node:crypto).
-  const detectorResults = runAllDetectors(body.artifacts as never);
-  const serializedDetectors = detectorResults.map(serializeDetector);
-
-  // 2. Custody: an evidence set with no custody events has no chain of custody.
-  const chain = buildCustody(body.caseId, body.custodyEvents ?? []);
-  const custodyCheck = verifyCustodyChain(chain);
-  const custodyValid = custodyCheck.valid && (body.custodyEvents?.length ?? 0) > 0;
-
-  // 3. Score — ABSTAIN when the chain is broken or absent, regardless of signal.
-  const scoreResult = score({
-    detectorResults,
+  const analysis = analyzeCase({
+    caseId: body.caseId,
     artifacts: body.artifacts as never,
     devilAdvocate: body.devilAdvocate ?? "",
-    custodyValid,
+    custodyEvents: (body.custodyEvents ?? []) as never,
   });
+
+  const scenario = body.scenario ?? "engine-only";
 
   if (scenario === "engine-only") {
     return NextResponse.json({
-      detectorResults: serializedDetectors,
-      score: serializeScore(scoreResult),
-      custodyValid,
-      custodyReason: custodyValid
-        ? custodyCheck.reason
-        : "No chain of custody — evidence is inadmissible.",
+      detectorResults: analysis.detectorResults.map(serializeDetector),
+      score: serializeScore(analysis.scoreResult),
+      custodyValid: analysis.custodyValid,
+      custodyReason: analysis.custodyReason,
     });
   }
 
-  // 4. Seal: append SEALED and produce the two-hash bundle.
-  const sealedAt = new Date().toISOString();
-  const bundle = sealBundle(
-    body.caseId,
-    sealedAt,
-    scoreResult,
-    { caseId: body.caseId, artifacts: body.artifacts as never },
-    chain,
-  );
+  const bundle = sealAnalysis(body.caseId, body.artifacts as never, analysis);
 
-  // Cross-check: the bundle must be internally consistent as-is.
+  // Cross-check: the bundle must be internally consistent as sealed.
   const selfCheck = verifyBundle(bundle);
 
   return NextResponse.json({
@@ -133,7 +111,7 @@ export async function POST(req: Request) {
       corroborationCount: bundle.corroborationCount,
     },
     attestationPayload: attestationPayload(bundle),
-    custodyValid,
+    custodyValid: analysis.custodyValid,
     selfCheck,
   });
 }

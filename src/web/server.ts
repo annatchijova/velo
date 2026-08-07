@@ -18,7 +18,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { z } from "zod";
-import { getCase, listCases, sealCase, verifyCase, type SealCaseInput } from "../core/operations.js";
+import { getCase, listCases, sealCase, verifyCase, type AnalyzeCaseInput } from "../core/operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 import { InvalidCaseIdError } from "../mcp/store.js";
 
@@ -189,7 +189,7 @@ export function createVeloServer(staticDir: string) {
         // it here would make the API brittle against a corpus that grows
         // faster than the Marker union — which is precisely how red team
         // F5 (corpus/engine drift) happened in the first place.
-        sendJson(res, 200, sealCase(parsed.data as SealCaseInput));
+        sendJson(res, 200, sealCase(parsed.data as AnalyzeCaseInput));
         return;
       }
 
