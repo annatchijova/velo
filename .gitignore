@@ -15,6 +15,7 @@ local-cases/
 PROGRESS_LOCAL.md
 GUION_VIDEO.md
 visual/IMAGE_PROMPTS.md
+visual/NOTEBOOKLM_PROMPTS.md
 
 # Env / secrets
 .env
