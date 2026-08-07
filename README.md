@@ -242,6 +242,7 @@ contracts/       velo.compact — the ZK gate
 cases/           13 synthetic cases, zero PII
 peritos-syntetic/ 6 synthetic expert-witness profiles
 docs/            architecture, glossary, cases, FAQ, business case, identity, roadmap, red team reports
+visual/          deck backgrounds + standalone SVG diagrams
 ```
 
 Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
@@ -250,7 +251,17 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
+[`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
+[`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
 [`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
+
+Standalone illustrated pages, same visual system, EN/ES toggle in the page
+itself: [`Architecture`](./docs/velo-architecture.html) ·
+[`Identity`](./docs/velo-identity.html) ·
+[`Business case`](./docs/velo-business.html) ·
+[`Roadmap`](./docs/velo-roadmap.html). Static diagrams for the pitch deck
+are in [`visual/`](./visual/) (`diagram-flow.svg`, `diagram-dual-ledger.svg`,
+`diagram-verdict-scale.svg`).
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are
