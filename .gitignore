@@ -11,6 +11,9 @@ contracts/managed/
 # Runtime-only sealed bundles (created by seal_case at runtime, never pre-populated)
 local-cases/
 
+# Internal team notes, not part of the submission
+PROGRESS_LOCAL.md
+
 # Env / secrets
 .env
 .env.local
