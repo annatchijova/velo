@@ -18,10 +18,13 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@effectstream/midnight-contracts": "0.103.2",
+    "@midnightntwrk/wallet-sdk-abstractions": "2.1.0"
   },
   "devDependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.16.0",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   }

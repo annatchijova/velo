@@ -7,6 +7,13 @@ Zero-knowledge attestation of forensic verdicts on [Midnight](https://midnight.n
 A forensic expert can prove their verdict is legitimate **without ever
 publishing the evidence it came from**.
 
+> VELO proves that a specific verdict was produced by a specific process,
+> under specified constraints, and that the resulting attestation cannot be
+> altered afterward. It does not replace forensic judgment; it makes forensic
+> judgment auditable. (See "What the proof does and does not establish" in
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for exactly where that
+> boundary sits.)
+
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
 ---
@@ -231,9 +238,17 @@ al tribunal que confíe en su palabra.
 VELO no elige ninguna. El perito corre un motor determinista en su propia
 máquina, sella el resultado, y publica **solo un commitment y una prueba de
 conocimiento cero**. La prueba establece dos cosas a la vez: que el veredicto
-publicado corresponde al análisis sellado, y que se cumplió la regla legal de
-admisibilidad — *al menos dos fuentes de corroboración independientes para un
-veredicto `MALICE`*.
+publicado corresponde al análisis sellado, y que se cumplió un criterio de
+admisibilidad formalizado, inspirado en el estándar Daubert — *al menos dos
+fuentes, declaradas independientes por el analista y distintas por raíz de
+cadena de proveniencia, para un veredicto `MALICE`*.
+
+> VELO prueba que un veredicto específico fue producido por un proceso
+> específico, bajo restricciones especificadas, y que la atestación resultante
+> no puede alterarse después. No reemplaza el juicio forense; lo hace
+> auditable. (Ver "Qué prueba la prueba y qué no" en
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) para saber exactamente
+> dónde está ese límite.)
 
 Esa regla no es una nota de política ni una convención de code review. Es una
 restricción dentro del circuito: **una atestación que la viole no puede
