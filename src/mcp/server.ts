@@ -10,12 +10,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { runAllDetectors } from "../engine/detectors.js";
 import type { Artifact } from "../engine/evidence.js";
-import { score } from "../engine/scorer.js";
-import { sealBundle, verifyBundle } from "../seal/bundle.js";
-import { CUSTODY_EVENT_TYPES, createCustodyChain, appendCustodyEvent, verifyCustodyChain } from "../seal/custody.js";
-import { listBundles, loadBundle, saveBundle, toSummary } from "./store.js";
+import { getCase, listCases, sealCase, verifyCase } from "../core/operations.js";
+import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 
 const server = new McpServer({ name: "velo", version: "0.1.0" });
 
@@ -58,7 +55,7 @@ server.registerTool(
     inputSchema: {},
   },
   async () => ({
-    content: [{ type: "text", text: JSON.stringify(listBundles(), null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(listCases(), null, 2) }],
   }),
 );
 
@@ -71,11 +68,11 @@ server.registerTool(
     inputSchema: { caseId: caseIdSchema },
   },
   async ({ caseId }) => {
-    const bundle = loadBundle(caseId);
-    if (!bundle) {
+    const summary = getCase(caseId);
+    if (!summary) {
       return { content: [{ type: "text", text: `No case found with id ${caseId}` }], isError: true };
     }
-    return { content: [{ type: "text", text: JSON.stringify(toSummary(bundle), null, 2) }] };
+    return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
   },
 );
 
@@ -111,45 +108,10 @@ server.registerTool(
     },
   },
   async ({ caseId, artifacts, devilAdvocate, custodyEvents }) => {
-    let chain = createCustodyChain(caseId);
-    for (const ev of custodyEvents) {
-      chain = appendCustodyEvent(chain, ev.eventType, ev.timestamp, ev.detail);
-    }
-    chain = appendCustodyEvent(chain, "ANALYZED", new Date().toISOString(), "deterministic engine ran");
-
-    // Derived, never asserted: a chain with no real acquisition history
-    // cannot support an admissible verdict.
-    const custodyCheck = verifyCustodyChain(chain);
-    const hasAcquisitionHistory = custodyEvents.length > 0;
-    const custodyValid = custodyCheck.valid && hasAcquisitionHistory;
-
-    const detectorResults = runAllDetectors(artifacts as Artifact[]);
-    const scoreResult = score({ detectorResults, artifacts: artifacts as Artifact[], devilAdvocate, custodyValid });
-
-    const manifest = { caseId, artifacts: artifacts as Artifact[] };
-    const bundle = sealBundle(caseId, new Date().toISOString(), scoreResult, manifest, chain);
-    const path = saveBundle(bundle);
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(
-            {
-              savedTo: path,
-              summary: toSummary(bundle),
-              reasoning: scoreResult.reasoning,
-              custodyValid,
-              custodyNote: hasAcquisitionHistory
-                ? custodyCheck.reason
-                : "No custody events supplied — treated as no chain of custody, so the verdict is ABSTAIN.",
-            },
-            null,
-            2,
-          ),
-        },
-      ],
-    };
+    // Behaviour lives in src/core/operations.ts, shared with the HTTP
+    // server, so the two interfaces cannot drift apart (red team F8).
+    const result = sealCase({ caseId, artifacts: artifacts as Artifact[], devilAdvocate, custodyEvents });
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   },
 );
 
@@ -165,11 +127,10 @@ server.registerTool(
     inputSchema: { caseId: caseIdSchema },
   },
   async ({ caseId }) => {
-    const bundle = loadBundle(caseId);
-    if (!bundle) {
+    const result = verifyCase(caseId);
+    if (!result) {
       return { content: [{ type: "text", text: `No case found with id ${caseId}` }], isError: true };
     }
-    const result = verifyBundle(bundle);
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   },
 );

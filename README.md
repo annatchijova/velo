@@ -122,6 +122,36 @@ It prints `internally consistent: YES/NO` — deliberately *not* the word
 consistency is a strictly weaker claim. See [F4 in the red team
 report](./docs/RED_TEAM_ROUND_1.md).
 
+### The local UI and its API
+
+```bash
+npm run web     # http://127.0.0.1:4310
+```
+
+Binds to `127.0.0.1` and nothing else, by design rather than by default:
+a machine holding a victim's evidence must not open a port to its network.
+Static files come from `src/web/static/` (override with `VELO_STATIC_DIR`).
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/seal` | Run the engine and seal a case |
+| `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
+| `GET` | `/api/cases/:caseId` | Public summary of one case |
+| `GET` | `/api/cases/:caseId/verify` | Internal-consistency check |
+| `GET` | `/api/attest` | `501` — the contract compiles but nothing is deployed |
+
+`POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
+and returns the sealed summary plus `reasoning`, `custodyValid`,
+`corroboratingSources[]` and `detectorsFired[]` — enough for a UI to show *why*
+a verdict landed where it did, without ever receiving the evidence.
+
+Sending `custodyEvents: []` is not an error: it produces `ABSTAIN`, because
+evidence with no acquisition history is inadmissible whatever it shows.
+
+Both interfaces call the same functions in `src/core/operations.ts`. Neither
+reimplements the other — red team F8 was two copies of one function that had
+already drifted apart before anyone noticed.
+
 ### As an MCP server
 
 The same engine is exposed over MCP, so an agent can drive the flow
