@@ -43,11 +43,13 @@ later layers extend it, they don't gate it.
    `bundle_hash` that includes the timestamp (identifies *this specific sealing
    event*) and an `analysis_fingerprint` that excludes it (identifies *the
    analysis itself*, so a deterministic replay produces the same fingerprint). The
-   fingerprint and the custody chain's tip — not the raw bundle — are what get
-   committed on-chain: the fingerprint so a replay of the same analysis still
-   matches, the tip so the custody history is anchored to something published.
+   fingerprint and the custody chain's tip — not the raw bundle — are among the
+   values hashed into the on-chain commitment: the fingerprint so a replay of the
+   same analysis still matches, the tip so the custody history is anchored to
+   something published.
 3. **The Compact contract (the gate).** Publishes `commitment = persistentHash
-   (bundle_fingerprint, custody_tip, salt)` and the declared verdict, and enforces the
+   (domain, bundle_fingerprint, custody_tip, verdict, corroboration_count, salt)` —
+   every value the attestation asserts is inside the hash — and enforces the
    corroboration rule as a circuit constraint rather than a policy note: a
    `MALICE` verdict cannot be attested without `corroboration_count >= 2`. Any
    attempt to attest `MALICE` from a single source fails to produce a proof at all.
@@ -157,11 +159,13 @@ que funciona — las capas siguientes lo extienden, no lo condicionan.
    de sellado en particular*) y un `analysis_fingerprint` que lo excluye
    (identifica *el análisis en sí*, de modo que un replay determinista produce el
    mismo fingerprint). El fingerprint y el tip de la cadena de custodia — no el
-   bundle crudo — son lo que se commitea on-chain: el fingerprint para que un
-   replay del mismo análisis siga coincidiendo, el tip para que la historia de
-   custodia quede anclada a algo publicado.
+   bundle crudo — están entre los valores hasheados dentro del commitment
+   on-chain: el fingerprint para que un replay del mismo análisis siga
+   coincidiendo, el tip para que la historia de custodia quede anclada a algo
+   publicado.
 3. **El contrato Compact (el gate).** Publica `commitment = persistentHash
-   (bundle_fingerprint, custody_tip, salt)` y el veredicto declarado, y aplica la regla de
+   (dominio, bundle_fingerprint, custody_tip, veredicto, corroboration_count, salt)`
+   —todo lo que la atestación afirma está dentro del hash— y aplica la regla de
    corroboración como una restricción del circuito, no como una nota de
    política: un veredicto `MALICE` no puede atestarse sin
    `corroboration_count >= 2`. Cualquier intento de atestar `MALICE` con una sola

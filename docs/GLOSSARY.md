@@ -9,20 +9,26 @@ contradicted by a later one.
 
 **`bundle_fingerprint`** — The hash of a sealed analysis bundle with the
 timestamp excluded. Two independent runs of the same deterministic analysis on
-the same evidence produce the same fingerprint. This is the value committed
-on-chain, never the raw bundle.
+the same evidence produce the same fingerprint. It is one of the values hashed
+into the on-chain **commitment** — never the raw bundle.
 
 **`bundle_hash`** — The hash of the same bundle *including* the timestamp.
 Identifies one specific sealing event rather than the analysis it contains. Kept
 distinct from `bundle_fingerprint` so that a deterministic replay can be
 verified independently of when it happened.
 
-**Commitment** — `persistentHash(bundle_fingerprint, custody_tip, salt)`.
-Published on-chain. Hiding: reveals nothing about the fingerprint because the
-salt is random. Binding: once published, cannot be reinterpreted as the
-commitment of a different fingerprint — or of a different custody history.
-The custody tip is part of the commitment on purpose: without it, the chain of
-custody would not be anchored by anything published (see **Custody chain**).
+**Commitment** — `persistentHash(domain, bundle_fingerprint, custody_tip,
+verdict, corroboration_count, salt)`. Published on-chain. Hiding: reveals
+nothing about the inputs because the salt is random. Binding: once published,
+it cannot be reinterpreted as the commitment of a different analysis, a
+different custody history, a different verdict, or a different corroboration
+count. Everything the attestation asserts is inside the hash on purpose — an
+earlier design left the verdict and the count outside it, which made the
+circuit's guarantee vacuous (a sealed `NOISE` analysis could be attested as
+`MALICE` with a fabricated count). A useful side effect: since the verdict is
+hashed in, the same commitment can never carry two different verdicts, so an
+attestation cannot be silently overwritten — a correction has to be a new,
+visibly different commitment.
 
 **Corroboration count / Daubert gate** — The number of independent sources
 supporting a finding. A `MALICE` verdict cannot be attested unless
@@ -70,20 +76,26 @@ contradecir con una posterior.
 
 **`bundle_fingerprint`** — El hash de un bundle de análisis sellado, sin el
 timestamp. Dos corridas independientes del mismo análisis determinista sobre la
-misma evidencia producen el mismo fingerprint. Es el valor que se commitea
-on-chain, nunca el bundle crudo.
+misma evidencia producen el mismo fingerprint. Es uno de los valores hasheados
+dentro del **commitment** on-chain — nunca el bundle crudo.
 
 **`bundle_hash`** — El hash del mismo bundle *incluyendo* el timestamp.
 Identifica un evento de sellado particular, no el análisis que contiene. Se
 mantiene separado del `bundle_fingerprint` para poder verificar un replay
 determinista independientemente de cuándo ocurrió.
 
-**Commitment** — `persistentHash(bundle_fingerprint, custody_tip, salt)`. Se
-publica on-chain. Hiding: no revela nada del fingerprint porque el salt es
-aleatorio. Binding: una vez publicado, no puede reinterpretarse como el
-commitment de otro fingerprint — ni de otra historia de custodia. El tip de
-custodia forma parte del commitment a propósito: sin él, la cadena de custodia
-no quedaría anclada a nada publicado (ver **Cadena de custodia**).
+**Commitment** — `persistentHash(dominio, bundle_fingerprint, custody_tip,
+veredicto, corroboration_count, salt)`. Se publica on-chain. Hiding: no revela
+nada de las entradas porque el salt es aleatorio. Binding: una vez publicado, no
+puede reinterpretarse como el commitment de otro análisis, otra historia de
+custodia, otro veredicto ni otro conteo de corroboración. Todo lo que la
+atestación afirma está dentro del hash a propósito — un diseño anterior dejaba
+el veredicto y el conteo afuera, lo que volvía vacua la garantía del circuito
+(un análisis sellado como `NOISE` podía atestarse como `MALICE` con un conteo
+fabricado). Efecto secundario útil: como el veredicto está hasheado adentro, un
+mismo commitment nunca puede llevar dos veredictos distintos, así que una
+atestación no puede sobrescribirse en silencio — una corrección tiene que ser un
+commitment nuevo y visiblemente distinto.
 
 **Conteo de corroboración / gate Daubert** — La cantidad de fuentes
 independientes que respaldan un hallazgo. Un veredicto `MALICE` no puede

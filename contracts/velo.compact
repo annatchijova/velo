@@ -1,27 +1,32 @@
 // VELO — Capa 2: the gate.
 //
 // NOT YET COMPILED from this machine (no Compact toolchain here — per
-// team decision, compilation happens later, after red-team review, on a
-// machine that has it). Written to the best of the compact skill's
-// documented patterns; flagged below wherever a specific compiler
-// behavior could not be verified from here.
+// team decision, compilation happens after adversarial review, not
+// through compile-fix-compile iteration). Written to the best of the
+// compact skill's documented patterns; every place a specific compiler
+// behavior could not be verified from here is flagged inline.
 //
-// What this proves, per 00_VELO_MASTER.md sec 4 Capa 2:
-//   1. The prover knows a (bundleFingerprint, salt) pair whose commitment
-//      is the one being published.
-//   2. The published verdict is bound to that fingerprint (same witness
-//      call, same circuit execution — they cannot be mixed and matched).
+// What this proves:
+//   1. The prover knows the private values behind the published
+//      commitment (analysis fingerprint, custody tip, corroboration
+//      count, salt).
+//   2. The published verdict is genuinely bound to those values — it is
+//      hashed into the commitment, so a given commitment can only ever
+//      carry one verdict.
 //   3. verdict == MALICE implies corroborationCount >= 2 (the Daubert
-//      corroboration gate) — a boolean constraint, not a promise.
+//      corroboration gate) — a constraint, not a promise.
 //
 // Out of scope for the circuit, on purpose: validating that
-// `devil_advocate` is non-empty for MALICE. That's a free-text field —
-// enforcing it here would mean hashing/comparing arbitrary-length
-// witness strings inside a ZK circuit for no real security benefit
-// (nothing prevents a low-effort string). It's enforced in the TypeScript
-// engine (src/engine/scorer.ts) before a bundle is ever sealed. The
-// circuit's job is the part that's actually a cryptographic guarantee —
-// the corroboration count comparison — not a content-quality check.
+// `devil_advocate` is non-empty for MALICE. That is a free-text field —
+// enforcing it here would mean hashing arbitrary-length witness strings
+// inside a ZK circuit for no real security benefit (nothing prevents a
+// low-effort string). It is enforced in src/engine/scorer.ts before a
+// bundle is ever sealed.
+//
+// Also out of scope, stated plainly: this does NOT stop an expert who
+// lies from the start. It stops the verdict or the corroboration count
+// being changed *after* the analysis was sealed. Those are different
+// claims and only the second one is made here.
 
 pragma language_version >= 0.22;
 
@@ -33,82 +38,108 @@ export enum Verdict { NOISE, SUSPICION, MALICE, ABSTAIN }
 export ledger caseVerdicts: Map<Bytes<32>, Verdict>;
 export ledger attestationCount: Counter;
 
-// Private inputs — bodies live in TypeScript (src/mcp or a future wallet
-// integration), never on-chain, never even in cleartext inside the proof.
+// Private inputs — bodies live in src/witness/witnesses.ts, never
+// on-chain, never in cleartext inside the proof.
 witness bundleFingerprint(): Bytes<32>;
 witness bundleSalt(): Bytes<32>;
 
-// RED TEAM F3: the custody tip is now part of what the commitment binds.
-// Previously the commitment covered only the analysis fingerprint, which
-// excludes the custody chain by design — so an attacker could truncate
-// custody events, recompute the (public) bundleHash, and the on-chain
-// value would be unchanged. The documents called this commitment the
-// "defense against truncation" while it did not cover custody at all.
-// Binding both means a replayed identical analysis still matches
-// (the point of having a separate fingerprint) AND the custody history
-// is anchored.
+// The custody chain's tip. Part of the commitment so that truncating
+// custody events changes the published value — without it, the anchor
+// the documentation calls "the defense against truncation" would not
+// cover custody at all.
 witness custodyTip(): Bytes<32>;
 
 // Number of INDEPENDENT SOURCES (distinct provenance roots), not detector
-// categories — see red team F2 and src/engine/scorer.ts. Bounded so `>=`
-// is well-defined: per the compact skill sec 3, Uint<0..n> supports
-// ordering comparisons, plain Uint<n> is not documented to. 17 is an
-// arbitrary ceiling with headroom; it does not claim a real maximum.
+// categories. Stays private — how many sources corroborate is itself
+// information about the case — but is hashed into the commitment, so it
+// is fixed the moment the commitment is published. Bounded because
+// Uint<0..n> is the documented type supporting ordering comparisons;
+// 17 is a ceiling with headroom, not a claimed real maximum.
 witness corroborationCountWitness(): Uint<0..17>;
 
 // No constructor needed — Counter and Map both default to their zero
-// value (0 / empty) per the compact skill's "Default Values" section;
-// an explicit `attestationCount.increment(0)` would be redundant.
+// value (0 / empty) per the compact skill's "Default Values" section.
 
 /**
- * Attest that `caseCommitment` corresponds to a sealed bundle the prover
- * actually holds, and that if the declared verdict is MALICE, at least
- * two independent sources corroborate it.
+ * Attest a sealed analysis.
  *
- * FLAGGED FOR REVIEW / COMPILE TIME: the commitment below computes
- * persistentHash over a 3-element vector [fingerprint, custodyTip, salt]
- * — extended from the 2-element [fingerprint, salt] form documented in
- * 00_VELO_MASTER.md sec 5 after red team F3 showed that form left the
- * custody chain unanchored. Three open questions for the compiler:
- *   1. persistentHash(vector) vs persistentCommit(value, nonce) — the
- *      compact skill's "Pattern 1: Commitment" uses the latter, which is
- *      the idiomatic stdlib helper for hiding+binding. Both should be
- *      equivalent in spirit; brute-force risk is low either way because
- *      fingerprint and tip are already 32-byte hashes, not small values.
- *   2. Whether Vector<3, Bytes<32>> compiles and hashes as expected.
- *   3. Whether disclose() is genuinely required (vs a no-op) on values
- *      that are already public circuit arguments — used it anyway
- *      because the skill's own bulletin-board example does.
+ * The commitment is COMPUTED here rather than passed in and checked.
+ * Passing it in would allow a mismatch between the value the prover
+ * believes they are attesting and the values the proof actually covers;
+ * computing it means the published commitment is, by construction, the
+ * hash of exactly the witnesses that satisfied the constraints.
+ *
+ * WHY VERDICT AND COUNT ARE IN THE COMMITMENT (this was a real defect):
+ * an earlier version committed only [fingerprint, custodyTip, salt] and
+ * took `verdict` as a free public argument with `corroborationCount` as
+ * an unbound witness. Nothing tied either of them to the commitment, so
+ * a prover holding a legitimately sealed NOISE analysis could call
+ * attest(C, MALICE) with a fabricated count of 5: the preimage check
+ * passed, the Daubert check compared a number the prover had just typed
+ * against itself, and the ledger recorded MALICE for an analysis that
+ * said NOISE. The circuit's central claim was vacuous. Binding both
+ * values into the commitment fixes that, and has a second effect worth
+ * naming: because the verdict is hashed in, there is no way to produce
+ * the same commitment with a different verdict, so an attestation
+ * cannot be silently overwritten by re-attesting the same key. A
+ * correction has to be a new, visibly different commitment.
+ *
+ * FLAGGED FOR COMPILE TIME — four things this file could not verify:
+ *   1. `persistentHash<Vector<N, Bytes<32>>>` vs `persistentCommit(v,
+ *      nonce)`. The skill's "Pattern 1: Commitment" uses the latter as
+ *      the idiomatic hiding+binding helper. The Vector form is used here
+ *      because it hashes several heterogeneous values together, which is
+ *      what this commitment needs; brute-force risk is low either way
+ *      since fingerprint and tip are already 32-byte hashes.
+ *   2. Whether `Vector<6, Bytes<32>>` compiles and hashes as expected.
+ *   3. Whether `verdict as Field as Bytes<32>` is a legal cast for an
+ *      enum. The skill documents this chain for a Counter
+ *      (`sequence as Field as Bytes<32>`) but not for an enum. If the
+ *      compiler rejects it, the documented fallback is to hash a struct
+ *      instead of a Vector, keeping each field in its own type.
+ *   4. Whether `disclose()` is genuinely required (vs a no-op) on values
+ *      that are already public — used anyway, following the skill's own
+ *      bulletin-board example.
+ *
+ * KNOWN, NOT FIXED: re-attesting an identical (analysis, verdict, count)
+ * triple recomputes the same commitment and increments attestationCount
+ * again. Harmless to the record — the ledger entry is unchanged — but it
+ * double-counts. Decide at integration whether to reject a commitment
+ * already present.
  */
-export circuit attest(caseCommitment: Bytes<32>, verdict: Verdict): [] {
+export circuit attest(verdict: Verdict): [] {
   const fingerprint = bundleFingerprint();
   const tip = custodyTip();
   const salt = bundleSalt();
   const corroborationCount = corroborationCountWitness();
 
-  // F3: three-element commitment — analysis identity, custody history,
-  // and the blinding salt. Truncating custody now changes the commitment,
-  // so the on-chain record actually anchors what the docs claim it does.
-  const computedCommitment = persistentHash<Vector<3, Bytes<32>>>([fingerprint, tip, salt]);
-  assert(computedCommitment == caseCommitment, "commitment does not match the known bundle fingerprint, custody tip and salt");
-
-  // Material implication, not a branch: (verdict == MALICE) => (corroborationCount >= 2).
-  // Written as a boolean so there is no dependence on conditional-assert
-  // semantics inside the circuit, which this build could not verify
-  // against the actual compiler. Pure boolean/comparison operators are
-  // documented as supported; this avoids relying on anything that isn't.
+  // The Daubert gate. Material implication written as a boolean rather
+  // than a branch, so nothing depends on conditional-assert semantics
+  // inside a circuit that could not be checked against the compiler.
   const maliceRequiresCorroboration =
     !(verdict == Verdict.MALICE) || corroborationCount >= (2 as Uint<0..17>);
   assert(maliceRequiresCorroboration, "MALICE requires at least 2 independent corroborating sources — the Daubert gate");
 
-  caseVerdicts.insert(disclose(caseCommitment), disclose(verdict));
+  // Domain-separated so this hash can never collide with one computed
+  // for another purpose in this or any future circuit (compact skill,
+  // "Domain separator is critical").
+  const commitment = persistentHash<Vector<6, Bytes<32>>>([
+    pad(32, "velo:attestation:v1"),
+    fingerprint,
+    tip,
+    verdict as Field as Bytes<32>,
+    corroborationCount as Field as Bytes<32>,
+    salt
+  ]);
+
+  caseVerdicts.insert(disclose(commitment), disclose(verdict));
   attestationCount.increment(1);
 }
 
 /**
- * Public read helper — anyone can check whether a given case_commitment
- * has an attested verdict, without needing to be the perito who sealed
- * it. Mirrors verify_commitment() in src/mcp/server.ts, but on-chain.
+ * Public read helper — anyone can check whether a given commitment has
+ * an attested verdict, without being the expert who sealed it. Mirrors
+ * verify_commitment() in src/mcp/server.ts, but on-chain.
  */
 export circuit lookupVerdict(caseCommitment: Bytes<32>): Verdict {
   assert(caseVerdicts.member(disclose(caseCommitment)), "no attestation exists for this commitment");

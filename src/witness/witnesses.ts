@@ -15,6 +15,13 @@ import { attestationPayload } from "../seal/bundle.js";
  * statements *about* them; only the resulting commitment and the declared
  * verdict are published.
  *
+ * All four are hashed into the commitment (together with the public
+ * verdict and a domain separator). That matters for the count in
+ * particular: it stays private — how many sources corroborate is itself
+ * information about the case — while still being fixed at the moment the
+ * commitment is published. It cannot be re-chosen later to make a
+ * different verdict pass the Daubert gate.
+ *
  * NOT VERIFIED AGAINST THE COMPILER: the contract has never been
  * compiled (no Compact toolchain on the machine this was written on), so
  * the generated TypeScript bindings do not exist yet. The types below are

@@ -51,7 +51,7 @@ flowchart TB
 
     subgraph chain["MIDNIGHT LEDGER — public and immutable, forever"]
         direction TB
-        COMMIT["commitment<br/><i>persistentHash(fingerprint, custodyTip, salt)</i>"]
+        COMMIT["commitment<br/><i>binds analysis, custody, verdict and count</i>"]
         VERDICT["declared verdict"]
     end
 

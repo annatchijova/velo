@@ -169,17 +169,25 @@ export interface AttestationPayload {
 }
 
 /**
- * The two private values the Compact circuit's witnesses must return
+ * The bundle-derived values the Compact circuit's witnesses must return
  * (`bundleFingerprint()` and `custodyTip()` in contracts/velo.compact).
- * The third witness, the salt, is generated per-attestation and is not
- * derived from the bundle.
+ * The salt is generated per-case, not derived from the bundle, and the
+ * corroboration count is read straight off the score result.
  *
- * Deliberately NOT combined into a single hash here: the on-chain
- * commitment is computed by Compact's `persistentHash` inside the
- * circuit, which is not SHA-256 and cannot be reproduced from
- * TypeScript. Precomputing a "commitment" here would be a value that
- * merely looks like the on-chain one while never matching it — the kind
- * of near-miss that is worse than not having the function at all.
+ * The on-chain commitment covers MORE than these two: it is
+ * `persistentHash(domain, fingerprint, custodyTip, verdict,
+ * corroborationCount, salt)`, computed inside the circuit. The verdict
+ * and the count are in there deliberately — without them, the circuit
+ * proved knowledge of a preimage while the verdict it wrote to the
+ * ledger floated free of it, so a sealed NOISE analysis could be
+ * attested as MALICE with a fabricated count.
+ *
+ * Deliberately NOT recomputed here: Compact's `persistentHash` is not
+ * SHA-256 and cannot be reproduced from TypeScript. A "commitment"
+ * computed in this file would merely look like the on-chain one while
+ * never matching it — worse than not having the function at all. The
+ * real value comes from the generated bindings once the contract
+ * compiles.
  */
 export function attestationPayload(bundle: SealedBundle): AttestationPayload {
   return { analysisFingerprint: bundle.analysisFingerprint, custodyTip: chainTip(bundle.custodyChain) };
