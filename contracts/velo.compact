@@ -1,0 +1,99 @@
+// VELO — Capa 2: the gate.
+//
+// NOT YET COMPILED from this machine (no Compact toolchain here — per
+// team decision, compilation happens later, after red-team review, on a
+// machine that has it). Written to the best of the compact skill's
+// documented patterns; flagged below wherever a specific compiler
+// behavior could not be verified from here.
+//
+// What this proves, per 00_VELO_MASTER.md sec 4 Capa 2:
+//   1. The prover knows a (bundleFingerprint, salt) pair whose commitment
+//      is the one being published.
+//   2. The published verdict is bound to that fingerprint (same witness
+//      call, same circuit execution — they cannot be mixed and matched).
+//   3. verdict == MALICE implies corroborationCount >= 2 (the Daubert
+//      corroboration gate) — a boolean constraint, not a promise.
+//
+// Out of scope for the circuit, on purpose: validating that
+// `devil_advocate` is non-empty for MALICE. That's a free-text field —
+// enforcing it here would mean hashing/comparing arbitrary-length
+// witness strings inside a ZK circuit for no real security benefit
+// (nothing prevents a low-effort string). It's enforced in the TypeScript
+// engine (src/engine/scorer.ts) before a bundle is ever sealed. The
+// circuit's job is the part that's actually a cryptographic guarantee —
+// the corroboration count comparison — not a content-quality check.
+
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+export enum Verdict { NOISE, SUSPICION, MALICE, ABSTAIN }
+
+// Public ledger — everything here is plaintext on the network, forever.
+export ledger caseVerdicts: Map<Bytes<32>, Verdict>;
+export ledger attestationCount: Counter;
+
+// Private inputs — bodies live in TypeScript (src/mcp or a future wallet
+// integration), never on-chain, never even in cleartext inside the proof.
+witness bundleFingerprint(): Bytes<32>;
+witness bundleSalt(): Bytes<32>;
+// Bounded so `>=` is well-defined — see compact skill sec 3, Uint<0..n>
+// is the type that supports ordering comparisons, plain Uint<n> is not
+// documented to. 17 is an arbitrary ceiling comfortably above the 5
+// detector categories this build's engine can ever produce (see
+// src/engine/detectors.ts) — corroborationCount can never legitimately
+// exceed 5 today, so 17 leaves headroom without claiming a specific
+// future maximum.
+witness corroborationCountWitness(): Uint<0..17>;
+
+// No constructor needed — Counter and Map both default to their zero
+// value (0 / empty) per the compact skill's "Default Values" section;
+// an explicit `attestationCount.increment(0)` would be redundant.
+
+/**
+ * Attest that `caseCommitment` corresponds to a sealed bundle the prover
+ * actually holds, and that if the declared verdict is MALICE, at least
+ * two independent sources corroborate it.
+ *
+ * FLAGGED FOR RED TEAM: the commitment scheme below computes
+ * persistentHash over a 2-element vector of [fingerprint, salt] to match
+ * the C = persistentHash(bundle_fingerprint, salt) formula in
+ * 00_VELO_MASTER.md sec 5, exactly as documented there. The compact
+ * skill's own "Pattern 1: Commitment" example uses persistentCommit(v,
+ * nonce) instead, which is the more idiomatic Compact stdlib helper for
+ * this exact hiding+binding shape. Both should be cryptographically
+ * equivalent in spirit; confirm during red team which one the compiler
+ * / stdlib actually expects, and which one avoids brute-forcing risk
+ * given bundleFingerprint is already a 32-byte hash (large space) rather
+ * than a small value like a raw verdict integer would be.
+ */
+export circuit attest(caseCommitment: Bytes<32>, verdict: Verdict): [] {
+  const fingerprint = bundleFingerprint();
+  const salt = bundleSalt();
+  const corroborationCount = corroborationCountWitness();
+
+  const computedCommitment = persistentHash<Vector<2, Bytes<32>>>([fingerprint, salt]);
+  assert(computedCommitment == caseCommitment, "commitment does not match the known bundle fingerprint and salt");
+
+  // Material implication, not a branch: (verdict == MALICE) => (corroborationCount >= 2).
+  // Written as a boolean so there is no dependence on conditional-assert
+  // semantics inside the circuit, which this build could not verify
+  // against the actual compiler. Pure boolean/comparison operators are
+  // documented as supported; this avoids relying on anything that isn't.
+  const maliceRequiresCorroboration =
+    !(verdict == Verdict.MALICE) || corroborationCount >= (2 as Uint<0..17>);
+  assert(maliceRequiresCorroboration, "MALICE requires at least 2 independent corroborating sources — the Daubert gate");
+
+  caseVerdicts.insert(disclose(caseCommitment), disclose(verdict));
+  attestationCount.increment(1);
+}
+
+/**
+ * Public read helper — anyone can check whether a given case_commitment
+ * has an attested verdict, without needing to be the perito who sealed
+ * it. Mirrors verify_commitment() in src/mcp/server.ts, but on-chain.
+ */
+export circuit lookupVerdict(caseCommitment: Bytes<32>): Verdict {
+  assert(caseVerdicts.member(disclose(caseCommitment)), "no attestation exists for this commitment");
+  return caseVerdicts.lookup(disclose(caseCommitment));
+}
