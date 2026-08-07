@@ -18,7 +18,9 @@ the legal admissibility rule (at least two independent corroborating sources)
 was actually followed. The evidence itself never touches the network.
 
 See [`INSPIRATIONS.md`](./INSPIRATIONS.md) for the prior work this project
-draws on conceptually, and why nothing here is copy-pasted from it.
+draws on conceptually, and why nothing here is copy-pasted from it. See
+[`docs/`](./docs/) for architecture, glossary, demo cases, design FAQ, and
+roadmap.
 
 ## Español
 
@@ -33,6 +35,8 @@ toca la red.
 
 Ver [`INSPIRATIONS.md`](./INSPIRATIONS.md) para el trabajo previo del que
 parte este proyecto conceptualmente, y por qué nada acá es copy-paste de eso.
+Ver [`docs/`](./docs/) para arquitectura, glosario, casos de demo, FAQ de
+diseño y roadmap.
 
 ---
 
