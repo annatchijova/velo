@@ -70,6 +70,8 @@ later layers extend it, they don't gate it.
    publishes commitments for accredited experts. The circuit proves membership
    (via a Merkle proof inside the ZK proof) without revealing which expert
    attested — the same relationship a wallet address has to its owner's identity.
+   This is a credential check, not a biometric one — see
+   [`IDENTITY.md`](./IDENTITY.md) for why.
 8. **Blind second opinion (scope permitting).** A second expert can attest the
    same `case_commitment` independently; the contract records agreement or
    contradiction between attestations without either expert seeing the other's
@@ -102,6 +104,11 @@ Two closed reasons, not a preference:
   `commitment` and the proof travel to the ledger.
 
 ### What the proof does and does not establish
+
+**In one sentence:** VELO proves that a specific verdict was produced by a
+specific process, under specified constraints, and that the resulting
+attestation cannot be altered afterward. It does not replace forensic
+judgment; it makes forensic judgment auditable.
 
 The proof establishes that a verdict consistent with the Daubert-inspired
 corroboration gate was bound, at the moment of attestation, to a specific
@@ -205,7 +212,8 @@ que funciona — las capas siguientes lo extienden, no lo condicionan.
    de acreditación publica commitments de peritos acreditados. El circuito
    prueba pertenencia (vía una prueba de Merkle dentro de la prueba ZK) sin
    revelar cuál perito atestó — la misma relación que tiene una dirección de
-   wallet con la identidad de su dueño.
+   wallet con la identidad de su dueño. Es un chequeo de credencial, no
+   biométrico — ver [`IDENTITY.md`](./IDENTITY.md) para el porqué.
 8. **Segunda opinión ciega (si el alcance lo permite).** Un segundo perito puede
    atestar el mismo `case_commitment` de forma independiente; el contrato
    registra coincidencia o contradicción entre atestaciones sin que ninguno de
@@ -241,11 +249,29 @@ Dos razones cerradas, no una preferencia:
 
 ### Qué prueba la prueba y qué no
 
-La prueba establece que el veredicto publicado no fue alterado después del
-sellado y que la regla de corroboración efectivamente se cumplió — una garantía
-estructural y criptográfica, no una afirmación que descansa en confiar en el
-perito. **No** establece que el análisis original del perito se hizo de forma
-honesta; eso sigue siendo responsabilidad humana y judicial, igual que con
-cualquier peritaje hoy. VELO elimina la posibilidad de manipulación *posterior*
-de un veredicto sellado — no elimina la posibilidad de un perito corrupto en el
-momento del análisis.
+**En una frase:** VELO prueba que un veredicto específico fue producido por un
+proceso específico, bajo restricciones especificadas, y que la atestación
+resultante no puede alterarse después. No reemplaza el juicio forense; lo hace
+auditable.
+
+La prueba establece que un veredicto consistente con el gate de corroboración
+inspirado en Daubert quedó atado, en el momento de la atestación, a un
+fingerprint de análisis y un custody tip específicos, y que ese binding no
+puede alterarse después — una garantía estructural y criptográfica. **No**
+establece que el fingerprint corresponda a una corrida real del motor sobre
+evidencia real: ese binding hoy existe solo en el caller de TypeScript
+(`src/witness/witnesses.ts`), no dentro del circuito, que — por la naturaleza
+de un circuito ZK — prueba una relación *entre los valores de witness que se
+le dan*, no que esos valores describan algo que realmente ocurrió. Un prover
+que evita el código normal de llamada y provee bytes de witness a mano puede
+producir una prueba válida para evidencia que nunca fue analizada. Cerrar ese
+hueco requiere un mecanismo de procedencia del witness (firma del motor,
+credencial de perito acreditado, o attestation del entorno) que todavía no
+existe — ver `docs/RED_TEAM_ROUND_2.md` (hallazgo G1) y el roadmap.
+
+Por separado, e independientemente de lo anterior: **no** establece que el
+análisis original del perito se hizo de forma honesta; eso sigue siendo
+responsabilidad humana y judicial, igual que con cualquier peritaje hoy. VELO
+elimina la posibilidad de manipulación *posterior* de un veredicto sellado —
+no elimina la posibilidad de un perito corrupto en el momento del análisis, y
+todavía no elimina la posibilidad de que no haya habido ningún análisis real.

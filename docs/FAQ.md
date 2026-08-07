@@ -6,6 +6,16 @@ actually establishes.
 
 ## English
 
+**So VELO doesn't prove the evidence is true, or that the expert is honest, or
+that the algorithm is correct. What does it actually prove?**
+VELO proves that a specific verdict was produced by a specific process, under
+specified constraints, and that the resulting attestation cannot be altered
+afterward. It does not replace forensic judgment; it makes forensic judgment
+auditable. Everything the proof does *not* cover — witness provenance, source
+independence beyond analyst declaration, the honesty of the original analysis —
+is named explicitly, not implied away, in "What the proof does and does not
+establish" below and in `docs/RED_TEAM_ROUND_2.md`.
+
 **Why Midnight, and not Aztec or Aleo?**
 Aztec targets general smart-contract privacy in an Ethereum-like model — capable,
 but without the explicit dual-ledger (public/private) split VELO needs to
@@ -78,6 +88,17 @@ that specific combination, not "ZK for privacy" in general.
 ---
 
 ## Español
+
+**Entonces VELO no prueba que la evidencia sea verdadera, ni que el perito sea
+honesto, ni que el algoritmo sea correcto. ¿Qué prueba realmente?**
+VELO prueba que un veredicto específico fue producido por un proceso
+específico, bajo restricciones especificadas, y que la atestación resultante
+no puede alterarse después. No reemplaza el juicio forense; lo hace auditable.
+Todo lo que la prueba *no* cubre — la procedencia del witness, la
+independencia de las fuentes más allá de lo que declara el analista, la
+honestidad del análisis original — está nombrado explícitamente, no dado por
+sentado, en "Qué establece y qué no establece la prueba" más abajo y en
+`docs/RED_TEAM_ROUND_2.md`.
 
 **¿Por qué Midnight y no Aztec o Aleo?**
 Aztec apunta a privacidad general de smart contracts en un modelo tipo Ethereum

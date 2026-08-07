@@ -1,23 +1,29 @@
-import { runAllDetectors } from "../engine/detectors.js";
+import { runAllDetectors, type DetectorResult } from "../engine/detectors.js";
 import type { Artifact } from "../engine/evidence.js";
-import { score } from "../engine/scorer.js";
-import { sealBundle, verifyBundle, type BundleVerification } from "../seal/bundle.js";
+import { score, type ScoreResult } from "../engine/scorer.js";
+import { sealBundle, verifyBundle, type BundleVerification, type SealedBundle } from "../seal/bundle.js";
 import {
   appendCustodyEvent,
   createCustodyChain,
   verifyCustodyChain,
+  type CustodyChain,
   type CustodyEventType,
 } from "../seal/custody.js";
 import { listBundles, loadBundle, saveBundle, toSummary, type CaseListing, type CaseSummary } from "../mcp/store.js";
 
 /**
- * The operations both frontends call.
+ * The operations every interface calls.
  *
- * There are two ways into VELO — an MCP server (agents) and a loopback
- * HTTP server (the browser UI) — and they must not drift apart. Red team
- * F8 was exactly that failure in miniature: two copies of one function,
- * already diverged before anyone noticed. Interfaces are thin; the
- * behaviour lives here, once.
+ * There are three ways into VELO — the MCP server (agents), the Next.js
+ * API routes (the browser UI), and the CLI simulation — and they must not
+ * each grow their own copy of the rules. Red team F8 was exactly that
+ * failure in miniature: two copies of one function, already diverged
+ * before anyone noticed. Interfaces stay thin; the behaviour lives here.
+ *
+ * Two things in particular must never be reimplemented per-interface,
+ * because getting either subtly wrong changes a verdict:
+ *   - how the custody chain is assembled from caller-supplied events;
+ *   - how `custodyValid` is DERIVED from that chain rather than asserted.
  */
 
 export interface CustodyEventInput {
@@ -26,11 +32,63 @@ export interface CustodyEventInput {
   detail: string;
 }
 
-export interface SealCaseInput {
+export interface AnalyzeCaseInput {
   caseId: string;
   artifacts: Artifact[];
   devilAdvocate: string;
   custodyEvents: CustodyEventInput[];
+}
+
+export interface AnalysisResult {
+  detectorResults: DetectorResult[];
+  scoreResult: ScoreResult;
+  custodyChain: CustodyChain;
+  custodyValid: boolean;
+  custodyReason: string;
+}
+
+/**
+ * Run the engine without sealing anything — what the UI shows before the
+ * user commits to a seal.
+ */
+export function analyzeCase(input: AnalyzeCaseInput): AnalysisResult {
+  const { caseId, artifacts, devilAdvocate, custodyEvents } = input;
+
+  let custodyChain = createCustodyChain(caseId);
+  for (const ev of custodyEvents) {
+    custodyChain = appendCustodyEvent(custodyChain, ev.eventType, ev.timestamp, ev.detail);
+  }
+  custodyChain = appendCustodyEvent(custodyChain, "ANALYZED", new Date().toISOString(), "deterministic engine ran");
+
+  // Derived, never asserted. Evidence with no acquisition history cannot
+  // support an admissible verdict, whatever it shows.
+  const custodyCheck = verifyCustodyChain(custodyChain);
+  const hasAcquisitionHistory = custodyEvents.length > 0;
+  const custodyValid = custodyCheck.valid && hasAcquisitionHistory;
+
+  const detectorResults = runAllDetectors(artifacts);
+  const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid });
+
+  return {
+    detectorResults,
+    scoreResult,
+    custodyChain,
+    custodyValid,
+    custodyReason: hasAcquisitionHistory
+      ? custodyCheck.reason
+      : "No custody events supplied — treated as no chain of custody, so the verdict is ABSTAIN.",
+  };
+}
+
+/** Seal an analysis that has already been run. Does not touch disk. */
+export function sealAnalysis(caseId: string, artifacts: Artifact[], analysis: AnalysisResult): SealedBundle {
+  return sealBundle(
+    caseId,
+    new Date().toISOString(),
+    analysis.scoreResult,
+    { caseId, artifacts },
+    analysis.custodyChain,
+  );
 }
 
 export interface SealCaseResult {
@@ -43,37 +101,20 @@ export interface SealCaseResult {
   detectorsFired: string[];
 }
 
-export function sealCase(input: SealCaseInput): SealCaseResult {
-  const { caseId, artifacts, devilAdvocate, custodyEvents } = input;
-
-  let chain = createCustodyChain(caseId);
-  for (const ev of custodyEvents) {
-    chain = appendCustodyEvent(chain, ev.eventType, ev.timestamp, ev.detail);
-  }
-  chain = appendCustodyEvent(chain, "ANALYZED", new Date().toISOString(), "deterministic engine ran");
-
-  // Derived, never asserted: evidence with no acquisition history cannot
-  // support an admissible verdict, whatever it shows.
-  const custodyCheck = verifyCustodyChain(chain);
-  const hasAcquisitionHistory = custodyEvents.length > 0;
-  const custodyValid = custodyCheck.valid && hasAcquisitionHistory;
-
-  const detectorResults = runAllDetectors(artifacts);
-  const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid });
-
-  const bundle = sealBundle(caseId, new Date().toISOString(), scoreResult, { caseId, artifacts }, chain);
+/** Analyze, seal, and persist — the MCP server's `seal_case`. */
+export function sealCase(input: AnalyzeCaseInput): SealCaseResult {
+  const analysis = analyzeCase(input);
+  const bundle = sealAnalysis(input.caseId, input.artifacts, analysis);
   const savedTo = saveBundle(bundle);
 
   return {
     savedTo,
     summary: toSummary(bundle),
-    reasoning: scoreResult.reasoning,
-    custodyValid,
-    custodyNote: hasAcquisitionHistory
-      ? custodyCheck.reason
-      : "No custody events supplied — treated as no chain of custody, so the verdict is ABSTAIN.",
-    corroboratingSources: scoreResult.corroboratingSources,
-    detectorsFired: scoreResult.detectorsFired,
+    reasoning: analysis.scoreResult.reasoning,
+    custodyValid: analysis.custodyValid,
+    custodyNote: analysis.custodyReason,
+    corroboratingSources: analysis.scoreResult.corroboratingSources,
+    detectorsFired: analysis.scoreResult.detectorsFired,
   };
 }
 

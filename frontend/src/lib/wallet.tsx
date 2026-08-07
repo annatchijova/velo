@@ -30,7 +30,9 @@ export const WALLET_INSTALL_URLS: Record<Exclude<WalletKind, "demo">, string> = 
 
 export type NetworkId = "mainnet" | "preview" | "preprod" | "undeployed";
 
-export const DEFAULT_NETWORK: NetworkId = "preprod";
+// Preview is the Hack Buenos Aires hackathon's official network (kickoff
+// talk, Jay Albert) — not preprod, which earlier local testing defaulted to.
+export const DEFAULT_NETWORK: NetworkId = "preview";
 
 interface WalletSession {
   kind: WalletKind;

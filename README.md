@@ -7,6 +7,13 @@ Zero-knowledge attestation of forensic verdicts on [Midnight](https://midnight.n
 A forensic expert can prove their verdict is legitimate **without ever
 publishing the evidence it came from**.
 
+> VELO proves that a specific verdict was produced by a specific process,
+> under specified constraints, and that the resulting attestation cannot be
+> altered afterward. It does not replace forensic judgment; it makes forensic
+> judgment auditable. (See "What the proof does and does not establish" in
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for exactly where that
+> boundary sits.)
+
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
 ---
@@ -207,18 +214,44 @@ src/mcp/         MCP server — the wallet interface
 contracts/       velo.compact — the ZK gate
 cases/           13 synthetic cases, zero PII
 peritos-syntetic/ 6 synthetic expert-witness profiles
-docs/            architecture, glossary, cases, FAQ, roadmap, red team report
+docs/            architecture, glossary, cases, FAQ, business case, identity, roadmap, red team reports
 ```
 
 Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`GLOSSARY`](./docs/GLOSSARY.md) · [`CASES`](./docs/CASES.md) ·
 [`FAQ`](./docs/FAQ.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
-[`RED TEAM`](./docs/RED_TEAM_ROUND_1.md) ·
+[`IDENTITY`](./docs/IDENTITY.md) ·
 [`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
+[`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
+[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md)
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are
 Python, this one is TypeScript and Compact.
+
+## Development conventions
+
+This repository follows a small, explicit set of engineering conventions so that
+reviews stay focused on substance rather than formatting. The rules are enforced
+automatically where possible.
+
+- **Conventional Commits v1.0.0** — every commit message follows the
+  `<type>[optional scope]: <description>` shape. A Husky `commit-msg` hook runs
+  [`commitlint`](https://commitlint.js.org/) with
+  `@commitlint/config-conventional`, and a non-conforming message is rejected
+  before it is recorded.
+- **Semantic Versioning 2.0.0** — the package version (`package.json`) is the
+  single source of truth and is bumped with `npm version` (e.g. `npm version
+  minor`).
+- **Keep a Changelog 1.1.0** — notable changes are recorded in
+  [`CHANGELOG.md`](./CHANGELOG.md), grouped under Added / Changed / Deprecated /
+  Removed / Fixed / Security, with an `Unreleased` section at the top.
+- **Husky pre-commit / pre-push setup** — a Husky `prepare` script installs the
+  git hooks on `npm install`. The `commit-msg` hook enforces Conventional
+  Commits; add a `pre-commit` or `pre-push` hook under `.husky/` for further
+  local guards.
+
+Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ---
 
@@ -232,9 +265,17 @@ al tribunal que confíe en su palabra.
 VELO no elige ninguna. El perito corre un motor determinista en su propia
 máquina, sella el resultado, y publica **solo un commitment y una prueba de
 conocimiento cero**. La prueba establece dos cosas a la vez: que el veredicto
-publicado corresponde al análisis sellado, y que se cumplió la regla legal de
-admisibilidad — *al menos dos fuentes de corroboración independientes para un
-veredicto `MALICE`*.
+publicado corresponde al análisis sellado, y que se cumplió un criterio de
+admisibilidad formalizado, inspirado en el estándar Daubert — *al menos dos
+fuentes, declaradas independientes por el analista y distintas por raíz de
+cadena de proveniencia, para un veredicto `MALICE`*.
+
+> VELO prueba que un veredicto específico fue producido por un proceso
+> específico, bajo restricciones especificadas, y que la atestación resultante
+> no puede alterarse después. No reemplaza el juicio forense; lo hace
+> auditable. (Ver "Qué prueba la prueba y qué no" en
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) para saber exactamente
+> dónde está ese límite.)
 
 Esa regla no es una nota de política ni una convención de code review. Es una
 restricción dentro del circuito: **una atestación que la viole no puede
