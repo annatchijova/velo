@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyBundle } from "velo/seal/bundle.js";
 import { verifyCustodyChain } from "velo/seal/custody.js";
+import { requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -33,6 +34,9 @@ function applyTamper(bundle: Record<string, unknown>, tamper: string): Record<st
 }
 
 export async function POST(req: Request) {
+  const contentTypeError = requireJsonContentType(req);
+  if (contentTypeError) return contentTypeError;
+
   let body: VerifyBody;
   try {
     body = (await req.json()) as VerifyBody;

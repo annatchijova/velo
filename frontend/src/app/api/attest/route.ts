@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { computeCommitment } from "@/lib/contract";
+import { requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -19,6 +20,9 @@ interface AttestBody {
 }
 
 export async function POST(req: Request) {
+  const contentTypeError = requireJsonContentType(req);
+  if (contentTypeError) return contentTypeError;
+
   let body: AttestBody;
   try {
     body = (await req.json()) as AttestBody;

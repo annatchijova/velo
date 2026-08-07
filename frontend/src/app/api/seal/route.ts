@@ -3,6 +3,7 @@ import { analyzeCase, sealAnalysis } from "velo/core/operations.js";
 import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { Fraction } from "velo/engine/fraction.js";
 import type { Artifact, CustodyEvent, DetectorResult, ScoreResult } from "@/lib/types";
+import { requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -66,6 +67,9 @@ function serializeScore(s: {
 }
 
 export async function POST(req: Request) {
+  const contentTypeError = requireJsonContentType(req);
+  if (contentTypeError) return contentTypeError;
+
   let body: SealBody;
   try {
     body = (await req.json()) as SealBody;
