@@ -1,0 +1,48 @@
+{
+  "case_id": "VELO-002",
+  "name": "The Uniform Log Auction",
+  "description": "Fifty log entries report AuthFailure at exact 2,000-second intervals with identical entropy. A naive system would see 50 failures and conclude brute-force attack. But memory shows no process generating those events.",
+  "expected_verdict": "SUSPICION",
+  "expected_corroboration_count": 1,
+  "devil_advocate": "",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T11:00:00Z", "detail": "Auth log anomaly flagged by monitoring." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T11:30:00Z", "detail": "Log file and a memory snapshot acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T12:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
+  "artifacts": [
+    {
+      "id": "v002-logs",
+      "type": "log",
+      "timestamp": "2026-04-10T11:00:00Z",
+      "source": "system_log",
+      "process": "authd",
+      "path": "/var/log/auth.log",
+      "entropyMilliBits": 3145,
+      "markers": ["temporal_entropy_null"],
+      "description": "50 AuthFailure events at 2,000s ± 0.001s intervals and entropy 3.145 ± 0.002. Inhumanly precise — real attacks and real humans have variance, not exact intervals.",
+      "provenanceChain": ["sha256:v002logs01"]
+    },
+    {
+      "id": "v002-memory",
+      "type": "process",
+      "timestamp": "2026-04-10T11:01:40Z",
+      "source": "memory_forensics",
+      "process": "systemd",
+      "path": "/proc",
+      "entropyMilliBits": 4000,
+      "markers": [],
+      "description": "Memory scan: NO brute-force tool running. No network sockets match the source IP from the logs. Pure context — this artifact shows the absence of corroboration, it doesn't itself trip a detector.",
+      "provenanceChain": ["sha256:v002mem02"]
+    }
+  ],
+  "expected_fractures": [
+    "TEMPORAL_ENTROPY_NULL"
+  ],
+  "peirce_chain": {
+    "firstness": "50 AuthFailure log entries with near-perfect 2s intervals.",
+    "secondness": "Memory does not confirm an attacking process; the logs have no technical counterpart.",
+    "thirdness": "The logs are fabricated via scripted injection. Strong signal but no independent corroboration."
+  },
+  "demo_quote": "A naive system sees 50 failures and screams MALICE. VELO detects that the temporal variance is inhuman — but a single detector, from a single source, can never reach MALICE on its own (max category weight is below the threshold by design). Strong signal, but one source: SUSPICION."
+}

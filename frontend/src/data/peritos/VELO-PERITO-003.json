@@ -1,0 +1,18 @@
+{
+  "perito_id": "VELO-PERITO-003",
+  "public_alias": "Perito-E81D",
+  "jurisdiction_model": "AR",
+  "specialty": "Digital forensics",
+  "accrediting_body_synthetic": "Costa Nueva Systems Engineering Board (fictional)",
+  "credential_id_synthetic": "CISCN-INF-2019-00734",
+  "matriculation_year": 2015,
+  "years_active": 11,
+  "valid_from": "2023-09-01T00:00:00Z",
+  "valid_until": "2026-09-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 50,
+  "cases_attested": ["VELO-005"],
+  "credential_status_at_attestation": {
+    "VELO-005": "VALID"
+  },
+  "notes": "First independent opinion on VELO-005 (multi-source convergence case). Designed together with VELO-PERITO-004 to exercise Layer 7: two examiners attest to the same case_commitment without seeing each other or each other's analysis — the contract only records agreement or contradiction of verdict, never the content."
+}

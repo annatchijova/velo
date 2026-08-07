@@ -1,0 +1,61 @@
+{
+  "case_id": "VELO-008",
+  "name": "The Altered Mise en Place",
+  "description": "Commit in deploy.sh with the message 'cleaning up redundant logs'. A single added line redirects auth_check's stderr to /dev/null with || true, silencing authentication failures and causing fail-open.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "The change looks like a readability improvement, but its effect is to silence authentication errors. A commit with such small surface and such high impact requires adversarial review.",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T22:40:00Z", "detail": "Post-deploy auth-failure spike with zero alerts flagged the discrepancy." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T23:10:00Z", "detail": "Git history, diff, and auth log acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T23:30:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
+  "artifacts": [
+    {
+      "id": "v008-commit",
+      "type": "log",
+      "timestamp": "2026-04-10T22:45:33Z",
+      "source": "git_audit",
+      "process": "git",
+      "path": "/repo/deploy.sh",
+      "entropyMilliBits": 4100,
+      "markers": ["documentary_fabrication"],
+      "description": "Commit 'Cleaning up redundant logs'. +1 line, 0 removed. Author: devops@corp.com. The commit message documents an innocuous change; the actual diff does something else entirely — a fabricated record of intent.",
+      "provenanceChain": ["sha256:v008git01"]
+    },
+    {
+      "id": "v008-diff",
+      "type": "file",
+      "timestamp": "2026-04-10T22:45:40Z",
+      "source": "code_audit",
+      "process": "diff",
+      "path": "/repo/deploy.sh:147",
+      "entropyMilliBits": 3500,
+      "markers": [],
+      "description": "Added line: 'auth_check() 2>/dev/null || true'. Silences pam_authenticate; if there's an error, it continues as if nothing happened. Context — the mechanism, not itself a scored contributor.",
+      "provenanceChain": ["sha256:v008diff02"]
+    },
+    {
+      "id": "v008-silence",
+      "type": "log",
+      "timestamp": "2026-04-10T23:00:00Z",
+      "source": "system_log",
+      "process": "deploy_service",
+      "path": "/var/log/auth.log",
+      "entropyMilliBits": 1200,
+      "markers": ["log_cleared"],
+      "description": "47 authentication failures in the post-deploy window. No 4625 event generated. The authentication module's alerting was silenced going forward — functionally equivalent to clearing the trail for everything after the deploy.",
+      "provenanceChain": ["sha256:v008log03"]
+    }
+  ],
+  "expected_fractures": [
+    "DOCUMENTARY_FABRICATION",
+    "LOG_CLEARED"
+  ],
+  "peirce_chain": {
+    "firstness": "Innocuous log-cleanup commit.",
+    "secondness": "The added line silences authentication errors and forces fail-open.",
+    "thirdness": "A minimal change with maximum security impact, disguised as a refactor."
+  },
+  "demo_quote": "A single line can open a door. VELO detects that the surface of the change doesn't match its impact on the authentication function."
+}

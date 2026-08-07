@@ -1,0 +1,51 @@
+{
+  "case_id": "VELO-007",
+  "name": "The Ventriloquist",
+  "description": "svchost.exe with a valid hash and Microsoft signature running from C:\\Users\\Public\\Downloads, with parent cmd.exe and a persistent connection to an IP in an unusual country. The process is legitimate, the configuration isn't.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "svchost.exe is a legitimate binary, but its path, parent process, and C2 connection are anomalous. The attacker uses the binary as a puppet.",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T17:15:00Z", "detail": "EDR alert on svchost.exe running from an unusual path." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T17:40:00Z", "detail": "Memory snapshot and network capture acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T18:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
+  "artifacts": [
+    {
+      "id": "v007-process",
+      "type": "process",
+      "timestamp": "2026-04-10T17:20:00Z",
+      "source": "memory_forensics",
+      "process": "svchost.exe",
+      "path": "C:\\Users\\Public\\Downloads\\svchost.exe",
+      "entropyMilliBits": 5500,
+      "markers": ["process_masquerade", "unusual_path", "parent_anomaly"],
+      "description": "svchost.exe running from Downloads, not from System32. Parent process: cmd.exe. Valid hash, valid Microsoft signature.",
+      "provenanceChain": ["sha256:v007mem01"]
+    },
+    {
+      "id": "v007-network",
+      "type": "network",
+      "timestamp": "2026-04-10T17:25:00Z",
+      "source": "network_capture",
+      "process": "svchost.exe",
+      "path": "conn://185.220.101.77:443",
+      "entropyMilliBits": 6200,
+      "markers": ["network_vs_host"],
+      "description": "Persistent HTTPS connection every 60 seconds to an IP in a country where the company has no operations — the network behavior contradicts what a real svchost.exe should ever be doing.",
+      "provenanceChain": ["sha256:v007pcap02"]
+    }
+  ],
+  "expected_fractures": [
+    "PROCESS_MASQUERADE",
+    "UNUSUAL_PATH",
+    "PARENT_ANOMALY",
+    "NETWORK_HOST_CONTRADICTION"
+  ],
+  "peirce_chain": {
+    "firstness": "Legitimate process in an unusual path with a suspicious parent.",
+    "secondness": "Persistent C2 connection to a geographically anomalous IP.",
+    "thirdness": "The attacker uses a trusted binary as a puppet. The valid signature doesn't clean the behavior."
+  },
+  "demo_quote": "A valid digital signature doesn't make an execution legitimate. The context — path, parent, network — gives away the ventriloquist."
+}

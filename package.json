@@ -11,6 +11,11 @@
     "simulate": "tsc -p . && node dist/src/simulate.js",
     "web": "tsc -p . && node dist/src/web/server.js"
   },
+  "workspaces": ["frontend"],
+  "exports": {
+    "./*": "./dist/src/*",
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^3.23.0"

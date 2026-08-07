@@ -1,0 +1,61 @@
+{
+  "case_id": "VELO-006",
+  "name": "The Surgical Void",
+  "description": "A 2KB file in /tmp was deleted with shred -n 7 -z -u. The asymmetry between the insignificant size and the destruction effort indicates the content was valuable and the actor knew it could be forensically recovered.",
+  "expected_verdict": "MALICE",
+  "expected_corroboration_count": 2,
+  "devil_advocate": "A legitimate user rarely uses seven-pass shred. The tool and the pattern indicate forensic awareness and intent to destroy evidence.",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T16:40:00Z", "detail": "Anomalous audit-log entry flagged." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T17:00:00Z", "detail": "Audit log, disk image and process log acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T17:30:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
+  "artifacts": [
+    {
+      "id": "v006-deletion",
+      "type": "log",
+      "timestamp": "2026-04-10T16:45:00Z",
+      "source": "audit_log",
+      "process": "shred",
+      "path": "/tmp/note.txt",
+      "entropyMilliBits": 3800,
+      "markers": ["surgical_deletion"],
+      "description": "Command 'shred -n 7 -z -u /tmp/note.txt'. 7 overwrite passes + zeroing for a 2KB file.",
+      "provenanceChain": ["sha256:v006audit01"]
+    },
+    {
+      "id": "v006-recovered",
+      "type": "file",
+      "timestamp": "2026-04-10T16:46:00Z",
+      "source": "disk_image",
+      "process": "carver",
+      "path": "/dev/sda1",
+      "entropyMilliBits": 7900,
+      "markers": [],
+      "description": "Recovered file fragment shows high-entropy content. Filesystem metadata indicates the inode was reused immediately. Context only — shows what was destroyed, doesn't itself trip a detector.",
+      "provenanceChain": ["sha256:v006disk02"]
+    },
+    {
+      "id": "v006-process",
+      "type": "process",
+      "timestamp": "2026-04-10T16:44:50Z",
+      "source": "process_log",
+      "process": "svc-helper",
+      "path": "/usr/bin/.tmp/svc-helper",
+      "entropyMilliBits": 4600,
+      "markers": ["process_masquerade"],
+      "description": "The shred binary was invoked via a renamed copy disguised as a system service ('svc-helper'), avoiding straightforward audit-trail attribution.",
+      "provenanceChain": ["sha256:v006proc03"]
+    }
+  ],
+  "expected_fractures": [
+    "SURGICAL_DELETION",
+    "PROCESS_MASQUERADE"
+  ],
+  "peirce_chain": {
+    "firstness": "Small file destroyed with a military-grade method.",
+    "secondness": "The size/effort asymmetry has no legitimate explanation, and the tool used to do it was itself disguised.",
+    "thirdness": "The actor tried to eliminate high-value evidence and hide who did it. The destruction itself is evidence."
+  },
+  "demo_quote": "Nobody wipes a 2KB text file seven times. The destruction effort reveals the value of what was meant to be hidden — and a single anti-forensic signal alone tops out at SUSPICION by design, so it took the disguised invocation to cross into MALICE."
+}
