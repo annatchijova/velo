@@ -155,11 +155,16 @@ the evidence came from. The system verifies that two sources were
 *declared* distinct; it does not cryptographically prove they are
 genuinely independent (see `docs/RED_TEAM_ROUND_2.md`, finding G3).
 
-**`devil_advocate`** — A mandatory field on any `MALICE` verdict
-recording the strongest innocent explanation that was considered, and
-why it was rejected. If it is empty, the engine refuses to publish
+**`devil_advocate`** — A mandatory field on any `MALICE` verdict,
+meant to record the strongest innocent explanation that was considered
+and why it was rejected. If it is empty, the engine refuses to publish
 `MALICE` and downgrades to `SUSPICION`. It exists because the most
-dangerous forensic error is finding what you expected to find.
+dangerous forensic error is finding what you expected to find. **What
+the engine actually verifies:** only that the field is non-empty after
+trimming (`docs/RED_TEAM_ROUND_2.md`, finding G10) — it cannot verify
+the explanation is genuine, evidence-grounded, or was seriously
+considered. That verification is human and judicial, the same as with
+any expert's stated reasoning today.
 
 **`bundle_fingerprint`** — The hash of the sealed analysis with the
 timestamp removed. Running the same analysis on the same evidence twice
@@ -339,11 +344,17 @@ fueron *declaradas* distintas; no prueba criptográficamente que sean
 genuinamente independientes (ver `docs/RED_TEAM_ROUND_2.md`, hallazgo
 G3).
 
-**`devil_advocate`** — Campo obligatorio en todo veredicto `MALICE` que
-registra la explicación inocente más fuerte que se consideró, y por qué
-se descartó. Si está vacío, el motor se niega a publicar `MALICE` y
-degrada a `SUSPICION`. Existe porque el error forense más peligroso es
-encontrar lo que uno esperaba encontrar.
+**`devil_advocate`** — Campo obligatorio en todo veredicto `MALICE`,
+pensado para registrar la explicación inocente más fuerte que se
+consideró, y por qué se descartó. Si está vacío, el motor se niega a
+publicar `MALICE` y degrada a `SUSPICION`. Existe porque el error
+forense más peligroso es encontrar lo que uno esperaba encontrar. **Lo
+que el motor realmente verifica:** solo que el campo no esté vacío
+después de recortar espacios (`docs/RED_TEAM_ROUND_2.md`, hallazgo
+G10) — no puede verificar que la explicación sea genuina, esté
+fundada en evidencia, o haya sido considerada en serio. Esa
+verificación sigue siendo humana y judicial, igual que con el
+razonamiento declarado de cualquier perito hoy.
 
 **`bundle_fingerprint`** — El hash del análisis sellado, sin el
 timestamp. Correr el mismo análisis sobre la misma evidencia dos veces

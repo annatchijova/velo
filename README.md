@@ -7,6 +7,13 @@ Zero-knowledge attestation of forensic verdicts on [Midnight](https://midnight.n
 A forensic expert can prove their verdict is legitimate **without ever
 publishing the evidence it came from**.
 
+> VELO proves that a specific verdict was produced by a specific process,
+> under specified constraints, and that the resulting attestation cannot be
+> altered afterward. It does not replace forensic judgment; it makes forensic
+> judgment auditable. (See "What the proof does and does not establish" in
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for exactly where that
+> boundary sits.)
+
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
 ---
@@ -176,6 +183,33 @@ claude mcp add velo -- node "$(pwd)/dist/src/mcp/server.js"
 | Block explorer | `verify_commitment` |
 | Send transaction | `attest_case` *(pending the contract)* |
 
+### Deploying
+
+`deploy/deploy-contract.ts` deploys `contracts/velo.compact` to the network in
+`deploy/network-config.ts` (`preview` by default — the hackathon's official
+network). It runs under [Bun](https://bun.sh), not `npm run build && node`:
+the deploy dependency ships raw `.ts` exports that plain `tsc`/`node` cannot
+resolve.
+
+```bash
+MIDNIGHT_NETWORK_ID=preview \
+MIDNIGHT_STORAGE_PASSWORD=<a-real-secret-you-pick> \
+MIDNIGHT_WALLET_SEED=<your-wallet-seed> \
+bun run deploy/deploy-contract.ts
+```
+
+**Use a wallet with nothing in it you can't afford to lose.** The deploy
+dependency logs the wallet seed to stdout as part of its normal, unconditional
+output — this repo redacts that line before it reaches your terminal (red
+team [F16](./docs/RED_TEAM_ROUND_4.md)), but that is a mitigation around a
+third-party default, not a guarantee the way the rest of this project's
+guarantees are. Treat any wallet used here as disposable regardless.
+
+`MIDNIGHT_STORAGE_PASSWORD` has no default — pick a real secret and never
+commit it. It encrypts the local signing-key store, not a throwaway
+namespace string (red team [F17](./docs/RED_TEAM_ROUND_4.md), fixed: this
+used to fall back to a hardcoded value).
+
 ## Status — what is real and what is not
 
 This project is 48 hours old. The table is honest on purpose; overclaiming is
@@ -215,11 +249,36 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`FAQ`](./docs/FAQ.md) · [`BUSINESS`](./docs/BUSINESS.md) ·
 [`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
-[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md)
+[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are
 Python, this one is TypeScript and Compact.
+
+## Development conventions
+
+This repository follows a small, explicit set of engineering conventions so that
+reviews stay focused on substance rather than formatting. The rules are enforced
+automatically where possible.
+
+- **Conventional Commits v1.0.0** — every commit message follows the
+  `<type>[optional scope]: <description>` shape. A Husky `commit-msg` hook runs
+  [`commitlint`](https://commitlint.js.org/) with
+  `@commitlint/config-conventional`, and a non-conforming message is rejected
+  before it is recorded.
+- **Semantic Versioning 2.0.0** — the package version (`package.json`) is the
+  single source of truth and is bumped with `npm version` (e.g. `npm version
+  minor`).
+- **Keep a Changelog 1.1.0** — notable changes are recorded in
+  [`CHANGELOG.md`](./CHANGELOG.md), grouped under Added / Changed / Deprecated /
+  Removed / Fixed / Security, with an `Unreleased` section at the top.
+- **Husky pre-commit / pre-push setup** — a Husky `prepare` script installs the
+  git hooks on `npm install`. The `commit-msg` hook enforces Conventional
+  Commits; add a `pre-commit` or `pre-push` hook under `.husky/` for further
+  local guards.
+
+Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ---
 
@@ -233,9 +292,17 @@ al tribunal que confíe en su palabra.
 VELO no elige ninguna. El perito corre un motor determinista en su propia
 máquina, sella el resultado, y publica **solo un commitment y una prueba de
 conocimiento cero**. La prueba establece dos cosas a la vez: que el veredicto
-publicado corresponde al análisis sellado, y que se cumplió la regla legal de
-admisibilidad — *al menos dos fuentes de corroboración independientes para un
-veredicto `MALICE`*.
+publicado corresponde al análisis sellado, y que se cumplió un criterio de
+admisibilidad formalizado, inspirado en el estándar Daubert — *al menos dos
+fuentes, declaradas independientes por el analista y distintas por raíz de
+cadena de proveniencia, para un veredicto `MALICE`*.
+
+> VELO prueba que un veredicto específico fue producido por un proceso
+> específico, bajo restricciones especificadas, y que la atestación resultante
+> no puede alterarse después. No reemplaza el juicio forense; lo hace
+> auditable. (Ver "Qué prueba la prueba y qué no" en
+> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) para saber exactamente
+> dónde está ese límite.)
 
 Esa regla no es una nota de política ni una convención de code review. Es una
 restricción dentro del circuito: **una atestación que la viole no puede

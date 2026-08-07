@@ -15,6 +15,19 @@ dependency); the Compact contract is integrated behind a single seam in
 - Tailwind CSS 3.4, Framer Motion, lucide-react
 - `velo` (`file:../velo`) — deterministic forensic engine + sealing
 - `@midnight-ntwrk/dapp-connector-api` — Lace + 1AM wallet connection (v4)
+- **Vitest + React Testing Library** — unit and integration tests
+- **Playwright** — end-to-end tests
+
+## Development workflow
+
+All frontend work follows **Test-Driven Development (TDD)**. See the official workflow in [`docs/FRONTEND_TDD.md`](../docs/FRONTEND_TDD.md). In short:
+
+1. Write failing tests aligned with acceptance criteria.
+2. Write the minimal implementation to make tests pass.
+3. Refactor while keeping tests green.
+4. Run the full frontend suite with `npm run test:all`.
+
+No frontend feature, component, or module may be added without its corresponding tests written first.
 
 ## Run
 
@@ -46,6 +59,17 @@ separately. Until it deploys, `/api/attest` computes the commitment locally
 `status: "local_pending_contract"` — honest, no simulated chain interaction.
 `src/lib/contract.ts` is the single function to swap when the contract
 artifacts exist.
+
+## Test
+
+```bash
+npm run test          # unit + integration tests (CI mode)
+npm run test:watch    # watch mode
+npm run test:e2e      # Playwright end-to-end tests
+npm run test:all      # unit + integration + e2e
+```
+
+See [`docs/FRONTEND_TDD.md`](../docs/FRONTEND_TDD.md) for the mandatory TDD workflow, test-type selection guidance, and accessibility/responsive checklists.
 
 ## Env
 
