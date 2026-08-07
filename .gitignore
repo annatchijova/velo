@@ -8,6 +8,9 @@ build/
 # Compact compiled artifacts (regenerable from .compact source)
 contracts/managed/
 
+# Runtime-only sealed bundles (created by seal_case at runtime, never pre-populated)
+local-cases/
+
 # Env / secrets
 .env
 .env.local

@@ -9,6 +9,10 @@
     "build": "tsc -p .",
     "test": "tsc -p . && node --test dist/tests/*.test.js"
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.23.0"
+  },
   "devDependencies": {
     "typescript": "^5.6.0",
     "@types/node": "^22.0.0"
