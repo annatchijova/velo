@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { EvidenceManifest } from "../engine/evidence.js";
 import type { ScoreResult } from "../engine/scorer.js";
+import type { CoverageGap } from "../engine/evidence.js";
 import { canonicalize } from "./canonical.js";
 import { type CustodyChain, appendCustodyEvent, chainTip, verifyCustodyChain } from "./custody.js";
 
@@ -24,6 +25,7 @@ export interface SealedBundle {
   score: string;
   corroborationCount: number;
   detectorsFired: string[];
+  coverageGaps: CoverageGap[];
   devilAdvocate: string;
   reasoning: string;
   evidenceManifest: EvidenceManifest;
@@ -53,6 +55,12 @@ export function sealBundle(
     score: scoreResult.score.toString(),
     corroborationCount: scoreResult.corroborationCount,
     detectorsFired: scoreResult.detectorsFired,
+    // In the fingerprint on purpose: a declared gap is what turns
+    // "nothing found" into ABSTAIN, so leaving it outside would let
+    // anyone strip the gaps and silently promote the verdict to NOISE —
+    // the same shape as red team F3, where the custody tip sat outside
+    // the commitment it was supposed to anchor.
+    coverageGaps: scoreResult.coverageGaps,
     devilAdvocate: scoreResult.devilAdvocate,
     reasoning: scoreResult.reasoning,
     evidenceManifest,
@@ -77,6 +85,7 @@ export function sealBundle(
     score: scoreResult.score.toString(),
     corroborationCount: scoreResult.corroborationCount,
     detectorsFired: scoreResult.detectorsFired,
+    coverageGaps: scoreResult.coverageGaps,
     devilAdvocate: scoreResult.devilAdvocate,
     reasoning: scoreResult.reasoning,
     evidenceManifest,
@@ -121,6 +130,7 @@ export function verifyBundle(bundle: SealedBundle): BundleVerification {
     score: bundle.score,
     corroborationCount: bundle.corroborationCount,
     detectorsFired: bundle.detectorsFired,
+    coverageGaps: bundle.coverageGaps,
     devilAdvocate: bundle.devilAdvocate,
     reasoning: bundle.reasoning,
     evidenceManifest: bundle.evidenceManifest,

@@ -1,5 +1,5 @@
 import { runAllDetectors, type DetectorResult } from "../engine/detectors.js";
-import type { Artifact } from "../engine/evidence.js";
+import type { Artifact, CoverageGap } from "../engine/evidence.js";
 import { score, type ScoreResult } from "../engine/scorer.js";
 import { sealBundle, verifyBundle, type BundleVerification, type SealedBundle } from "../seal/bundle.js";
 import {
@@ -37,6 +37,8 @@ export interface AnalyzeCaseInput {
   artifacts: Artifact[];
   devilAdvocate: string;
   custodyEvents: CustodyEventInput[];
+  /** Sources that should have been examined and were not — see scorer.ts. */
+  coverageGaps?: CoverageGap[];
 }
 
 export interface AnalysisResult {
@@ -52,7 +54,7 @@ export interface AnalysisResult {
  * user commits to a seal.
  */
 export function analyzeCase(input: AnalyzeCaseInput): AnalysisResult {
-  const { caseId, artifacts, devilAdvocate, custodyEvents } = input;
+  const { caseId, artifacts, devilAdvocate, custodyEvents, coverageGaps } = input;
 
   let custodyChain = createCustodyChain(caseId);
   for (const ev of custodyEvents) {
@@ -67,7 +69,7 @@ export function analyzeCase(input: AnalyzeCaseInput): AnalysisResult {
   const custodyValid = custodyCheck.valid && hasAcquisitionHistory;
 
   const detectorResults = runAllDetectors(artifacts);
-  const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid });
+  const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid, coverageGaps });
 
   return {
     detectorResults,

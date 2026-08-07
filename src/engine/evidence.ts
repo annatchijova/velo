@@ -57,3 +57,23 @@ export interface EvidenceManifest {
   caseId: string;
   artifacts: Artifact[];
 }
+
+/**
+ * A source that should have been examined and was not.
+ *
+ * This is the difference between "I looked and found nothing" and "I
+ * could not look where it mattered". Both used to end as `NOISE`, which
+ * conflates a true negative with an unknown — the exact overclaim this
+ * system exists to prevent, made by the system itself.
+ *
+ * Declared by the analyst, not detected: the engine cannot know what was
+ * never collected. That makes it the same kind of claim as the custody
+ * chain — asserted by a human, then used to constrain what the engine is
+ * allowed to conclude.
+ */
+export interface CoverageGap {
+  /** The source that was expected. */
+  expected: string;
+  /** Why it was not available — rotated, never imaged, destroyed before acquisition. */
+  reason: string;
+}

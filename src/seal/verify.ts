@@ -56,6 +56,7 @@ interface SealedBundle {
   score: string;
   corroborationCount: number;
   detectorsFired: string[];
+  coverageGaps: unknown[];
   devilAdvocate: string;
   reasoning: string;
   evidenceManifest: unknown;
@@ -218,6 +219,9 @@ export function verifyBundle(bundle: SealedBundle): { internallyConsistent: bool
     score: bundle.score,
     corroborationCount: bundle.corroborationCount,
     detectorsFired: bundle.detectorsFired,
+    // Must mirror src/seal/bundle.ts exactly — a gap left out here would
+    // make a stripped bundle verify clean in the judge's tool.
+    coverageGaps: bundle.coverageGaps,
     devilAdvocate: bundle.devilAdvocate,
     reasoning: bundle.reasoning,
     evidenceManifest: bundle.evidenceManifest,

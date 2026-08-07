@@ -1,5 +1,5 @@
 import type { DetectorResult } from "./detectors.js";
-import type { Artifact } from "./evidence.js";
+import type { Artifact, CoverageGap } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
 export type Verdict = "NOISE" | "SUSPICION" | "MALICE" | "ABSTAIN";
@@ -24,6 +24,8 @@ export interface ScoreResult {
   detectorsFired: string[];
   /** The distinct provenance roots that corroborate, for audit. */
   corroboratingSources: string[];
+  /** Declared gaps carried through to the sealed bundle, so a reader sees what was not examined. */
+  coverageGaps: CoverageGap[];
   /** Non-empty only when verdict === "MALICE". */
   devilAdvocate: string;
   /** Why the verdict landed where it did — for the sealed bundle's audit trail. */
@@ -43,6 +45,18 @@ export interface ScoreInput {
   devilAdvocate: string;
   /** False if the custody chain failed verification — forces ABSTAIN regardless of score. */
   custodyValid: boolean;
+  /**
+   * Sources that should have been examined and were not. Declared by the
+   * analyst; the engine cannot detect what was never collected.
+   *
+   * These degrade a NEGATIVE finding only. "I found nothing" is not
+   * supportable when a relevant source was never looked at — that is an
+   * unknown, and it now says so instead of returning NOISE. A positive
+   * finding is untouched: corroborated MALICE is not erased because an
+   * unrelated log rotated. The gap undermines the claim that nothing is
+   * there, not the evidence of what is.
+   */
+  coverageGaps?: CoverageGap[];
 }
 
 /**
@@ -64,6 +78,7 @@ function sourceOf(artifact: Artifact): string {
 
 export function score(input: ScoreInput): ScoreResult {
   const { detectorResults, artifacts, devilAdvocate, custodyValid } = input;
+  const coverageGaps = input.coverageGaps ?? [];
 
   if (!custodyValid) {
     return {
@@ -73,6 +88,7 @@ export function score(input: ScoreInput): ScoreResult {
       detectorCategoriesFired: 0,
       detectorsFired: [],
       corroboratingSources: [],
+      coverageGaps,
       devilAdvocate: "",
       reasoning: "Custody chain failed verification — evidence is inadmissible regardless of what it shows.",
     };
@@ -102,6 +118,7 @@ export function score(input: ScoreInput): ScoreResult {
     detectorCategoriesFired: fired.length,
     detectorsFired,
     corroboratingSources,
+    coverageGaps,
   };
 
   if (meetsMaliceThreshold && hasCorroboration) {
@@ -135,6 +152,19 @@ export function score(input: ScoreInput): ScoreResult {
   }
 
   if (totalScore.lessOrEqual(NOISE_CEILING)) {
+    // "Nothing found" is only a finding if the looking was complete.
+    // With a declared gap, the honest answer is that this is unknown,
+    // not that it is clean — reporting NOISE here would be the engine
+    // making exactly the overclaim the system exists to prevent.
+    if (coverageGaps.length > 0) {
+      const missing = coverageGaps.map((g) => `${g.expected} (${g.reason})`).join("; ");
+      return {
+        ...base,
+        verdict: "ABSTAIN",
+        devilAdvocate: "",
+        reasoning: `Nothing anomalous was found in what was examined, but ${coverageGaps.length} expected source(s) could not be examined: ${missing}. A negative finding is not supportable over evidence that was never available.`,
+      };
+    }
     return {
       ...base,
       verdict: "NOISE",

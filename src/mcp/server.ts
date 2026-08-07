@@ -110,12 +110,19 @@ server.registerTool(
       artifacts: z.array(artifactSchema),
       devilAdvocate: z.string().default(""),
       custodyEvents: z.array(custodyEventSchema).default([]),
+      coverageGaps: z
+        .array(z.object({ expected: z.string(), reason: z.string() }))
+        .default([])
+        .describe(
+          "Sources that should have been examined and were not. Declaring one turns a 'nothing found' " +
+            "result into ABSTAIN: a negative finding is not supportable over evidence never available.",
+        ),
     },
   },
-  async ({ caseId, artifacts, devilAdvocate, custodyEvents }) => {
+  async ({ caseId, artifacts, devilAdvocate, custodyEvents, coverageGaps }) => {
     // Behaviour lives in src/core/operations.ts, shared with the HTTP
     // server, so the two interfaces cannot drift apart (red team F8).
-    const result = sealCase({ caseId, artifacts: artifacts as Artifact[], devilAdvocate, custodyEvents });
+    const result = sealCase({ caseId, artifacts: artifacts as Artifact[], devilAdvocate, custodyEvents, coverageGaps });
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   },
 );
