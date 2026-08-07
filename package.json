@@ -3,15 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "VELO \u2014 zero-knowledge forensic attestation on Midnight",
+  "description": "VELO — zero-knowledge forensic attestation on Midnight",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsc -p .",
-    "test": "tsc -p . && node --test dist/tests/*.test.js",
-    "simulate": "tsc -p . && node dist/src/simulate.js",
-    "web": "tsc -p . && node dist/src/web/server.js"
+    "build": "npm run clean && tsc -p .",
+    "test": "npm run clean && tsc -p . && node --test dist/tests/*.test.js",
+    "simulate": "npm run build && node dist/src/simulate.js",
+    "clean": "rm -rf dist"
   },
-  "workspaces": ["frontend"],
+  "workspaces": [
+    "frontend"
+  ],
   "exports": {
     "./*": "./dist/src/*",
     "./package.json": "./package.json"

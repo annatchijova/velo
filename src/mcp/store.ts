@@ -33,8 +33,19 @@ export class InvalidCaseIdError extends Error {
   }
 }
 
+/**
+ * The single answer to "is this a usable case ID". Every interface that
+ * lets a caller name a case — MCP, the HTTP API, the frontend's corpus
+ * loader — asks this one function rather than carrying its own regex.
+ * Three copies of a security check are three chances for one of them to
+ * be relaxed by someone who does not know why it is strict.
+ */
+export function isValidCaseId(caseId: string): boolean {
+  return typeof caseId === "string" && CASE_ID_PATTERN.test(caseId) && caseId !== "." && caseId !== "..";
+}
+
 export function assertValidCaseId(caseId: string): void {
-  if (!CASE_ID_PATTERN.test(caseId) || caseId === "." || caseId === "..") {
+  if (!isValidCaseId(caseId)) {
     throw new InvalidCaseIdError(caseId);
   }
 }
