@@ -6,9 +6,24 @@
   "expected_corroboration_count": 1,
   "devil_advocate": "",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-05-14T23:45:00Z", "detail": "DLP log entry with no matching alert flagged during weekly review." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-05-15T09:00:00Z", "detail": "DLP log and device registry log acquired from laptop-3391." },
-    { "eventType": "ANALYZED", "timestamp": "2026-05-15T09:30:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-05-14T23:45:00Z",
+      "detail": "DLP log entry with no matching alert flagged during weekly review.",
+      "detail_es": "Entrada de log de DLP sin alerta correspondiente, marcada en la revisión semanal."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-05-15T09:00:00Z",
+      "detail": "DLP log and device registry log acquired from laptop-3391.",
+      "detail_es": "Log de DLP y log del registro de dispositivos adquiridos de laptop-3391."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-05-15T09:30:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -21,7 +36,10 @@
       "entropyMilliBits": 4900,
       "markers": [],
       "description": "4,200 files (2.1GB) logged as copied to a removable device in an 8-minute window. Context — the claim the device registry contradicts.",
-      "provenanceChain": ["sha256:v012dlp01"]
+      "provenanceChain": [
+        "sha256:v012dlp01"
+      ],
+      "description_es": "4.200 archivos (2,1 GB) registrados como copiados a un dispositivo extraíble en una ventana de 8 minutos. Contexto — la afirmación que el registro de dispositivos contradice."
     },
     {
       "id": "v012-usb",
@@ -31,9 +49,14 @@
       "process": "usb_manager",
       "path": "endpoint://laptop-3391/usb_events.log",
       "entropyMilliBits": 3100,
-      "markers": ["log_vs_memory"],
+      "markers": [
+        "log_vs_memory"
+      ],
       "description": "No USB device connection recorded for laptop-3391 in the entire 24-hour window. No DLP alert was generated despite the copy exceeding the policy threshold — the device registry contradicts what the DLP log claims happened.",
-      "provenanceChain": ["sha256:v012usb02"]
+      "provenanceChain": [
+        "sha256:v012usb02"
+      ],
+      "description_es": "Ninguna conexión de dispositivo USB registrada para laptop-3391 en toda la ventana de 24 horas. No se generó ninguna alerta de DLP pese a que la copia superaba el umbral de la política — el registro de dispositivos contradice lo que el log de DLP afirma que ocurrió."
     }
   ],
   "expected_fractures": [
@@ -44,5 +67,13 @@
     "secondness": "The device registry contradicts it: no device was ever connected.",
     "thirdness": "One of the two logs was tampered with, but a single corroborating source isn't enough to say which — or to reach MALICE."
   },
-  "demo_quote": "A bulk copy with no device to receive it is a contradiction, not a conviction. VELO holds at SUSPICION until a second source breaks the tie."
+  "demo_quote": "A bulk copy with no device to receive it is a contradiction, not a conviction. VELO holds at SUSPICION until a second source breaks the tie.",
+  "name_es": "La Renuncia Silenciosa",
+  "description_es": "Un log de DLP de endpoint muestra 4.200 archivos copiados a un dispositivo extraíble a las 23:40, la noche anterior a que el empleado anunciara su renuncia. Pero el registro de dispositivos USB del endpoint no muestra ningún dispositivo conectado en esa ventana, y no se disparó ninguna alerta de DLP pese a haberse superado el umbral de la política.",
+  "demo_quote_es": "Una copia masiva sin un dispositivo que la reciba es una contradicción, no una condena. VELO se queda en SUSPICION hasta que una segunda fuente desempate.",
+  "peirce_chain_es": {
+    "firstness": "El log de DLP reporta una copia masiva a un dispositivo extraíble.",
+    "secondness": "El registro de dispositivos lo contradice: nunca se conectó ninguno.",
+    "thirdness": "Uno de los dos logs fue manipulado, pero una sola fuente corroborante no alcanza para decir cuál — ni para llegar a MALICE."
+  }
 }

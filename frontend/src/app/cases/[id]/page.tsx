@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2, Quote, Gavel, ShieldAlert } from "lucide-react";
 import { useParams } from "next/navigation";
 import type { CaseFile, EngineRun } from "@/lib/types";
 import { fetchCase, runEngine } from "@/lib/api";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, localized } from "@/lib/i18n";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import { VerdictGauge } from "@/components/VerdictGauge";
 import { DetectorChips } from "@/components/DetectorChips";
@@ -18,7 +18,7 @@ import { ActionPanel } from "@/components/ActionPanel";
 export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
   const caseId = decodeURIComponent(params.id);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [caseFile, setCaseFile] = useState<CaseFile | null>(null);
   const [engine, setEngine] = useState<EngineRun | null>(null);
@@ -96,26 +96,26 @@ export default function CaseDetailPage() {
               {matches ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-verdict-noiseBg px-2.5 py-1 text-[10.5px] font-bold text-verdict-noise">
                   <ShieldAlert className="h-3 w-3" />
-                  engine reproduces it
+                  {t("detail.engineReproduces")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[10.5px] font-bold text-amber-700">
-                  mismatch
+                  {t("detail.mismatch")}
                 </span>
               )}
             </span>
           )}
         </div>
         <h1 className="mt-2 font-display text-[32px] font-extrabold tracking-[-0.03em] text-ink-900">
-          {caseFile.name}
+          {localized(lang, caseFile.name, caseFile.name_es)}
         </h1>
         <p className="mt-2 max-w-[720px] text-[14.5px] leading-relaxed text-ink-500">
-          {caseFile.description}
+          {localized(lang, caseFile.description, caseFile.description_es)}
         </p>
 
         <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-brand-indigo/15 bg-brand-indigo/5 px-4 py-3">
           <Quote className="mt-0.5 h-4 w-4 shrink-0 text-brand-deep" />
-          <p className="text-[13px] italic leading-relaxed text-ink-700">{caseFile.demo_quote}</p>
+          <p className="text-[13px] italic leading-relaxed text-ink-700">{localized(lang, caseFile.demo_quote, caseFile.demo_quote_es)}</p>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export default function CaseDetailPage() {
             </div>
             {engine && !engine.custodyValid && (
               <p className="mt-3 rounded-xl bg-verdict-abstainBg px-3 py-2 text-[12px] font-semibold leading-relaxed text-verdict-abstain">
-                {engine.custodyReason ?? "Custody chain invalid."}
+                {engine.custodyReason ?? t("detail.custodyInvalid")}
               </p>
             )}
             {caseFile.devil_advocate && (
@@ -182,7 +182,7 @@ export default function CaseDetailPage() {
                   {t("detail.devil")}
                 </p>
                 <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-700">
-                  {caseFile.devil_advocate}
+                  {localized(lang, caseFile.devil_advocate, caseFile.devil_advocate_es)}
                 </p>
               </div>
             )}
@@ -199,8 +199,8 @@ export default function CaseDetailPage() {
                 {t("detail.custody")}
               </h2>
               <span className="text-[11px] text-ink-400">
-                {caseFile.custodyEvents.length} event
-                {caseFile.custodyEvents.length === 1 ? "" : "s"}
+                {caseFile.custodyEvents.length}{" "}
+                {t(caseFile.custodyEvents.length === 1 ? "detail.event" : "detail.events")}
               </span>
             </div>
             <div className="mt-4">
@@ -222,7 +222,7 @@ export default function CaseDetailPage() {
               {t("detail.peirce")}
             </h2>
             <div className="mt-4">
-              <PeirceChain chain={caseFile.peirce_chain} />
+              <PeirceChain chain={localized(lang, caseFile.peirce_chain, caseFile.peirce_chain_es)} />
             </div>
           </div>
         </div>

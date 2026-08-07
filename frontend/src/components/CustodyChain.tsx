@@ -1,4 +1,7 @@
+"use client";
+
 import { Fingerprint, Link2 } from "lucide-react";
+import { useI18n, localized } from "@/lib/i18n";
 import type { CustodyEvent } from "@/lib/types";
 import { shortHash, formatDate } from "@/lib/utils";
 
@@ -11,6 +14,8 @@ export function CustodyChain({
   tip?: string;
   genesis?: string;
 }) {
+  const { lang } = useI18n();
+
   if (events.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-ink-900/15 bg-ink-900/[0.02] p-5 text-center">
@@ -47,7 +52,7 @@ export function CustodyChain({
               </span>
               <span className="text-[11.5px] text-ink-400">{formatDate(e.timestamp)}</span>
             </div>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-700">{e.detail}</p>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-700">{localized(lang, e.detail, e.detail_es)}</p>
           </div>
         </div>
       ))}

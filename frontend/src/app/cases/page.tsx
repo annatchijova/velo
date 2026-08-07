@@ -21,7 +21,7 @@ export default function CasesPage() {
 
   useEffect(() => {
     fetch("/api/cases", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed to load cases"))))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(t("cases.loadFailed")))))
       .then((data: CaseFile[]) => setCases(data))
       .catch((e) => setError(e.message));
   }, []);
@@ -214,9 +214,9 @@ export default function CasesPage() {
           <div className="table-scroll">
             <div className="table-inner">
               <div className="grid grid-cols-[0.7fr_1.4fr_0.8fr_0.5fr] gap-4 border-b border-ink-900/5 bg-ink-900/[0.02] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.07em] text-ink-400">
-                <span>{t("cases.all")}</span>
-                <span>Case</span>
-                <span>{t("cases.count")}</span>
+                <span>{t("cases.colId")}</span>
+                <span>{t("cases.colCase")}</span>
+                <span>{t("cases.colDetails")}</span>
                 <span>{t("detail.verdict")}</span>
               </div>
               {filtered.map((cs) => (
@@ -230,9 +230,10 @@ export default function CasesPage() {
                   </span>
                   <span className="truncate text-[13px] font-bold text-ink-900">{cs.name}</span>
                   <span className="text-[12.5px] text-ink-500">
-                    {cs.expected_corroboration_count} source
-                    {cs.expected_corroboration_count === 1 ? "" : "s"} · {cs.artifacts.length} artifact
-                    {cs.artifacts.length === 1 ? "" : "s"}
+                    {cs.expected_corroboration_count}{" "}
+                    {t(cs.expected_corroboration_count === 1 ? "cases.source" : "cases.sources")} ·{" "}
+                    {cs.artifacts.length}{" "}
+                    {t(cs.artifacts.length === 1 ? "cases.artifact" : "cases.artifacts")}
                   </span>
                   <VerdictBadge verdict={cs.expected_verdict} size="sm" />
                 </a>

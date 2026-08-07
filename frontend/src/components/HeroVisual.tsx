@@ -3,13 +3,14 @@
 import { motion } from "framer-motion";
 import { Lock, Fingerprint, Eye, ShieldCheck } from "lucide-react";
 import { VeloLogo } from "@/components/VeloLogo";
+import { useI18n } from "@/lib/i18n";
 
 const STEPS = [
-  { icon: Lock, label: "Sealed locally", sub: "evidence never moves" },
-  { icon: Fingerprint, label: "Fingerprinted", sub: "deterministic hash" },
-  { icon: Eye, label: "Attested on-chain", sub: "commitment only" },
-  { icon: ShieldCheck, label: "Verified", sub: "ZK proof stands" },
-];
+  { icon: Lock, labelKey: "hero.step1Label", subKey: "hero.step1Sub" },
+  { icon: Fingerprint, labelKey: "hero.step2Label", subKey: "hero.step2Sub" },
+  { icon: Eye, labelKey: "hero.step3Label", subKey: "hero.step3Sub" },
+  { icon: ShieldCheck, labelKey: "hero.step4Label", subKey: "hero.step4Sub" },
+] as const;
 
 const HASHES = [
   "9f2c…a41b",
@@ -19,6 +20,7 @@ const HASHES = [
 ];
 
 export function HeroVisual() {
+  const { t } = useI18n();
   return (
     <div className="relative">
       {/* floating background hashes */}
@@ -52,7 +54,7 @@ export function HeroVisual() {
                 <div>
                   <p className="text-[14px] font-extrabold tracking-tight text-white">VELO-DEMO</p>
                   <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-white/50">
-                    sealed case
+                    {t("hero.sealedCase")}
                   </p>
                 </div>
               </div>
@@ -62,7 +64,7 @@ export function HeroVisual() {
                 className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white/90"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                chain live
+                {t("hero.chainLive")}
               </motion.span>
             </div>
 
@@ -72,7 +74,7 @@ export function HeroVisual() {
                 const Icon = s.icon;
                 return (
                   <motion.div
-                    key={s.label}
+                    key={s.labelKey}
                     initial={{ opacity: 0, x: -14 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 + i * 0.18, duration: 0.5, ease: "easeOut" }}
@@ -82,8 +84,8 @@ export function HeroVisual() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12.5px] font-bold text-white">{s.label}</p>
-                      <p className="text-[11px] text-white/55">{s.sub}</p>
+                      <p className="text-[12.5px] font-bold text-white">{t(s.labelKey)}</p>
+                      <p className="text-[11px] text-white/55">{t(s.subKey)}</p>
                     </div>
                     <motion.span
                       animate={{ scale: [1, 1.15, 1] }}
@@ -100,13 +102,13 @@ export function HeroVisual() {
             {/* commitment */}
             <div className="mt-5 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 px-3.5 py-2.5">
               <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-white/50">
-                commitment
+                {t("hero.commitment")}
               </span>
               <span className="font-mono text-[11.5px] text-cyan-300">
                 0x71a4…ec9f
               </span>
               <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/70">
-                salt hidden
+                {t("hero.saltHidden")}
               </span>
             </div>
           </div>

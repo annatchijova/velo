@@ -6,9 +6,24 @@
   "expected_corroboration_count": 2,
   "devil_advocate": "The process hollowing and credential dumping are real structural evidence of intrusion. The Cyrillic strings are planted to divert attribution.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T03:10:00Z", "detail": "EDR alert on svchost.exe anomaly." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T03:30:00Z", "detail": "Memory image and dropper binary acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T04:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T03:10:00Z",
+      "detail": "EDR alert on svchost.exe anomaly.",
+      "detail_es": "Alerta de EDR por anomalía en svchost.exe."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T03:30:00Z",
+      "detail": "Memory image and dropper binary acquired.",
+      "detail_es": "Imagen de memoria y binario dropper adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T04:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,14 @@
       "process": "svchost.exe",
       "path": "C:\\Windows\\System32\\svchost.exe",
       "entropyMilliBits": 6500,
-      "markers": ["process_masquerade"],
+      "markers": [
+        "process_masquerade"
+      ],
       "description": "Process hollowing confirmed in svchost.exe: a legitimate process hosting injected code while presenting as itself. Reflective DLL injection detected. Structural evidence that is hard to fake.",
-      "provenanceChain": ["sha256:v003mem01"]
+      "provenanceChain": [
+        "sha256:v003mem01"
+      ],
+      "description_es": "Process hollowing confirmado en svchost.exe. Reflective DLL injection detectado. Evidencia estructural difícil de falsificar."
     },
     {
       "id": "v003-lsass",
@@ -33,7 +53,10 @@
       "entropyMilliBits": 5800,
       "markers": [],
       "description": "LSASS credential dumping detected. Active compromise confirmed. Included for narrative completeness — the engine's detector suite has no dedicated credential-dumping category, so this artifact is context, not a scored contributor.",
-      "provenanceChain": ["sha256:v003lsass02"]
+      "provenanceChain": [
+        "sha256:v003lsass02"
+      ],
+      "description_es": "LSASS credential dumping detectado. Compromiso activo confirmado."
     },
     {
       "id": "v003-strings",
@@ -43,9 +66,14 @@
       "process": "dropper.exe",
       "path": "/tmp/dropper.bin",
       "entropyMilliBits": 7200,
-      "markers": ["false_flag_attribution"],
+      "markers": [
+        "false_flag_attribution"
+      ],
       "description": "Cyrillic strings injected into the dropper. Linguistic profile too pristine, inconsistent with the observed technical OPSEC.",
-      "provenanceChain": ["sha256:v003str03"]
+      "provenanceChain": [
+        "sha256:v003str03"
+      ],
+      "description_es": "Strings cirílicos inyectados en dropper. Perfil lingüístico demasiado prístino, inconsistente con el OPSEC técnico observado."
     }
   ],
   "expected_fractures": [
@@ -57,5 +85,14 @@
     "secondness": "The cultural markers are too clean for the attacker's observed technical OPSEC level.",
     "thirdness": "The real attack was used as a canvas to divert blame. The malice is the disinformation, not the nationality."
   },
-  "demo_quote": "A genuine false flag has the attack present. VELO separates the real technical evidence from the planted attribution."
+  "demo_quote": "A genuine false flag has the attack present. VELO separates the real technical evidence from the planted attribution.",
+  "name_es": "El Falso Flag",
+  "description_es": "Compromiso real confirmado: process hollowing en svchost.exe y LSASS credential dumping. Sobre ese ataque real, el operador plantó strings cirílicos cuya limpieza contradice el perfil técnico observado. La malicia no es rusa; es del planter.",
+  "devil_advocate_es": "El process hollowing y el credential dumping son evidencia estructural real de intrusión. Los strings cirílicos son plantados para desviar la atribución.",
+  "demo_quote_es": "Una bandera falsa verdadera tiene el ataque presente. VELO separa la evidencia técnica real de la atribución plantada.",
+  "peirce_chain_es": {
+    "firstness": "Ataque real confirmado + atribución cirílica plantada.",
+    "secondness": "Los markers culturales son demasiado limpios para el nivel de OPSEC técnico del atacante.",
+    "thirdness": "El ataque real fue usado como lienzo para desviar la culpa. La malicia es la desinformación, no la nacionalidad."
+  }
 }

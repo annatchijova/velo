@@ -6,9 +6,24 @@
   "expected_corroboration_count": 2,
   "devil_advocate": "A legitimate user rarely uses seven-pass shred. The tool and the pattern indicate forensic awareness and intent to destroy evidence.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T16:40:00Z", "detail": "Anomalous audit-log entry flagged." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T17:00:00Z", "detail": "Audit log, disk image and process log acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T17:30:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T16:40:00Z",
+      "detail": "Anomalous audit-log entry flagged.",
+      "detail_es": "Entrada anómala en el log de auditoría marcada."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T17:00:00Z",
+      "detail": "Audit log, disk image and process log acquired.",
+      "detail_es": "Log de auditoría, imagen de disco y log de procesos adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T17:30:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,14 @@
       "process": "shred",
       "path": "/tmp/note.txt",
       "entropyMilliBits": 3800,
-      "markers": ["surgical_deletion"],
+      "markers": [
+        "surgical_deletion"
+      ],
       "description": "Command 'shred -n 7 -z -u /tmp/note.txt'. 7 overwrite passes + zeroing for a 2KB file.",
-      "provenanceChain": ["sha256:v006audit01"]
+      "provenanceChain": [
+        "sha256:v006audit01"
+      ],
+      "description_es": "Comando 'shred -n 7 -z -u /tmp/note.txt'. 7 pasadas de sobreescritura + zeroing para archivo de 2KB."
     },
     {
       "id": "v006-recovered",
@@ -33,7 +53,10 @@
       "entropyMilliBits": 7900,
       "markers": [],
       "description": "Recovered file fragment shows high-entropy content. Filesystem metadata indicates the inode was reused immediately. Context only — shows what was destroyed, doesn't itself trip a detector.",
-      "provenanceChain": ["sha256:v006disk02"]
+      "provenanceChain": [
+        "sha256:v006disk02"
+      ],
+      "description_es": "Fragmento recuperado del archivo muestra contenido de alta entropía. Metadata del filesystem indica que el inode fue reutilizado inmediatamente."
     },
     {
       "id": "v006-process",
@@ -43,9 +66,14 @@
       "process": "svc-helper",
       "path": "/usr/bin/.tmp/svc-helper",
       "entropyMilliBits": 4600,
-      "markers": ["process_masquerade"],
+      "markers": [
+        "process_masquerade"
+      ],
       "description": "The shred binary was invoked via a renamed copy disguised as a system service ('svc-helper'), avoiding straightforward audit-trail attribution.",
-      "provenanceChain": ["sha256:v006proc03"]
+      "provenanceChain": [
+        "sha256:v006proc03"
+      ],
+      "description_es": "El binario shred se invocó mediante una copia renombrada, disfrazada de servicio del sistema ('svc-helper'), evitando la atribución directa en el rastro de auditoría."
     }
   ],
   "expected_fractures": [
@@ -57,5 +85,14 @@
     "secondness": "The size/effort asymmetry has no legitimate explanation, and the tool used to do it was itself disguised.",
     "thirdness": "The actor tried to eliminate high-value evidence and hide who did it. The destruction itself is evidence."
   },
-  "demo_quote": "Nobody wipes a 2KB text file seven times. The destruction effort reveals the value of what was meant to be hidden — and a single anti-forensic signal alone tops out at SUSPICION by design, so it took the disguised invocation to cross into MALICE."
+  "demo_quote": "Nobody wipes a 2KB text file seven times. The destruction effort reveals the value of what was meant to be hidden — and a single anti-forensic signal alone tops out at SUSPICION by design, so it took the disguised invocation to cross into MALICE.",
+  "name_es": "El Vacío Quirúrgico",
+  "description_es": "Archivo de 2KB en /tmp fue borrado con shred -n 7 -z -u. La asimetría entre el tamaño insignificante y el esfuerzo de destrucción indica que el contenido era valioso y el actor sabía que podría ser forenseado.",
+  "devil_advocate_es": "Un usuario legítimo raramente usa shred siete pasadas. La herramienta y el patrón indican conocimiento forense y intención de destruir evidencia.",
+  "demo_quote_es": "Nadie pasa siete veces un borrador de 2KB. El esfuerzo de destrucción revela el valor de lo que se quiso ocultar.",
+  "peirce_chain_es": {
+    "firstness": "Archivo pequeño destruido con método militar.",
+    "secondness": "La asimetría tamaño/esfuerzo no tiene explicación legítima.",
+    "thirdness": "El actor intentó eliminar evidencia de alto valor. La destrucción misma es evidencia."
+  }
 }

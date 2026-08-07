@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Artifact, ArtifactType } from "@/lib/types";
 import { shortHash, formatDate } from "@/lib/utils";
+import { useI18n, localized } from "@/lib/i18n";
 
 const TYPE_ICON: Record<ArtifactType, LucideIcon> = {
   file: FileText,
@@ -19,16 +20,8 @@ const TYPE_ICON: Record<ArtifactType, LucideIcon> = {
   dns_record: Globe,
 };
 
-const TYPE_LABEL: Record<ArtifactType, string> = {
-  file: "File",
-  process: "Process",
-  log: "Log",
-  network: "Network",
-  registry: "Registry",
-  dns_record: "DNS record",
-};
-
 export function ArtifactList({ artifacts }: { artifacts: Artifact[] }) {
+  const { t, lang } = useI18n();
   return (
     <div className="space-y-3">
       {artifacts.map((a) => {
@@ -43,23 +36,23 @@ export function ArtifactList({ artifacts }: { artifacts: Artifact[] }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[13px] font-bold text-ink-900">{a.id}</span>
                   <span className="rounded-full bg-ink-900/5 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-ink-500">
-                    {TYPE_LABEL[a.type]}
+                    {t(`artifactType.${a.type}`)}
                   </span>
                   <span className="text-[11.5px] text-ink-400">{formatDate(a.timestamp)}</span>
                 </div>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-700">{a.description}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-700">{localized(lang, a.description, a.description_es)}</p>
                 <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11.5px] text-ink-500">
                   <span className="truncate">
-                    <span className="font-semibold text-ink-400">source</span> {a.source}
+                    <span className="font-semibold text-ink-400">{t("field.source")}</span> {a.source}
                   </span>
                   <span className="truncate">
-                    <span className="font-semibold text-ink-400">process</span> {a.process}
+                    <span className="font-semibold text-ink-400">{t("field.process")}</span> {a.process}
                   </span>
                   <span className="truncate font-mono" title={a.path}>
-                    <span className="font-sans font-semibold text-ink-400">path</span> {a.path}
+                    <span className="font-sans font-semibold text-ink-400">{t("field.path")}</span> {a.path}
                   </span>
                   <span>
-                    <span className="font-semibold text-ink-400">entropy</span>{" "}
+                    <span className="font-semibold text-ink-400">{t("field.entropy")}</span>{" "}
                     <span className="font-mono">{(a.entropyMilliBits / 1000).toFixed(2)}</span> bits/B
                   </span>
                 </div>
@@ -76,7 +69,7 @@ export function ArtifactList({ artifacts }: { artifacts: Artifact[] }) {
                   </div>
                 )}
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-                  <span className="font-semibold text-ink-400">provenance</span>
+                  <span className="font-semibold text-ink-400">{t("field.provenance")}</span>
                   {a.provenanceChain.map((h) => (
                     <span key={h} className="rounded bg-ink-900/5 px-1.5 py-0.5 font-mono text-[10.5px] text-ink-500" title={h}>
                       {shortHash(h, 8)}

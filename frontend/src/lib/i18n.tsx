@@ -65,6 +65,18 @@ const dict = {
     "cases.emptyDesc": "Try a different search or clear the verdict filter.",
     "cases.count": "cases",
     "cases.open": "Open",
+    "cases.colId": "ID",
+    "cases.colCase": "Case",
+    "cases.colDetails": "Details",
+    "cases.source": "source",
+    "cases.sources": "sources",
+    "cases.artifact": "artifact",
+    "cases.artifacts": "artifacts",
+    "field.source": "source",
+    "field.process": "process",
+    "field.path": "path",
+    "field.entropy": "entropy",
+    "field.provenance": "provenance",
 
     // Case detail
     "detail.back": "Back to ledger",
@@ -97,12 +109,86 @@ const dict = {
     "verdict.NOISE": "Noise",
     "verdict.ABSTAIN": "Abstain",
 
+    // Artifact types
+    "artifactType.file": "File",
+    "artifactType.process": "Process",
+    "artifactType.log": "Log",
+    "artifactType.network": "Network",
+    "artifactType.registry": "Registry",
+    "artifactType.dns_record": "DNS record",
+
+    // Detectors
+    "detector.temporal": "Temporal",
+    "detector.cross_source": "Cross-source",
+    "detector.anti_forensic": "Anti-forensic",
+    "detector.narrative": "Narrative",
+    "detector.process": "Process / path",
+
+    // Action panel (attack simulation)
+    "action.swapVerdict": "Swap verdict",
+    "action.corruptFingerprint": "Corrupt fingerprint",
+    "action.truncateCustody": "Truncate custody chain",
+    "action.examinerWorkflow": "Examiner workflow",
+    "action.walletRequired": "wallet required to attest",
+    "action.connected": "connected",
+    "action.runEngine": "run the deterministic engine",
+    "action.connectFirst": "connect wallet first",
+    "action.tryBreak": "try to break it",
+    "action.verifyPristine": "Verify pristine",
+    "action.score": "score",
+    "action.corroboration": "corroboration",
+    "toast.sealingFailed": "Sealing failed",
+    "toast.attestationFailed": "Attestation failed",
+    "toast.verificationFailed": "Verification failed",
+    "toast.sealedSuccess": "Bundle sealed locally — nothing has touched the network.",
+    "toast.attestRequiresWallet": "Attestation requires a connected Midnight wallet.",
+    "toast.commitmentComputed": "Commitment computed — the verdict is bound to the sealed fingerprint.",
+    "toast.tamperDetectedPrefix": "Tamper detected",
+    "toast.reasonsVerificationFailed": "reason(s) verification failed.",
+    "toast.verifiedOffline": "Bundle verified offline — hashes recomputed and match.",
+    "verify.passed": "Verification passed — the bundle is untampered.",
+    "verify.tamperedFailed": "Tampering detected — verification failed.",
+
+    // Hero visual (landing page)
+    "hero.step1Label": "Sealed locally",
+    "hero.step1Sub": "evidence never moves",
+    "hero.step2Label": "Fingerprinted",
+    "hero.step2Sub": "deterministic hash",
+    "hero.step3Label": "Attestation",
+    "hero.step3Sub": "commitment only — not deployed yet",
+    "hero.step4Label": "Verified locally",
+    "hero.step4Sub": "hashes recompute; on-chain proof pending",
+    "hero.sealedCase": "sealed case",
+    "hero.chainLive": "local demo",
+    "hero.commitment": "commitment",
+    "hero.saltHidden": "salt hidden",
+
+    // Peirce chain (semiotic triad)
+    "peirce.firstness": "Firstness",
+    "peirce.firstnessHint": "what presents itself",
+    "peirce.secondness": "Secondness",
+    "peirce.secondnessHint": "the resisting fact",
+    "peirce.thirdness": "Thirdness",
+    "peirce.thirdnessHint": "the interpreted rule",
+
+    // Examiners (peritos)
+    "peritos.attestations": "Attestations",
+    "status.valid": "valid",
+    "status.expired": "expired",
+    "cases.loadFailed": "Failed to load cases",
+    "detail.engineReproduces": "engine reproduces it",
+    "detail.mismatch": "mismatch",
+    "detail.custodyInvalid": "Custody chain invalid.",
+    "detail.event": "event",
+    "detail.events": "events",
+
     // Common
     "common.loading": "Loading…",
     "common.error": "Error",
     "common.success": "Success",
     "common.cancel": "Cancel",
     "common.confirm": "Confirm",
+    "common.none": "none",
   },
   es: {
     "nav.cases": "Casos",
@@ -160,6 +246,18 @@ const dict = {
     "cases.emptyDesc": "Probá otra búsqueda o limpiá el filtro de veredicto.",
     "cases.count": "casos",
     "cases.open": "Abrir",
+    "cases.colId": "ID",
+    "cases.colCase": "Caso",
+    "cases.colDetails": "Detalles",
+    "cases.source": "fuente",
+    "cases.sources": "fuentes",
+    "cases.artifact": "artefacto",
+    "cases.artifacts": "artefactos",
+    "field.source": "fuente",
+    "field.process": "proceso",
+    "field.path": "path",
+    "field.entropy": "entropía",
+    "field.provenance": "proveniencia",
 
     "detail.back": "Volver al registro",
     "detail.evidence": "Artefactos de evidencia",
@@ -190,11 +288,79 @@ const dict = {
     "verdict.NOISE": "Ruido",
     "verdict.ABSTAIN": "Abstención",
 
+    "artifactType.file": "Archivo",
+    "artifactType.process": "Proceso",
+    "artifactType.log": "Log",
+    "artifactType.network": "Red",
+    "artifactType.registry": "Registro",
+    "artifactType.dns_record": "Registro DNS",
+
+    "detector.temporal": "Temporal",
+    "detector.cross_source": "Cruce de fuentes",
+    "detector.anti_forensic": "Anti-forense",
+    "detector.narrative": "Narrativa",
+    "detector.process": "Proceso / path",
+
+    "action.swapVerdict": "Cambiar veredicto",
+    "action.corruptFingerprint": "Corromper fingerprint",
+    "action.truncateCustody": "Truncar cadena de custodia",
+    "action.examinerWorkflow": "Flujo del perito",
+    "action.walletRequired": "hace falta wallet para atestar",
+    "action.connected": "conectado",
+    "action.runEngine": "corre el motor determinista",
+    "action.connectFirst": "conectá la wallet primero",
+    "action.tryBreak": "intentá romperlo",
+    "action.verifyPristine": "Verificar sin alterar",
+    "action.score": "score",
+    "action.corroboration": "corroboración",
+    "toast.sealingFailed": "Falló el sellado",
+    "toast.attestationFailed": "Falló la atestación",
+    "toast.verificationFailed": "Falló la verificación",
+    "toast.sealedSuccess": "Bundle sellado localmente — nada tocó la red.",
+    "toast.attestRequiresWallet": "Atestar requiere una wallet de Midnight conectada.",
+    "toast.commitmentComputed": "Commitment calculado — el veredicto queda atado al fingerprint sellado.",
+    "toast.tamperDetectedPrefix": "Alteración detectada",
+    "toast.reasonsVerificationFailed": "razón(es) por las que falló la verificación.",
+    "toast.verifiedOffline": "Bundle verificado offline — los hashes se recalcularon y coinciden.",
+    "verify.passed": "Verificación exitosa — el bundle no fue alterado.",
+    "verify.tamperedFailed": "Alteración detectada — falló la verificación.",
+
+    "hero.step1Label": "Sellado local",
+    "hero.step1Sub": "la evidencia nunca se mueve",
+    "hero.step2Label": "Con fingerprint",
+    "hero.step2Sub": "hash determinista",
+    "hero.step3Label": "Atestación",
+    "hero.step3Sub": "solo el commitment — todavía sin desplegar",
+    "hero.step4Label": "Verificado localmente",
+    "hero.step4Sub": "los hashes recomputan; prueba on-chain pendiente",
+    "hero.sealedCase": "caso sellado",
+    "hero.chainLive": "demo local",
+    "hero.commitment": "commitment",
+    "hero.saltHidden": "salt oculto",
+
+    "peirce.firstness": "Primeridad",
+    "peirce.firstnessHint": "lo que se presenta",
+    "peirce.secondness": "Segundidad",
+    "peirce.secondnessHint": "el hecho que resiste",
+    "peirce.thirdness": "Terceridad",
+    "peirce.thirdnessHint": "la regla interpretada",
+
+    "peritos.attestations": "Atestaciones",
+    "status.valid": "válido",
+    "status.expired": "expirado",
+    "cases.loadFailed": "No se pudieron cargar los casos",
+    "detail.engineReproduces": "el motor lo reproduce",
+    "detail.mismatch": "no coincide",
+    "detail.custodyInvalid": "Cadena de custodia inválida.",
+    "detail.event": "evento",
+    "detail.events": "eventos",
+
     "common.loading": "Cargando…",
     "common.error": "Error",
     "common.success": "Éxito",
     "common.cancel": "Cancelar",
     "common.confirm": "Confirmar",
+    "common.none": "ninguno",
   },
 } as const;
 
@@ -233,4 +399,21 @@ export function useI18n() {
   const ctx = useContext(I18nContext);
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
+}
+
+/**
+ * Picks the Spanish sibling of a corpus field when the UI is in Spanish,
+ * falling back to the English one.
+ *
+ * The synthetic corpus is bilingual in place — `name` / `name_es` on the
+ * same object — rather than as a parallel set of translated files. A
+ * second copy of the corpus is exactly the duplication red team F5 was
+ * about, and it drifted once already.
+ *
+ * The fallback is deliberate: a case that has not been translated yet
+ * shows English rather than an empty panel. A missing translation should
+ * degrade to readable, never to blank.
+ */
+export function localized<T>(lang: Lang, en: T, es: T | undefined): T {
+  return lang === "es" && es !== undefined ? es : en;
 }

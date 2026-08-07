@@ -6,9 +6,24 @@
   "expected_corroboration_count": 2,
   "devil_advocate": "svchost.exe is a legitimate binary, but its path, parent process, and C2 connection are anomalous. The attacker uses the binary as a puppet.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T17:15:00Z", "detail": "EDR alert on svchost.exe running from an unusual path." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T17:40:00Z", "detail": "Memory snapshot and network capture acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T18:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T17:15:00Z",
+      "detail": "EDR alert on svchost.exe running from an unusual path.",
+      "detail_es": "Alerta de EDR: svchost.exe ejecutándose desde una ruta inusual."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T17:40:00Z",
+      "detail": "Memory snapshot and network capture acquired.",
+      "detail_es": "Instantánea de memoria y captura de red adquiridas."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T18:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,16 @@
       "process": "svchost.exe",
       "path": "C:\\Users\\Public\\Downloads\\svchost.exe",
       "entropyMilliBits": 5500,
-      "markers": ["process_masquerade", "unusual_path", "parent_anomaly"],
+      "markers": [
+        "process_masquerade",
+        "unusual_path",
+        "parent_anomaly"
+      ],
       "description": "svchost.exe running from Downloads, not from System32. Parent process: cmd.exe. Valid hash, valid Microsoft signature.",
-      "provenanceChain": ["sha256:v007mem01"]
+      "provenanceChain": [
+        "sha256:v007mem01"
+      ],
+      "description_es": "svchost.exe ejecutándose desde Downloads, no desde System32. Parent process: cmd.exe. Hash válido, firma Microsoft válida."
     },
     {
       "id": "v007-network",
@@ -31,9 +53,14 @@
       "process": "svchost.exe",
       "path": "conn://185.220.101.77:443",
       "entropyMilliBits": 6200,
-      "markers": ["network_vs_host"],
+      "markers": [
+        "network_vs_host"
+      ],
       "description": "Persistent HTTPS connection every 60 seconds to an IP in a country where the company has no operations — the network behavior contradicts what a real svchost.exe should ever be doing.",
-      "provenanceChain": ["sha256:v007pcap02"]
+      "provenanceChain": [
+        "sha256:v007pcap02"
+      ],
+      "description_es": "Conexión HTTPS persistente cada 60 segundos a IP en país sin operaciones de la empresa."
     }
   ],
   "expected_fractures": [
@@ -47,5 +74,14 @@
     "secondness": "Persistent C2 connection to a geographically anomalous IP.",
     "thirdness": "The attacker uses a trusted binary as a puppet. The valid signature doesn't clean the behavior."
   },
-  "demo_quote": "A valid digital signature doesn't make an execution legitimate. The context — path, parent, network — gives away the ventriloquist."
+  "demo_quote": "A valid digital signature doesn't make an execution legitimate. The context — path, parent, network — gives away the ventriloquist.",
+  "name_es": "El Ventrílocuo",
+  "description_es": "svchost.exe con hash válido y firma Microsoft ejecutándose desde C:\\Users\\Public\\Downloads, con parent cmd.exe y conexión persistente a IP en país inusual. El proceso es legítimo, la configuración no.",
+  "devil_advocate_es": "svchost.exe es un binario legítimo, pero su ruta, parent process y conexión C2 son anómalos. El atacante usa el binario como marioneta.",
+  "demo_quote_es": "Una firma digital válida no hace legítima una ejecución. El contexto —ruta, parent, red— delata al ventrílocuo.",
+  "peirce_chain_es": {
+    "firstness": "Proceso legítimo en ruta inusual con parent sospechoso.",
+    "secondness": "Conexión C2 persistente a IP geográficamente anómala.",
+    "thirdness": "El atacante usa un binario confiable como marioneta. La firma válida no limpia el comportamiento."
+  }
 }

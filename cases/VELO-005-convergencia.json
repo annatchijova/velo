@@ -6,9 +6,24 @@
   "expected_corroboration_count": 3,
   "devil_advocate": "Each source alone could have a benign explanation, but the independent convergence points to the same actor and timeline. The TPM rules out pre-boot compromise.",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T13:55:00Z", "detail": "EDR + network alerts correlated to one host." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T14:30:00Z", "detail": "Memory image, pcap, disk image and TPM quote acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T15:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T13:55:00Z",
+      "detail": "EDR + network alerts correlated to one host.",
+      "detail_es": "Alertas de EDR y de red correlacionadas a un mismo host."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T14:30:00Z",
+      "detail": "Memory image, pcap, disk image and TPM quote acquired.",
+      "detail_es": "Imagen de memoria, pcap, imagen de disco y quote del TPM adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T15:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,15 @@
       "process": "lsass.exe",
       "path": "C:\\Windows\\System32\\lsass.exe",
       "entropyMilliBits": 6400,
-      "markers": ["process_masquerade"],
+      "markers": [
+        "process_masquerade"
+      ],
       "description": "PID 2244 injected into lsass.exe, presenting as the legitimate process while running injected code. Kernel structure anomaly confirmed.",
-      "provenanceChain": ["sha256:v005mem01", "sha256:examiner01"]
+      "provenanceChain": [
+        "sha256:v005mem01",
+        "sha256:examiner01"
+      ],
+      "description_es": "PID 2244 inyectado en lsass.exe. Kernel structure anomaly confirmado."
     },
     {
       "id": "v005-network",
@@ -31,9 +52,14 @@
       "process": "dns_client",
       "path": "dns://c2-domain.evil",
       "entropyMilliBits": 5200,
-      "markers": ["network_vs_host"],
+      "markers": [
+        "network_vs_host"
+      ],
       "description": "DNS beacon every 300s ± 45s, consistent with Cobalt Strike's default beacon — the host has no declared reason to be contacting this domain at all.",
-      "provenanceChain": ["sha256:v005pcap01"]
+      "provenanceChain": [
+        "sha256:v005pcap01"
+      ],
+      "description_es": "DNS beacon cada 300s ± 45s. Consistente con beacon default de Cobalt Strike."
     },
     {
       "id": "v005-disk",
@@ -43,9 +69,15 @@
       "process": "windef.exe",
       "path": "C:\\Windows\\System32\\windef.dll",
       "entropyMilliBits": 7100,
-      "markers": ["timestamps_stomped"],
+      "markers": [
+        "timestamps_stomped"
+      ],
       "description": "Beacon DLL found in System32 posing as Windows Defender, with file timestamps altered to match legitimate system files. Hash matches a known beacon.",
-      "provenanceChain": ["sha256:v005img01", "sha256:sector01"]
+      "provenanceChain": [
+        "sha256:v005img01",
+        "sha256:sector01"
+      ],
+      "description_es": "Beacon DLL encontrada en System32 haciéndose pasar por Windows Defender. Hash coincide con beacon conocido."
     },
     {
       "id": "v005-tpm",
@@ -57,7 +89,10 @@
       "entropyMilliBits": 2500,
       "markers": [],
       "description": "TPM PCR0 and PCR7 valid. Boot integrity intact. The attack is post-boot, runtime injection. No markers: this artifact shows the ABSENCE of anomaly (a clean boot), which is context that rules out a rival hypothesis, not something any of the 5 anomaly-detectors can score.",
-      "provenanceChain": ["sha256:v005tpm01"]
+      "provenanceChain": [
+        "sha256:v005tpm01"
+      ],
+      "description_es": "TPM PCR0 y PCR7 válidos. Boot integrity intacta. El ataque es post-boot, runtime injection."
     }
   ],
   "expected_fractures": [
@@ -70,5 +105,14 @@
     "secondness": "Low cross-correlation: these sources cannot have been fabricated together.",
     "thirdness": "Cobalt Strike beacon with process injection confirmed. Reliable evidence."
   },
-  "demo_quote": "Four independent sources converge in the story; three of them are what the engine's detector suite can actually score today. The TPM's clean reading is real corroboration in the forensic sense — it rules out a rival hypothesis — even though it doesn't move the engine's corroborationCount. That gap is worth naming honestly rather than papering over."
+  "demo_quote": "Four independent sources converge in the story; three of them are what the engine's detector suite can actually score today. The TPM's clean reading is real corroboration in the forensic sense — it rules out a rival hypothesis — even though it doesn't move the engine's corroborationCount. That gap is worth naming honestly rather than papering over.",
+  "name_es": "La Convergencia de Cuatro Fuentes",
+  "description_es": "Compromiso confirmado por cuatro fuentes independientes: memory (process injection en lsass.exe), network (DNS beacon a C2), disk (beacon DLL con hash conocido) y TPM (boot integrity intacta). Baja correlación cruzada, alta confianza.",
+  "devil_advocate_es": "Cada fuente por sí sola podría tener explicación benigna, pero la convergencia independiente apunta al mismo actor y timeline. El TPM descarta compromiso pre-boot.",
+  "demo_quote_es": "Cuatro fuentes independientes convergen. Ninguna explica sola el caso, pero juntas forman una prueba que resiste la duda razonable.",
+  "peirce_chain_es": {
+    "firstness": "Cuatro artefactos independientes apuntando al mismo compromiso.",
+    "secondness": "Baja correlación cruzada: estas fuentes no pueden haber sido fabricadas juntas.",
+    "thirdness": "Cobalt Strike beacon con process injection confirmado. Evidencia confiable."
+  }
 }

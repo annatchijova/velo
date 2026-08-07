@@ -6,9 +6,24 @@
   "expected_corroboration_count": 1,
   "devil_advocate": "",
   "custodyEvents": [
-    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T11:00:00Z", "detail": "Auth log anomaly flagged by monitoring." },
-    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T11:30:00Z", "detail": "Log file and a memory snapshot acquired." },
-    { "eventType": "ANALYZED", "timestamp": "2026-04-10T12:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-04-10T11:00:00Z",
+      "detail": "Auth log anomaly flagged by monitoring.",
+      "detail_es": "Anomalía en el log de autenticación marcada por monitoreo."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-04-10T11:30:00Z",
+      "detail": "Log file and a memory snapshot acquired.",
+      "detail_es": "Archivo de log e instantánea de memoria adquiridos."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-04-10T12:00:00Z",
+      "detail": "Deterministic engine ran over the acquired artifacts.",
+      "detail_es": "El motor determinista corrió sobre los artefactos adquiridos."
+    }
   ],
   "artifacts": [
     {
@@ -19,9 +34,14 @@
       "process": "authd",
       "path": "/var/log/auth.log",
       "entropyMilliBits": 3145,
-      "markers": ["temporal_entropy_null"],
+      "markers": [
+        "temporal_entropy_null"
+      ],
       "description": "50 AuthFailure events at 2,000s ± 0.001s intervals and entropy 3.145 ± 0.002. Inhumanly precise — real attacks and real humans have variance, not exact intervals.",
-      "provenanceChain": ["sha256:v002logs01"]
+      "provenanceChain": [
+        "sha256:v002logs01"
+      ],
+      "description_es": "50 eventos AuthFailure con intervalos 2.000s ± 0.001s y entropía 3.145 ± 0.002. Inhumana precisión."
     },
     {
       "id": "v002-memory",
@@ -33,7 +53,10 @@
       "entropyMilliBits": 4000,
       "markers": [],
       "description": "Memory scan: NO brute-force tool running. No network sockets match the source IP from the logs. Pure context — this artifact shows the absence of corroboration, it doesn't itself trip a detector.",
-      "provenanceChain": ["sha256:v002mem02"]
+      "provenanceChain": [
+        "sha256:v002mem02"
+      ],
+      "description_es": "Memory scan: NO hay herramienta de fuerza bruta en ejecución. No hay sockets de red que coincidan con la IP origen de los logs."
     }
   ],
   "expected_fractures": [
@@ -44,5 +67,13 @@
     "secondness": "Memory does not confirm an attacking process; the logs have no technical counterpart.",
     "thirdness": "The logs are fabricated via scripted injection. Strong signal but no independent corroboration."
   },
-  "demo_quote": "A naive system sees 50 failures and screams MALICE. VELO detects that the temporal variance is inhuman — but a single detector, from a single source, can never reach MALICE on its own (max category weight is below the threshold by design). Strong signal, but one source: SUSPICION."
+  "demo_quote": "A naive system sees 50 failures and screams MALICE. VELO detects that the temporal variance is inhuman — but a single detector, from a single source, can never reach MALICE on its own (max category weight is below the threshold by design). Strong signal, but one source: SUSPICION.",
+  "name_es": "La Subasta de Logs Uniformes",
+  "description_es": "Cincuenta entradas de log reportan AuthFailure con intervalos exactos de 2.000 segundos y entropía idéntica. Un sistema naive vería 50 fallos y concluiría ataque de fuerza bruta. Pero la memoria no muestra ningún proceso que genere esos eventos.",
+  "demo_quote_es": "Un sistema naive ve 50 fallos y grita MALICE. VELO detecta que la varianza temporal es inhumana y que la memoria contradice los logs. Señal fuerte, pero una sola fuente: SUSPICION.",
+  "peirce_chain_es": {
+    "firstness": "50 AuthFailure log entries con near-perfect 2s intervals.",
+    "secondness": "Memoria no confirma proceso atacante; los logs no tienen contraparte técnica.",
+    "thirdness": "Los logs son fabricados mediante inyección scriptada. Hay señal fuerte pero no corroboración independiente."
+  }
 }
