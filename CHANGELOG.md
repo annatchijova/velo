@@ -45,8 +45,8 @@ this point, so the entire history is grouped under the initial `0.1.0`.
   `scripts/compile-contract.sh` for one-command builds.
 - **Witnesses.** Circuit witnesses (TypeScript side) bound to the generated
   bindings.
-- **Web.** Loopback-only HTTP server (`npm run web`) and Next.js frontend
-  sharing `src/core/operations.ts`.
+- **Web.** Next.js frontend, calling the same `src/core/operations.ts` as the
+  MCP server so no interface carries its own copy of the rules.
 - **Simulation.** `src/simulate.ts` end-to-end demo showing both refusal
   moments (insufficient corroboration and missing custody).
 - **Deploy.** Contract deploy tooling for the preview network.
@@ -72,8 +72,15 @@ this point, so the entire history is grouped under the initial `0.1.0`.
 
 ### Removed
 
-- Redundant loopback HTTP server superseded by shared operations; shared
-  `caseId` validator.
+Built and withdrawn before this release, so none of it ever shipped. Recorded
+because the reasons are the load-bearing part: each was a second copy of logic
+that already existed somewhere else, and duplication is how a verdict quietly
+diverges between two interfaces.
+
+- Standalone loopback HTTP server — its orchestration was a second copy of the
+  MCP server's, so it was folded into `src/core/operations.ts`. Nothing in this
+  release starts a server of its own.
+- Duplicate `caseId` validator, superseded by the shared one.
 - `frontend/lib` — orphaned duplicate pointing at the wrong network.
 - Internal-only files excluded from the submission (`PROGRESS_LOCAL.md`,
   `GUION_VIDEO.md`).
@@ -93,10 +100,8 @@ this point, so the entire history is grouped under the initial `0.1.0`.
 
 ### Security
 
-- Loopback server binds to `127.0.0.1` only, by design — a machine holding a
-  victim's evidence must not open a port to its network.
-- Red team round 3: CSRF on the loopback/frontend seal-adjacent routes
-  (finding F14) fixed.
+- Red team round 3: CSRF on the frontend's seal-adjacent routes (finding F14)
+  fixed.
 
 [Unreleased]: https://github.com/annatchijova/velo/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/annatchijova/velo/releases/tag/v0.1.0
