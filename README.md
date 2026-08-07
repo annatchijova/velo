@@ -213,7 +213,8 @@ docs/            architecture, glossary, cases, FAQ, roadmap, red team report
 Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`GLOSSARY`](./docs/GLOSSARY.md) · [`CASES`](./docs/CASES.md) ·
 [`FAQ`](./docs/FAQ.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
-[`RED TEAM`](./docs/RED_TEAM_ROUND_1.md)
+[`RED TEAM`](./docs/RED_TEAM_ROUND_1.md) ·
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are

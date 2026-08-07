@@ -10,7 +10,8 @@ frontend and MCP interface exercising seal / attest / verify end-to-end (layer
 basic adversarial cases (layer 5). Selective disclosure, the anonymous expert
 credential, and the blind second-opinion extension are scoped in only as time
 allows, and are documented honestly as partial or unimplemented rather than
-presented as finished.
+presented as finished. From this point forward, all frontend work follows the
+mandatory TDD workflow documented in `docs/FRONTEND_TDD.md`.
 
 **Beyond the hackathon (net-new restriction no longer applies):**
 
@@ -36,7 +37,9 @@ punta a punta (capa 4), y tests que cubren umbrales, el gate de corroboración,
 determinismo y casos adversariales básicos (capa 5). La divulgación selectiva,
 la credencial anónima del perito y la extensión de segunda opinión ciega entran
 solo si el tiempo alcanza, y se documentan honestamente como parciales o no
-implementadas en vez de presentarse como terminadas.
+implementadas en vez de presentarse como terminadas. De aquí en adelante, todo
+trabajo de frontend sigue el flujo de TDD obligatorio documentado en
+`docs/FRONTEND_TDD.md`.
 
 **Después del hackathon (ya no rige la restricción net-new):**
 
