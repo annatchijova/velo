@@ -22,7 +22,8 @@ module.exports = {
     ],
     "scope-empty": [1, "never"],
     "scope-case": [2, "always", "lower-case"],
-    "scope-max-length": [2, "always", 24]
+    "scope-max-length": [2, "always", 24],
+    "subject-case": [2, "never"]
   },
   ignores: [
     (commit) =>
