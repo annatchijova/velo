@@ -22,15 +22,16 @@ import { attestationPayload } from "../seal/bundle.js";
  * commitment is published. It cannot be re-chosen later to make a
  * different verdict pass the Daubert gate.
  *
- * NOT VERIFIED AGAINST THE COMPILER: the contract has never been
- * compiled (no Compact toolchain on the machine this was written on), so
- * the generated TypeScript bindings do not exist yet. The types below are
- * written structurally against the documented witness contract, not
- * imported from generated code. Expect to reconcile the exact
- * WitnessContext shape and the Uint<0..17> representation (number vs
- * bigint) at first compile. Everything else here — the salt lifecycle,
- * the hex/byte conversion, the validation — is independent of that and
- * is unit-tested.
+ * PARTIALLY VERIFIED AGAINST THE COMPILER: the contract now compiles
+ * (contracts/managed/velo/contract/index.d.ts exists). The predicted
+ * mismatch showed up exactly as expected — the generated `Witnesses<PS>`
+ * binds `corroborationCountWitness` to `bigint`, not `number` — and is
+ * fixed below (`BigInt(...)` at the return boundary). The `context`
+ * parameter below is still typed structurally (`{ privateState }`)
+ * rather than imported as `WitnessContext<Ledger, PS>` from the
+ * generated bindings; that reconciliation is still open. Everything
+ * else here — the salt lifecycle, the hex/byte conversion, the
+ * validation — is independent of that and is unit-tested.
  */
 
 const BYTES_32 = 32;
@@ -190,7 +191,10 @@ export function makeWitnessImplementations(bundle: SealedBundle) {
     },
     corroborationCountWitness: ({ privateState }: { privateState: VeloPrivateState }) => {
       const { state, witnesses } = witnessesForBundle(privateState, bundle);
-      return [state, witnesses.corroborationCount] as const;
+      // The compiled circuit's Uint<0..17> witness is bound as `bigint` in
+      // the generated TypeScript (contracts/managed/velo/contract/index.d.ts),
+      // not `number` — confirmed once the contract actually compiled.
+      return [state, BigInt(witnesses.corroborationCount)] as const;
     },
   };
 }
