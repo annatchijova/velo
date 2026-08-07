@@ -2,8 +2,8 @@
   "perito_id": "VELO-PERITO-005",
   "public_alias": "Perito-9B4E",
   "jurisdiction_model": "agnostic",
-  "specialty": "Informática forense",
-  "accrediting_body_synthetic": "Consejo Profesional de Ciencias Informáticas de Rionegro Sur (ficticio) — mismo cuerpo acreditador que VELO-PERITO-001, matrícula distinta",
+  "specialty": "Digital forensics",
+  "accrediting_body_synthetic": "Rionegro Sur Professional Council of Computer Sciences (fictional) — same accrediting body as VELO-PERITO-001, different license number",
   "credential_id_synthetic": "CPCI-RNS-INF-05190",
   "matriculation_year": 2012,
   "years_active": 14,
@@ -11,12 +11,12 @@
     {
       "valid_from": "2025-06-01T00:00:00Z",
       "valid_until": "2026-02-01T00:00:00Z",
-      "reason": "Período inicial, vencido sin renovación a tiempo (0 horas de capacitación continua registradas antes del vencimiento)."
+      "reason": "Initial period, expired without timely renewal (0 continuing-education hours recorded before expiration)."
     },
     {
       "valid_from": "2026-06-01T00:00:00Z",
       "valid_until": "2029-06-01T00:00:00Z",
-      "reason": "Rematriculación tras el vencimiento — trámite tardío, típico de renovaciones fuera de término."
+      "reason": "Re-licensing after expiration — late filing, typical of out-of-term renewals."
     }
   ],
   "continuing_education_hours_last_cycle": 0,
@@ -26,5 +26,5 @@
     "VELO-009": "VALID",
     "VELO-010": "VALID"
   },
-  "notes": "Caso adversarial clave para Capa 6. Este perito SÍ pertenece al Merkle tree de acreditados (la membership proof pasaría siempre) — pero tiene un HUECO de vigencia entre el 2026-02-01 y el 2026-06-01 por no renovar a tiempo. VELO-009 (2026-01-16) cae en el primer período — VALID. VELO-006 (2026-04-10) cae justo en el hueco — EXPIRED, debe rechazarse aunque el perito pertenezca al árbol. VELO-010 (2026-07-20) cae en el segundo período tras la rematriculación — VALID de nuevo. El circuito debe chequear vigencia en la fecha exacta de CADA atestación, no una vigencia global del perito — mismo perito, tres resultados distintos según cuándo atestó. Es el equivalente de Capa 6 al VELO-004-cadena-rota (ABSTAIN por cadena de custodia rota, no por veredicto): acá el rechazo es por vigencia, no por membership."
+  "notes": "Key adversarial case for Layer 6. This examiner DOES belong to the Merkle tree of accredited examiners (the membership proof would always pass) — but has a validity GAP between 2026-02-01 and 2026-06-01 from not renewing on time. VELO-009 (2026-01-16) falls in the first period — VALID. VELO-006 (2026-04-10) falls right in the gap — EXPIRED, must be rejected even though the examiner belongs to the tree. VELO-010 (2026-07-20) falls in the second period after re-licensing — VALID again. The circuit must check validity at the exact date of EACH attestation, not a global validity for the examiner — same examiner, three different outcomes depending on when they attested. It's the Layer-6 equivalent of VELO-004-cadena-rota (ABSTAIN for broken chain of custody, not for verdict): here the rejection is for validity, not for membership."
 }

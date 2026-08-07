@@ -1,15 +1,16 @@
-# Casos sintéticos de evidencia para VELO
+# Synthetic evidence cases for VELO
 
-## Formato de un caso
+## Case format
 
 ```json
 {
   "case_id": "VELO-XXX",
-  "name": "Nombre del caso",
+  "name": "Case name",
   "description": "...",
   "expected_verdict": "MALICE",
   "expected_corroboration_count": 2,
   "devil_advocate": "...",
+  "custodyEvents": [{ "eventType": "IDENTIFIED", "timestamp": "...", "detail": "..." }, ...],
   "artifacts": [...],
   "expected_fractures": [...],
   "peirce_chain": { "firstness": "...", "secondness": "...", "thirdness": "..." },
@@ -17,66 +18,79 @@
 }
 ```
 
-## Tipos de artefacto
+**`artifacts[]` must match `Artifact` in `src/engine/evidence.ts` exactly** — `entropyMilliBits` (integer, bits/byte × 1000), `provenanceChain` (camelCase), and `markers` values drawn only from the closed vocabulary below. This is enforced by `tests/corpus.test.ts`, which loads every file in this directory and runs it through the real `runAllDetectors`/`score`, not by convention (red team F5: this corpus used to carry invented markers and mismatched field names that made the whole demo unreproducible against its own engine).
 
-- `file`: archivo en disco.
-- `process`: ejecución de proceso en memoria.
-- `log`: entrada de log.
-- `network`: flujo o conexión de red.
-- `registry`: clave de registro Windows.
-- `dns_record`: registro DNS.
+**`custodyEvents[]`** is the real acquisition history — `eventType` from `CUSTODY_EVENT_TYPES` in `src/seal/custody.ts` (`IDENTIFIED`, `COLLECTED`, `ACQUIRED`, `PRESERVED`, `ANALYZED`, `SEALED`). An empty array forces `ABSTAIN`, mirroring exactly how `seal_case` derives `custodyValid` over the real MCP protocol (red team F13) — there is no separate `custodyValid: true/false` flag to fake.
 
-## Marcadores de detectores
+## Artifact types
 
-### Detector temporal (`detectTemporalViolation`)
-- `cause_event`: artefacto que debería ser causa.
-- `effect_event`: artefacto que debería ser efecto.
-- `effect_before_cause`: violación física de causalidad.
-- `temporal_entropy_null`: intervalos inhumanamente uniformes.
+- `file`: file on disk.
+- `process`: in-memory process execution.
+- `log`: log entry.
+- `network`: network flow or connection.
+- `registry`: Windows registry key.
+- `dns_record`: DNS record.
 
-### Detector de inconsistencia cross-source (`detectCrossSourceContradiction`)
-- `log_vs_memory`: log dice X, memoria no lo confirma.
-- `network_vs_host`: tráfico de red contradice estado del host.
-- `cryptographic_inconsistency`: firma/hash/hash chain no verifica.
+## Detector markers
 
-### Detector anti-forense (`detectAntiForensicMarker`)
-- `log_cleared`: log borrado/truncado.
-- `timestamps_stomped`: timestamps manipulados.
-- `usn_journal_gap`: gap en USN journal.
-- `mft_entry_anomaly`: anomalía MFT.
-- `surgical_deletion`: borrado con shred/sobrescritura múltiple.
+### Temporal detector (`detectTemporalViolation`)
+- `cause_event`: artifact that should be a cause.
+- `effect_event`: artifact that should be an effect.
+- `effect_before_cause`: physical violation of causality.
+- `temporal_entropy_null`: inhumanly uniform intervals.
 
-### Detector de patrón narrativo (`detectNarrativePattern`)
-- `competence_theater`: incompetencia simulada.
-- `narrative_poisoning`: distracción emocional para cubrir técnica.
-- `false_flag_attribution`: atribución plantada inconsistente.
-- `documentary_fabrication`: documentos con metadatos inconsistentes.
+### Cross-source contradiction detector (`detectCrossSourceContradiction`)
+- `log_vs_memory`: log says X, memory doesn't confirm it.
+- `network_vs_host`: network traffic contradicts host state.
+- `cryptographic_inconsistency`: signature/hash/hash chain doesn't verify.
 
-### Detector de ruta/proceso (`detectProcessMasquerade`)
-- `process_masquerade`: proceso intenta parecer otro.
-- `unusual_path`: ruta inesperada para el proceso.
-- `parent_anomaly`: parent process incorrecto.
+### Anti-forensic detector (`detectAntiForensicMarker`)
+- `log_cleared`: log deleted/truncated.
+- `timestamps_stomped`: manipulated timestamps.
+- `usn_journal_gap`: gap in the USN journal.
+- `mft_entry_anomaly`: MFT anomaly.
+- `surgical_deletion`: deletion via shred/multi-pass overwrite.
 
-## Reglas de veredicto
+### Narrative pattern detector (`detectNarrativePattern`)
+- `competence_theater`: simulated incompetence.
+- `narrative_poisoning`: emotional distraction covering a technical act.
+- `false_flag_attribution`: inconsistent planted attribution.
+- `documentary_fabrication`: documents with inconsistent metadata.
 
-- `MALICE`: score > 0.33 **Y** `corroboration_count >= 2`.
-- `SUSPICION`: score > 0.10 pero sin corroboración suficiente.
-- `NOISE`: score <= 0.08.
-- `ABSTAIN`: evidencia inadmisible (cadena de custodia rota) o caso degenerado.
+### Path/process detector (`detectProcessMasquerade`)
+- `process_masquerade`: process trying to look like another.
+- `unusual_path`: unexpected path for the process.
+- `parent_anomaly`: incorrect parent process.
 
-`MALICE` requiere `devil_advocate != ""`.
+## Verdict rules
 
-## Casos incluidos
+Exact thresholds, from `src/engine/scorer.ts` (previously this section stated `> 0.10` for SUSPICION, which didn't match the code — fixed as part of red team F5):
 
-| Caso | Veredicto | Detectores | Inspirado en VIGÍA |
+- `ABSTAIN`: `custodyValid` is false — no custody events, or the chain doesn't verify. Short-circuits before any detector result is even considered.
+- `MALICE`: score > 33/100 **AND** `corroborationCount >= 2` **AND** `devil_advocate != ""`. Missing the devil's advocate degrades an otherwise-qualifying case to `SUSPICION` rather than publishing it.
+- `SUSPICION`: score > 33/100 with `corroborationCount < 2`, **or** score in (8/100, 33/100].
+- `NOISE`: score <= 8/100 (in practice: no detector fired at all — the lightest single detector weighs 1/5).
+
+No single detector category can reach the MALICE threshold alone (the heaviest, anti-forensic, is 3/10 < 33/100) — `MALICE` structurally requires at least two different detector categories to fire, from at least two independently-sourced artifacts.
+
+## Included cases
+
+| Case | Verdict | Detectors | Inspired by VIGÍA |
 |---|---|---|---|
-| `VELO-001-peon-confesion.json` | MALICE | Temporal + anti-forense + network | `case_083_sacrificio_del_peon` |
+| `VELO-001-peon-confesion.json` | MALICE | Temporal + anti-forensic + network | `case_083_sacrificio_del_peon` |
 | `VELO-002-logs-uniformes.json` | SUSPICION | Statistical uniformity + memory contradiction | `case_002_log_fabrication` |
 | `VELO-003-falso-flag.json` | MALICE | Memory anomaly + attribution mismatch | `case_003_false_flag` |
 | `VELO-004-cadena-rota.json` | ABSTAIN | Provenance break | `case_004_provenance_break` |
-| `VELO-005-convergencia.json` | MALICE | Memory + network + disk + TPM | `case_005_multi_source` |
-| `VELO-006-vacio-quirurgico.json` | MALICE | Anti-forense + entropy anomaly | `case_009_vacio_quirurgico` |
+| `VELO-005-convergencia.json` | MALICE | Memory + network + disk (TPM as unscored context) | `case_005_multi_source` |
+| `VELO-006-vacio-quirurgico.json` | MALICE | Anti-forensic + entropy anomaly | `case_009_vacio_quirurgico` |
 | `VELO-007-ventrilocuo.json` | MALICE | Path incongruence + network anomaly | `case_026_ventrilocuo_process_hollowing` |
 | `VELO-008-mise-en-place.json` | MALICE | Code anomaly + log silence | `case_085_mise_en_place_alterada` |
-| `VELO-009-trampa-soporte.json` | SUSPICION | Single competence-theater signal | `case_084_cebo_falso_layman` (sin corroboración) |
-| `VELO-010-dia-normal.json` | NOISE | Ninguno | baseline benigno |
+| `VELO-009-trampa-soporte.json` | SUSPICION | Single competence-theater signal | `case_084_cebo_falso_layman` (no corroboration) |
+| `VELO-010-dia-normal.json` | NOISE | None | benign baseline |
+| `VELO-011-two-badges.json` | SUSPICION | Physical access vs. network (cross-source) | new — frontend access-model fixture |
+| `VELO-012-quiet-resignation.json` | SUSPICION | Log vs. device registry (cross-source) | new — frontend access-model fixture |
+| `VELO-013-anonymous-drop.json` | ABSTAIN | Provenance break | new — unclaimed-case fixture |
+
+`VELO-011`, `VELO-012` and `VELO-013` exist to exercise the perito-facing "my cases" view in the frontend: see [`peritos-syntetic/README.md`](../peritos-syntetic/README.md#own-vs-others-visibility-rule-for-the-frontend) for the visibility contract they're designed to test.
+
+Run `npm test` to verify all 13 cases against the live engine (`tests/corpus.test.ts`) — this is not a one-time check, it re-runs the whole corpus against `runAllDetectors`/`score` every time the suite runs, so a future edit to either the engine's marker vocabulary or a case's artifacts that breaks the match fails the build instead of silently drifting again.

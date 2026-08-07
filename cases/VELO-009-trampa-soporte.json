@@ -1,10 +1,15 @@
 {
   "case_id": "VELO-009",
-  "name": "El Cebo del Falso Layman",
-  "description": "Usuario de administración envía ticket de soporte simulando incompetencia digital. La captura adjunta muestra un exploit dirty pipe a medio ejecutar. Sin embargo, no hay historial bash, no hay descarga previa, no hay proceso en memoria. Una sola fuente no alcanza para MALICE.",
+  "name": "The False-Layman Bait",
+  "description": "An admin user sends a support ticket simulating digital incompetence. The attached screenshot shows a dirty pipe exploit mid-execution. However, there's no bash history, no prior download, no process in memory. A single source isn't enough for MALICE.",
   "expected_verdict": "SUSPICION",
   "expected_corroboration_count": 1,
   "devil_advocate": "",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-01-16T09:15:22Z", "detail": "Support ticket flagged for review by a human analyst." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-01-16T09:30:00Z", "detail": "Ticket, screenshot and a memory snapshot of the reporting host acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-01-16T10:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
   "artifacts": [
     {
       "id": "v009-ticket",
@@ -13,10 +18,10 @@
       "source": "ticket_system",
       "process": "helpdesk",
       "path": "ticket://SUP-2026-084",
-      "entropy": 4.7,
-      "markers": ["competence_theater", "single_source"],
-      "description": "Ticket: 'No sé qué toqué, pantalla negra con letras verdes, no entro al Excel'. Adjunto: screenshot.png.",
-      "provenance_chain": ["sha256:v009tick01"]
+      "entropyMilliBits": 4700,
+      "markers": ["competence_theater"],
+      "description": "Ticket: 'I don't know what I touched, black screen with green letters, I can't get into Excel'. Attachment: screenshot.png.",
+      "provenanceChain": ["sha256:v009tick01"]
     },
     {
       "id": "v009-image",
@@ -25,10 +30,10 @@
       "source": "vision_ocr",
       "process": "screenshot.png",
       "path": "/tickets/SUP-2026-084/screenshot.png",
-      "entropy": 6.8,
-      "markers": ["competence_theater", "exploit_visible"],
-      "description": "Captura: terminal Linux con CVE-2022-0847 (dirty pipe) al 45%. Requiere conocimiento avanzado de C para llegar a ese estado.",
-      "provenance_chain": ["sha256:v009img02"]
+      "entropyMilliBits": 6800,
+      "markers": ["competence_theater"],
+      "description": "Screenshot: Linux terminal with CVE-2022-0847 (dirty pipe) at 45%. Requires advanced C knowledge to reach that state. Same provenance root as the ticket — this is an attachment of that same submission, not an independent acquisition.",
+      "provenanceChain": ["sha256:v009tick01"]
     },
     {
       "id": "v009-memory",
@@ -37,19 +42,19 @@
       "source": "memory_forensics",
       "process": "bash",
       "path": "/bin/bash",
-      "entropy": 3.2,
-      "markers": ["no_corroboration"],
-      "description": "Memory scan: no hay historial bash con wget/chmod/exploit. No hay proceso sospechoso activo. No hay conexión DNS a dominio reciente.",
-      "provenance_chain": ["sha256:v009mem03"]
+      "entropyMilliBits": 3200,
+      "markers": [],
+      "description": "Memory scan: no bash history with wget/chmod/exploit. No active suspicious process. No DNS connection to a recent domain. Shows the absence of corroboration; carries no markers itself.",
+      "provenanceChain": ["sha256:v009mem03"]
     }
   ],
   "expected_fractures": [
     "COMPETENCE_THEATER"
   ],
   "peirce_chain": {
-    "firstness": "Ticket de usuario no técnico con captura de exploit kernel.",
-    "secondness": "No hay corroboración técnica: sin historial, sin proceso, sin red.",
-    "thirdness": "Hay señal fuerte de teatro forense, pero una sola fuente. El sistema se resiste a elevar a MALICE."
+    "firstness": "Non-technical user's ticket with a kernel-exploit screenshot.",
+    "secondness": "No technical corroboration: no history, no process, no network.",
+    "thirdness": "There's a strong signal of forensic theater, but a single source. The system resists escalating to MALICE."
   },
-  "demo_quote": "La captura es alarmante, pero sin memoria, sin red y sin proceso que la corrobore, VELO se queda en SUSPICION. La regla Daubert exige dos fuentes."
+  "demo_quote": "The screenshot is alarming, but without memory, network, or a process to corroborate it, VELO stays at SUSPICION. The ticket and its own attachment are one source, not two — the Daubert rule counts independent acquisitions, not files."
 }

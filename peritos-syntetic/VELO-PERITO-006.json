@@ -1,0 +1,18 @@
+{
+  "perito_id": "VELO-PERITO-006",
+  "public_alias": "Perito-3D77",
+  "jurisdiction_model": "AR",
+  "specialty": "Digital forensics",
+  "accrediting_body_synthetic": "Rionegro Sur Professional Council of Computer Sciences (fictional) — same accrediting body as VELO-PERITO-001 and VELO-PERITO-005, different license number",
+  "credential_id_synthetic": "CPCI-RNS-INF-06284",
+  "matriculation_year": 2020,
+  "years_active": 6,
+  "valid_from": "2025-01-01T00:00:00Z",
+  "valid_until": "2028-01-01T00:00:00Z",
+  "continuing_education_hours_last_cycle": 30,
+  "cases_attested": ["VELO-012"],
+  "credential_status_at_attestation": {
+    "VELO-012": "VALID"
+  },
+  "notes": "Own-vs-others visibility fixture for the frontend 'my cases' view. VELO-PERITO-006 attests only VELO-012 — from VELO-PERITO-001's perspective (who attests VELO-001, VELO-002, VELO-011) this case belongs to a different examiner: VELO-PERITO-001 should see only {case_id, expected_verdict, expected_corroboration_count} for VELO-012, never its artifacts, devil_advocate, or peirce_chain, and never VELO-PERITO-006's public_alias. Symmetrically, VELO-PERITO-006 gets the same restricted view of VELO-001/002/011. VELO-013 is attested by nobody: it must not appear in ANY examiner's 'my cases' list, only in an unclaimed/pending queue with no verdict exposed."
+}

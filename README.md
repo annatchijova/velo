@@ -40,6 +40,18 @@ diseño y roadmap.
 
 ---
 
+## Links
+
+- Project page: [annatchijova.github.io/vigia/velo.html](https://annatchijova.github.io/vigia/velo.html)
+
+## Authors
+
+- [annatchijova](https://github.com/annatchijova)
+- [olgavasilievaveg-hash](https://github.com/olgavasilievaveg-hash/)
+- [Dahgoth](https://github.com/Dahgoth)
+
+---
+
 ## License
 
 Apache License 2.0 — see [`LICENSE`](./LICENSE).

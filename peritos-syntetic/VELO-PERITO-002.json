@@ -3,7 +3,7 @@
   "public_alias": "Perito-C2B9",
   "jurisdiction_model": "US",
   "specialty": "Digital forensics (cert-based, no bar/colegio)",
-  "accrediting_body_synthetic": "Meridian Institute for Digital Forensic Certification (ficticio, análogo a GIAC/IACIS)",
+  "accrediting_body_synthetic": "Meridian Institute for Digital Forensic Certification (fictional, analogous to GIAC/IACIS)",
   "credential_id_synthetic": "MIDFC-GCFE-2021-11029",
   "matriculation_year": 2021,
   "years_active": 5,
@@ -15,5 +15,5 @@
     "VELO-003": "VALID",
     "VELO-004": "VALID"
   },
-  "notes": "Camino feliz del modelo estadounidense: certificación vigente vía renovación periódica basada en horas de educación continua, sin colegio profesional tradicional detrás. Prueba que el schema es agnóstico de jurisdicción sin forzar el modelo argentino sobre el estadounidense."
+  "notes": "Happy path of the U.S. model: valid certification via periodic renewal based on continuing-education hours, with no traditional professional body behind it. Proves the schema is jurisdiction-agnostic without forcing the Argentine model onto the U.S. one."
 }

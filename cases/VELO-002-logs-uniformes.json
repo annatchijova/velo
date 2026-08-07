@@ -1,10 +1,15 @@
 {
   "case_id": "VELO-002",
-  "name": "La Subasta de Logs Uniformes",
-  "description": "Cincuenta entradas de log reportan AuthFailure con intervalos exactos de 2.000 segundos y entropía idéntica. Un sistema naive vería 50 fallos y concluiría ataque de fuerza bruta. Pero la memoria no muestra ningún proceso que genere esos eventos.",
+  "name": "The Uniform Log Auction",
+  "description": "Fifty log entries report AuthFailure at exact 2,000-second intervals with identical entropy. A naive system would see 50 failures and conclude brute-force attack. But memory shows no process generating those events.",
   "expected_verdict": "SUSPICION",
   "expected_corroboration_count": 1,
   "devil_advocate": "",
+  "custodyEvents": [
+    { "eventType": "IDENTIFIED", "timestamp": "2026-04-10T11:00:00Z", "detail": "Auth log anomaly flagged by monitoring." },
+    { "eventType": "ACQUIRED", "timestamp": "2026-04-10T11:30:00Z", "detail": "Log file and a memory snapshot acquired." },
+    { "eventType": "ANALYZED", "timestamp": "2026-04-10T12:00:00Z", "detail": "Deterministic engine ran over the acquired artifacts." }
+  ],
   "artifacts": [
     {
       "id": "v002-logs",
@@ -13,10 +18,10 @@
       "source": "system_log",
       "process": "authd",
       "path": "/var/log/auth.log",
-      "entropy": 3.145,
-      "markers": ["statistical_uniformity", "temporal_entropy_null"],
-      "description": "50 eventos AuthFailure con intervalos 2.000s ± 0.001s y entropía 3.145 ± 0.002. Inhumana precisión.",
-      "provenance_chain": ["sha256:v002logs01"]
+      "entropyMilliBits": 3145,
+      "markers": ["temporal_entropy_null"],
+      "description": "50 AuthFailure events at 2,000s ± 0.001s intervals and entropy 3.145 ± 0.002. Inhumanly precise — real attacks and real humans have variance, not exact intervals.",
+      "provenanceChain": ["sha256:v002logs01"]
     },
     {
       "id": "v002-memory",
@@ -25,20 +30,19 @@
       "source": "memory_forensics",
       "process": "systemd",
       "path": "/proc",
-      "entropy": 4.0,
-      "markers": ["log_vs_memory"],
-      "description": "Memory scan: NO hay herramienta de fuerza bruta en ejecución. No hay sockets de red que coincidan con la IP origen de los logs.",
-      "provenance_chain": ["sha256:v002mem02"]
+      "entropyMilliBits": 4000,
+      "markers": [],
+      "description": "Memory scan: NO brute-force tool running. No network sockets match the source IP from the logs. Pure context — this artifact shows the absence of corroboration, it doesn't itself trip a detector.",
+      "provenanceChain": ["sha256:v002mem02"]
     }
   ],
   "expected_fractures": [
-    "STATISTICAL_UNIFORMITY",
-    "LOG_VS_MEMORY"
+    "TEMPORAL_ENTROPY_NULL"
   ],
   "peirce_chain": {
-    "firstness": "50 AuthFailure log entries con near-perfect 2s intervals.",
-    "secondness": "Memoria no confirma proceso atacante; los logs no tienen contraparte técnica.",
-    "thirdness": "Los logs son fabricados mediante inyección scriptada. Hay señal fuerte pero no corroboración independiente."
+    "firstness": "50 AuthFailure log entries with near-perfect 2s intervals.",
+    "secondness": "Memory does not confirm an attacking process; the logs have no technical counterpart.",
+    "thirdness": "The logs are fabricated via scripted injection. Strong signal but no independent corroboration."
   },
-  "demo_quote": "Un sistema naive ve 50 fallos y grita MALICE. VELO detecta que la varianza temporal es inhumana y que la memoria contradice los logs. Señal fuerte, pero una sola fuente: SUSPICION."
+  "demo_quote": "A naive system sees 50 failures and screams MALICE. VELO detects that the temporal variance is inhuman — but a single detector, from a single source, can never reach MALICE on its own (max category weight is below the threshold by design). Strong signal, but one source: SUSPICION."
 }

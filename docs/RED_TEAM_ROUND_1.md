@@ -36,7 +36,7 @@ Rule applied: no finding says CONFIRMED without its experiment; vectors that wer
 | F2 | **High** | CONFIRMED | `scorer.ts` + `detectors.ts` | The Daubert gate counted *detector categories*, not *independent sources*: **a single artifact reached MALICE with "corroboration 4"** | **FIXED** |
 | F3 | **High** | CONFIRMED | `bundle.ts` + docs | What gets committed on-chain (the fingerprint) **excluded the custody chain**: custody truncation was invisible to the planned anchor | **FIXED** |
 | F4 | **High** (current build) | CONFIRMED | whole perimeter | With no secret anywhere, **anyone can forge a complete bundle** that `verify.js` accepts with `valid: true`; the word "valid" overpromises "authentic" | **FIXED** (wording + explicit disclaimer) |
-| F5 | **High** (demo/credibility) | CONFIRMED | `cases/` ↔ `engine/` | Total corpus↔engine drift: **8/13 cases diverge** from their expected verdict | **OPEN** (owned by the corpus session) |
+| F5 | **High** (demo/credibility) | CONFIRMED | `cases/` ↔ `engine/` | Total corpus↔engine drift: **8/13 cases diverge** from their expected verdict | **FIXED** (from the corpus session) |
 | F6 | Medium | CONFIRMED | `detectors.ts` | Temporal detector **fails open** on invalid timestamps (`NaN < x` → silence) | **FIXED** |
 | F7 | Medium | CONFIRMED | `custody.ts` | The verifier checks hash linkage, not semantics: accepts invented eventType, non-consecutive `seq`, out-of-order timestamps | **FIXED** |
 | F8 | Medium-low | CONFIRMED (drift) / PLAUSIBLE (impact) | `verify.ts` vs `canonical.ts` | Two canonicalizers already diverged (bigint); the "self-contained" design guarantees future drift | **FIXED** (conformance suite) |
@@ -118,7 +118,7 @@ Rule applied: no finding says CONFIRMED without its experiment; vectors that wer
 
 ---
 
-### F5 — Total corpus ↔ engine drift: the demo does not reproduce its own cases — OPEN
+### F5 — Total corpus ↔ engine drift: the demo does not reproduce its own cases — FIXED (from the corpus session)
 
 **Severity:** High (credibility/demo) · **Level:** CONFIRMED BY INDUCTION (E4 + static analysis) · **Bucket:** integration / composition across parallel sessions.
 
@@ -129,7 +129,8 @@ Rule applied: no finding says CONFIRMED without its experiment; vectors that wer
   - VELO-004 and VELO-013 (expected ABSTAIN from a broken custody chain) → **NOISE**. The engine has no provenance detector: the story "a strong hash with no custody is inadmissible" is not implemented — ABSTAIN exists only as an external flag.
   - VELO-003/006/007/008/011 (MALICE) → SUSPICION or NOISE.
   - VELO-002 "matches" SUSPICION but with `corroborationCount=2` where the case declares 1 — it matches for the wrong reason.
-- **Status:** **not fixed here.** `cases/` is owned by the parallel corpus session; fixing it from this side would collide with in-flight work. The engine-side half of the fix (a single shared `Marker` union, strict parsing at the case loader, and a CI test running the corpus against `expected_verdict`) is the recommended next step, plus deciding whether ABSTAIN-by-provenance is a real detector.
+- **Fix applied (from the corpus session, closing this out):** every `cases/*.json` artifact rewritten to the real `Artifact` shape (`entropyMilliBits`, `provenanceChain`, markers restricted to the closed 19-value `Marker` union), each case redesigned so its story still holds using only markers the engine actually scores. Where a marker had no honest equivalent (TPM hardware attestation in VELO-005; credential dumping in VELO-003), the artifact was kept for narrative context but documented as *not* contributing to the engine's numeric corroboration, rather than force-mapped onto an unrelated category. Added `custodyEvents[]` per case, deriving `custodyValid` the same way `seal_case` does post-F13 (empty events → ABSTAIN) instead of a bypassable flag. Added `tests/corpus.test.ts`: loads every case, runs it through the live `runAllDetectors`/`score`, asserts verdict + corroborationCount + fracture set. One case (VELO-011, new since the audit) had its documented verdict corrected from MALICE to SUSPICION rather than forced — a single cross-source contradiction from one source structurally cannot clear the corroboration gate, and papering over that would have reintroduced the exact drift this finding is about. `cases/README.md` corrected to match: the "SUSPICION: score > 0.10" line didn't match `NOISE_CEILING = 8/100` in the live code either.
+- **Verification:** `npm test` — 13/13 corpus cases pass against the real engine, 34/34 total suite green.
 
 ---
 
@@ -217,7 +218,7 @@ Falsification is a first-class result. These attacks were executed and **failed*
 
 ## What was changed (post-audit remediation)
 
-Every finding was re-verified against the live code before patching — none was applied blind on the report's authority alone. Twelve of thirteen are fixed; F5 is left to the session that owns the corpus.
+Every finding was re-verified against the live code before patching — none was applied blind on the report's authority alone. All thirteen are now fixed; F5 was closed out separately by the corpus session (see that finding's entry above for what changed in `cases/`).
 
 | Area | Change |
 |---|---|
@@ -231,8 +232,12 @@ Every finding was re-verified against the live code before patching — none was
 | `src/seal/verify.ts` | synced with all of the above; strict duplicate-key rejection; boundary shape check with human-readable failure; explicit "does not establish" output |
 | `contracts/velo.compact` | third witness `custodyTip()`; commitment is now `persistentHash([fingerprint, tip, salt])` |
 | `tests/` | star test rewritten to test independent sources (not categories); same-provenance-root test; `tests/conformance.test.ts` pinning both canonicalizers |
+| `cases/*.json` (F5, corpus session) | markers/fields conformed to the real `Artifact` shape; `custodyEvents[]` added; VELO-011's verdict corrected rather than forced |
+| `tests/corpus.test.ts` (F5, corpus session) | new — runs the full 13-case corpus through the live engine on every `npm test` |
 
 **Verification after fixes:** 14/14 tests green; `simulate` end-to-end OK; the auditor's own attacks re-run and blocked (path traversal direct and over real MCP JSON-RPC, single-source MALICE, timestamp fail-open, unsafe integer, ABSTAIN reachable).
+
+**Verification after F5 (corpus session, later pass):** suite grew to 34 tests (this session's `corpus.test.ts` plus other work landed in parallel) — 34/34 green, including all 13 corpus cases against the live engine.
 
 ## What was NOT verified (explicit fallibilism)
 

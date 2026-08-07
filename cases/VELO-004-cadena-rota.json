@@ -1,10 +1,11 @@
 {
   "case_id": "VELO-004",
-  "name": "La Cadena Rota",
-  "description": "Hash de archivo coincide con malware conocido (47/70 en VirusTotal). Pero no existe registro de adquisición, no hay firma del perito y la cadena de provenance no tiene raíz. Bajo Daubert, la evidencia es inadmisible.",
+  "name": "The Broken Chain",
+  "description": "File hash matches known malware (47/70 on VirusTotal). But no acquisition record exists, no examiner signature, and the provenance chain has no root. Under Daubert, the evidence is inadmissible.",
   "expected_verdict": "ABSTAIN",
   "expected_corroboration_count": 0,
   "devil_advocate": "",
+  "custodyEvents": [],
   "artifacts": [
     {
       "id": "v004-hash",
@@ -13,10 +14,10 @@
       "source": "hash_database",
       "process": "generate_forensic_hash",
       "path": "/evidence/suspicious_binary.exe",
-      "entropy": 6.9,
-      "markers": ["known_malware_hash"],
-      "description": "SHA-256 coincide con malware conocido. VirusTotal: 47/70 detecciones. PERO no hay registro de adquisición ni chain root.",
-      "provenance_chain": ["ORPHANED"]
+      "entropyMilliBits": 6900,
+      "markers": [],
+      "description": "SHA-256 matches known malware. VirusTotal: 47/70 detections. BUT there's no acquisition record and no chain root. No markers set: the engine's detector suite has no provenance category — inadmissibility here comes entirely from custodyEvents being empty, not from a fired detector.",
+      "provenanceChain": ["ORPHANED"]
     },
     {
       "id": "v004-timestamp",
@@ -25,19 +26,19 @@
       "source": "file_system",
       "process": "read_evidence",
       "path": "/evidence/suspicious_binary.exe",
-      "entropy": 5.5,
-      "markers": ["orphaned_provenance"],
-      "description": "Timestamp de creación coincide con intervalo de beacon conocido. Pero la cadena de custodia tiene un solo hash huérfano, sin imagen de disco padre.",
-      "provenance_chain": ["sha256:partial_chain_ORPHANED"]
+      "entropyMilliBits": 5500,
+      "markers": [],
+      "description": "Creation timestamp matches a known beacon interval. But the chain of custody has a single orphaned hash, with no parent disk image.",
+      "provenanceChain": ["sha256:partial_chain_ORPHANED"]
     }
   ],
   "expected_fractures": [
     "PROVENANCE_BREAK"
   ],
   "peirce_chain": {
-    "firstness": "47/70 detecciones en VirusTotal — señal aparentemente fuerte.",
-    "secondness": "No hay acquisition record, firma de perito, ni root de la cadena de custodia.",
-    "thirdness": "Sin root of trust no se puede verificar que la evidencia no fue plantada o modificada. Inadmisible."
+    "firstness": "47/70 detections on VirusTotal — apparently strong signal.",
+    "secondness": "No acquisition record, no examiner signature, no root for the chain of custody.",
+    "thirdness": "Without a root of trust it can't be verified that the evidence wasn't planted or modified. Inadmissible."
   },
-  "demo_quote": "Evidencia de alta calidad sin cadena de custodia es inadmisible. VELO no se deja seducir por el hash; exige provenance."
+  "demo_quote": "High-quality evidence without a chain of custody is inadmissible. VELO doesn't get seduced by the hash; it demands provenance. `PROVENANCE_BREAK` here is narrative documentation, not a detector fracture — score() short-circuits to ABSTAIN as soon as custodyEvents is empty, before any of the 5 detectors run."
 }
