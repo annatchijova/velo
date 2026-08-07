@@ -79,6 +79,19 @@ on a non-AVX2 machine, it fails at the ZK backend with a clear message
 distinguishing "hardware can't run this" from "the contract is wrong" — read
 that message out loud if it happens live, don't panic and don't skip past it.
 
+**The contract is live on Midnight preview** — deployed, not just compiled:
+
+```
+contract address: 46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d
+network:          preview
+recorded in:      deploy/managed-shim/velo-contract.preview.json
+```
+
+Say this plainly if asked "is any of this actually on-chain": yes, the
+contract itself is deployed and reachable — what's *not* wired yet is the
+app calling it (`attest_case` / `/api/attest` are still placeholders, see §5).
+That's a precise, defensible claim, not an overclaim.
+
 ---
 
 ## 3. Screen sequence
@@ -123,10 +136,34 @@ under pressure:
 
 Reading these out loud, unprompted, is stronger than waiting to be caught.
 
-- **`attest_case` is still a stub.** The contract compiles (verified, keys
-  generated) and deploy tooling exists (`deploy/deploy-contract.ts`), but the
-  MCP tool does not yet call it — check `src/mcp/server.ts` before claiming
-  otherwise if this changes before the demo.
+- **`attest_case` / `/api/attest` are still placeholders.** The contract is
+  now genuinely deployed and live on Midnight preview
+  (`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d` — see
+  §2), which is real progress, not a claim — but nothing in the app calls it
+  yet. Check `src/mcp/server.ts` and `frontend/src/app/api/attest/route.ts`
+  before claiming otherwise if this changes before the demo.
+
+  **Deploy history, if asked "did it work first try" or "tell us about a
+  hard bug"** (full account in `docs/LEARNINGS.md`, L1 and L3) — two
+  distinct failures, not one:
+  1. First attempts failed with "Insufficient Funds: could not balance
+     dust" — turned out to be a missing NIGHT-for-DUST registration step,
+     not actually insufficient funds.
+  2. With that fixed, the next failure was `Custom error: 170` at
+     submission. The tempting fix — a forum thread on this exact error
+     pointed at a ledger version mismatch — was checked against Midnight's
+     own compatibility matrix and correctly ruled out: every component
+     already matched. The real cause was DUST sync state still settling
+     (observed flapping `true → false → true` in the sync log) when the
+     transaction was built, so the spend proof referenced a merkle root
+     that was already being superseded. Waiting for sync to fully settle
+     before submitting fixed it — no version bump needed.
+
+  This is a genuinely good answer to "walk us through a hard bug": a
+  plausible wrong fix was available and specifically *not* taken, because
+  the evidence (the compatibility matrix, the sync-state log) didn't
+  support it. That's the same abductive discipline the project's own red
+  team methodology names in `demo/skills/red-teaming-zk-attestation-systems.md`.
 - **Witness provenance (G1, `RED_TEAM_ROUND_2.md`).** The circuit proves a
   relationship between witnesses; it cannot prove those witnesses came from a
   real engine run on real evidence. Named explicitly in `ARCHITECTURE.md`,
