@@ -151,6 +151,29 @@ test("custody chain: tampering any entry invalidates the whole chain from that p
   assert.equal(after.valid, false);
 });
 
+test("KNOWN LIMITATION: verifyCustodyChain in isolation cannot detect truncation", () => {
+  // This test documents a real gap, on purpose -- see the comment on
+  // verifyCustodyChain in src/seal/custody.ts. A chain with events
+  // removed from the END is internally consistent, because every
+  // remaining link still recomputes correctly. Truncation is only
+  // actually caught by comparing against an externally-anchored
+  // commitment (the on-chain record, Capa 2) -- not by this function
+  // alone. If this assertion ever starts failing because someone "fixed"
+  // verifyCustodyChain to reject truncation, that's worth a real
+  // conversation: it likely means an expected-tip parameter got added,
+  // and this test (and the comment it points at) needs updating together.
+  let chain = createCustodyChain("VELO-TRUNC-TEST");
+  chain = appendCustodyEvent(chain, "IDENTIFIED", "2026-08-07T14:00:00Z", "step 1");
+  chain = appendCustodyEvent(chain, "ACQUIRED", "2026-08-07T14:05:00Z", "step 2");
+  chain = appendCustodyEvent(chain, "ANALYZED", "2026-08-07T14:10:00Z", "step 3");
+  chain = appendCustodyEvent(chain, "SEALED", "2026-08-07T14:15:00Z", "step 4 - the real ending");
+
+  const truncated = { ...chain, events: chain.events.slice(0, 3) };
+  const result = verifyCustodyChain(truncated);
+
+  assert.equal(result.valid, true, "documents the known gap -- see comment above and in custody.ts");
+});
+
 test("sealed bundle: analysis fingerprint is stable across re-sealing the same analysis, bundle hash is not", () => {
   const detectorResults = runAllDetectors(maliceArtifacts());
   const result = score({

@@ -71,7 +71,29 @@ export interface CustodyVerification {
   reason: string;
 }
 
-/** Recomputes every link independently — does not trust any hash stored in the chain itself. */
+/**
+ * Recomputes every link independently — does not trust any hash stored in
+ * the chain itself.
+ *
+ * KNOWN LIMITATION, not a bug: this function CANNOT detect truncation —
+ * an attacker who removes events from the END of an honest chain and
+ * hands you the shortened result gets a chain that is internally
+ * consistent, because every link that remains still recomputes correctly.
+ * No hash-chain-in-isolation can prove a negative ("nothing was removed
+ * after this point") without an external, independently-trusted anchor
+ * to compare against. See tests/pipeline.test.ts for a test that
+ * demonstrates this directly.
+ *
+ * The actual anti-truncation property VELO relies on is NOT this
+ * function — it's the on-chain commitment (Capa 2). Once a bundle's
+ * commitment is attested on Midnight, that record is immutable; a
+ * verifier who checks a LOCAL bundle.json against the ON-CHAIN
+ * commitment/bundleHash *will* catch a locally-truncated-then-touched-up
+ * copy, because the attacker cannot also rewrite what's already public
+ * on the ledger. Ledger immutability is the anchor. Do not describe this
+ * local chain as truncation-proof by itself in the pitch — say
+ * specifically that the ledger commitment is what anchors it.
+ */
 export function verifyCustodyChain(chain: CustodyChain): CustodyVerification {
   const expectedGenesis = genesisHash(chain.caseId);
   if (chain.genesisHash !== expectedGenesis) {
