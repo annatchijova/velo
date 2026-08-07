@@ -78,6 +78,12 @@ artifacts are the git tag and the GitHub Release. A `BREAKING CHANGE:` footer
 (or a `!` after the type) bumps MAJOR. To force a specific version, edit the
 versions in the open release pull request before merging it.
 
+Merges to `main` are squash merges, and release-please reads only what is on
+`main`: the squash subject — the **PR title** for multi-commit PRs — becomes
+the changelog entry. PR titles are therefore enforced as Conventional Commits
+by the `PR title` workflow; title your PR like a commit (e.g.
+`feat(engine): add custody-chain export`).
+
 ## Keep a Changelog
 
 Notable changes are recorded in [`CHANGELOG.md`](./CHANGELOG.md) following the
