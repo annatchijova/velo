@@ -219,6 +219,30 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 were adapted from, and why none of it is copy-pasted: those projects are
 Python, this one is TypeScript and Compact.
 
+## Development conventions
+
+This repository follows a small, explicit set of engineering conventions so that
+reviews stay focused on substance rather than formatting. The rules are enforced
+automatically where possible.
+
+- **Conventional Commits v1.0.0** — every commit message follows the
+  `<type>[optional scope]: <description>` shape. A Husky `commit-msg` hook runs
+  [`commitlint`](https://commitlint.js.org/) with
+  `@commitlint/config-conventional`, and a non-conforming message is rejected
+  before it is recorded.
+- **Semantic Versioning 2.0.0** — the package version (`package.json`) is the
+  single source of truth and is bumped with `npm version` (e.g. `npm version
+  minor`).
+- **Keep a Changelog 1.1.0** — notable changes are recorded in
+  [`CHANGELOG.md`](./CHANGELOG.md), grouped under Added / Changed / Deprecated /
+  Removed / Fixed / Security, with an `Unreleased` section at the top.
+- **Husky pre-commit / pre-push setup** — a Husky `prepare` script installs the
+  git hooks on `npm install`. The `commit-msg` hook enforces Conventional
+  Commits; add a `pre-commit` or `pre-push` hook under `.husky/` for further
+  local guards.
+
+Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
 ---
 
 ## Español
