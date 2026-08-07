@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["contracts/velo.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EA8BA;;;;;;;;;;;;;;;;;;;;;;MA6EA,AAAA,MAkCC;;;;;cAlCqB,SAAgB;;;;;;;;;;;;;;;;;;yCAAhB,SAAgB;;;;;;;mEAAhB,SAAgB;;;OAkCrC;MAOD,AAAA,aAGC;;;;;cAH4B,gBAAyB;;;;;;;;;;;;;;;;;;yCAAzB,gBAAyB;;;;;;;;;+CAAzB,gBAAyB;;;OAGrD;;;;;;;;;;GACA;EA1HD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAOA;;;;;;;;;;yEAAoD;IACpD;;;;;;;;;yEAAwC;;;;;;;GAkHvC;ECxJD,AAAA,kBAAA;oEAAA;;;ED0CA,AAAA,oBAAuC;;0DAAvC,iBAAuC;;;;;;;;;;;;;;GAAA;EACvC,AAAA,aAAgC;;0DAAhC,UAAgC;;;;;;;;;;;;;;GAAA;EAMhC,AAAA,aAAgC;;0DAAhC,UAAgC;;;;;;;;;;;;;;GAAA;EAQhC,AAAA,4BAAiD;;0DAAjD,yBAAiD;;;;;;;;;;;;;;GAAA;EAkDjD,AAAA,SAkCC,4BAlCqB,SAAgB;UAC9B,aAAiC;UACjC,KAAkB;UAClB,MAAmB;UACnB,oBAAgD;;UAKhD,6BACoE,KAAtE,SAAO;;0CAAuB,oBAAkB;4BAC7C,6BAA2B;;UAK5B,YAOJ;iDALA,aAAW;iDACX,KAAG;;6FACH,SAAO;;;sFACP,oBAAkB;;iDAClB,MAAI;qDAQE;;;;;;;;;;;4KAA6B,YAAU;;;;0HAA3B;;IAEpB;;;;;;;;;;2HAA6B,YAAU;;;2HAAY,SAAO;;;wEAA9C;UACZ,KAAgB;IAAhB;;;;;;;;;;6FAAA,KAAgB;;;;wEAAA;;GACjB;EAOD,AAAA,gBAGC,4BAH4B,gBAAyB;oDAC7C;;;;;;;;;;;2KAA6B,gBAAc;;;;yHAA/B;;mCACZ;;;;;;;;;;;;;;8HAA6B,gBAAc;;;wGAA/B;GACpB;;;;;;;;;;;;;;;;IAlHD;;;;;uCAAA;;;;;;;;;;;;;;;;4GAAoD;;;;;;uCAApD;;;;;;;;;;;;4GAAoD;;;;;;;;;;;;;;uCAApD;;;;;;;;;;;;;;;4GAAoD;;;;;;;;;;;;;;uCAApD;;;;;;;;;;;;;;;;;4GAAoD;;;;;;;;;KAAA;IACpD;qCAAA;;;;;;;;;;;0GAAwC;KAAA;;;;;;;;;;;;;;;"
+}
