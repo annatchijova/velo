@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELO — Caso de negocio / Business case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pergamino:#EDE7DA; --pergamino-2:#E4DDCC; --tinta:#1C1A17;
+    --velo:#3A3F4B; --velo-2:#2E323C; --sello:#8B3A2F;
+    --plata:#C9C4B8; --plata-dim:#9C978A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--pergamino); color:var(--tinta); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  body{padding:0 0 80px 0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  body.lang-es .en{display:none !important;} body.lang-en .es{display:none !important;}
+
+  .topbar{display:flex; justify-content:space-between; align-items:center; max-width:1180px; margin:0 auto; padding:28px 32px 0 32px;}
+  .topbar .kicker{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--plata-dim);}
+  .lang-toggle{display:flex; border:1px solid var(--velo); border-radius:3px; overflow:hidden;}
+  .lang-toggle button{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; background:transparent; border:none; color:var(--velo); padding:7px 14px; cursor:pointer;}
+  .lang-toggle button.active{background:var(--velo); color:var(--pergamino);}
+
+  header.masthead{max-width:1180px; margin:0 auto; padding:18px 32px 40px 32px; border-bottom:1px solid var(--plata);}
+  header.masthead h1{font-family:'Source Serif 4',serif; font-weight:600; font-size:40px; letter-spacing:-0.01em;}
+  header.masthead h1 .accent{color:var(--sello);}
+  header.masthead p.sub{margin-top:10px; font-family:'Source Serif 4',serif; font-style:italic; font-size:18px; color:var(--velo); max-width:700px;}
+
+  .scope-flag{
+    max-width:1180px; margin:24px auto 0 auto; padding:14px 32px;
+    border-top:1px solid var(--sello); border-bottom:1px solid var(--sello);
+    background:var(--pergamino-2);
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--sello); letter-spacing:.02em;
+  }
+
+  section{max-width:1180px; margin:0 auto; padding:48px 32px 0 32px;}
+  .section-label{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--sello); margin-bottom:6px;}
+  .section-title{font-family:'Source Serif 4',serif; font-weight:600; font-size:24px; margin-bottom:18px;}
+  .lede{font-size:15px; line-height:1.7; color:var(--tinta); max-width:820px; margin-bottom:22px;}
+
+  /* wallet portfolio box */
+  .wallet-box{border:1px solid var(--velo); background:var(--pergamino-2); padding:26px 30px; margin-top:8px;}
+  .wallet-box .expert{font-family:'Source Serif 4',serif; font-weight:600; font-size:17px;}
+  .wallet-box ul{list-style:none; margin-top:14px;}
+  .wallet-box ul li{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; padding:8px 0 8px 18px;
+    border-top:1px dashed var(--plata); position:relative;
+  }
+  .wallet-box ul li:first-child{border-top:none;}
+  .wallet-box ul li::before{content:"+"; position:absolute; left:0; color:var(--sello);}
+  .wallet-box ul li.sub{padding-left:36px; font-size:12px; color:var(--velo);}
+  .wallet-box ul li.sub::before{content:"·";}
+  .wallet-caption{margin-top:14px; font-size:13px; color:var(--velo); max-width:760px; line-height:1.6;}
+
+  /* 2x2 case grid */
+  .cases{margin-top:44px; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--velo); border:1px solid var(--velo);}
+  .case-cell{background:var(--pergamino); padding:26px 28px;}
+  .case-cell .case-num{font-family:'Source Serif 4',serif; font-weight:600; font-size:22px; color:var(--sello);}
+  .case-cell h4{font-family:'Source Serif 4',serif; font-weight:600; font-size:17px; margin-top:4px;}
+  .case-cell .today, .case-cell .with-velo{margin-top:12px; font-size:13.5px; line-height:1.6;}
+  .case-cell .today .lbl, .case-cell .with-velo .lbl{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    display:block; margin-bottom:3px; color:var(--plata-dim);
+  }
+  .case-cell .with-velo .lbl{color:var(--sello);}
+  .case-cell .with-velo{border-left:2px solid var(--sello); padding-left:12px; margin-top:14px;}
+
+  /* pitch panel */
+  .proof-panel{margin-top:44px; border:1px solid var(--velo); padding:28px 30px; background:var(--pergamino-2);}
+  .proof-panel .section-label{margin-bottom:10px;}
+  .proof-panel .claim{
+    font-family:'Source Serif 4',serif; font-style:italic; font-size:17px; line-height:1.6; color:var(--tinta); max-width:860px;
+    padding-left:16px; border-left:2px solid var(--sello);
+  }
+
+  /* next-20h checklist */
+  .checklist{margin-top:44px; border:1px solid var(--plata);}
+  .check-row{display:grid; grid-template-columns:44px 1fr; border-top:1px solid var(--plata); padding:14px 20px; align-items:start; gap:14px;}
+  .check-row:first-child{border-top:none;}
+  .check-num{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--sello);}
+  .check-body{font-size:14px; line-height:1.55;}
+
+  footer.colophon{
+    max-width:1180px; margin:56px auto 0 auto; padding:24px 32px 0 32px;
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--plata-dim);
+    letter-spacing:.04em; border-top:1px solid var(--plata);
+  }
+
+  @media (max-width:820px){ .cases{grid-template-columns:1fr;} .check-row{grid-template-columns:32px 1fr;} }
+</style>
+</head>
+<body class="lang-es">
+
+<div class="topbar">
+  <div class="kicker">VELO / MIDNIGHT · <span class="es">caso de negocio</span><span class="en">business case</span></div>
+  <div class="lang-toggle">
+    <button id="btn-es" class="active" onclick="setLang('es')">ES</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <h1 class="es">Una billetera profesional de <span class="accent">evidencia</span></h1>
+  <h1 class="en">A professional evidence <span class="accent">wallet</span></h1>
+  <p class="sub es">Nadie compra una primitiva criptográfica. Lo que compra un perito, un estudio o una institución es reputación, trayectoria y capacidad de demostrar confiabilidad — sin exponer la evidencia que se le confió proteger.</p>
+  <p class="sub en">Nobody buys a cryptographic primitive. What an expert, a law firm, or an institution buys is reputation, track record, and the ability to demonstrate reliability — without exposing the evidence they were trusted to protect.</p>
+</header>
+
+<div class="scope-flag mono es">⚠ visión / roadmap post-hackathon — no es alcance de este fin de semana. Ver docs/ROADMAP.md.</div>
+<div class="scope-flag mono en">⚠ vision / post-hackathon roadmap — not this weekend's scope. See docs/ROADMAP.md.</div>
+
+<!-- WALLET STRUCTURE -->
+<section>
+  <div class="section-label es">el reencuadre</div>
+  <div class="section-label en">the reframe</div>
+  <div class="section-title es">No almacena evidencia. Almacena prueba de trabajo verificable.</div>
+  <div class="section-title en">It does not store evidence. It stores proof that verifiable work happened.</div>
+
+  <div class="wallet-box">
+    <div class="expert es">PERITO</div>
+    <div class="expert en">EXPERT</div>
+    <ul>
+      <li class="es">Credencial profesional ZK</li><li class="en">ZK professional credential</li>
+      <li class="es">Casos sellados</li><li class="en">Sealed cases</li>
+      <li class="sub es">tipo · fecha · jurisdicción · regla satisfecha · resultado</li>
+      <li class="sub en">type · date · jurisdiction · rule satisfied · outcome</li>
+      <li class="sub es">commitment · prueba ZK · historial de auditorías</li>
+      <li class="sub en">commitment · ZK proof · audit history</li>
+    </ul>
+  </div>
+  <p class="wallet-caption es">Donde LinkedIn dice "tengo experiencia", VELO dice "existe una prueba criptográfica de que participé en análisis que cumplieron reglas específicas".</p>
+  <p class="wallet-caption en">Where LinkedIn says "I claim expertise," VELO says "cryptographic proof exists that I participated in analyses that satisfied specific rules."</p>
+</section>
+
+<!-- FOUR CASES -->
+<section>
+  <div class="section-label es">cuatro casos de negocio</div>
+  <div class="section-label en">four business cases</div>
+  <div class="section-title es">De casos sellados individuales a una capa de confianza</div>
+  <div class="section-title en">From individual sealed cases to a trust layer</div>
+
+  <div class="cases">
+    <div class="case-cell">
+      <div class="case-num">01</div>
+      <h4 class="es">Reputación del perito</h4><h4 class="en">Expert reputation</h4>
+      <div class="today"><span class="lbl es">hoy</span><span class="lbl en">today</span><span class="es">"El Dr. X es experto en forense" — certificados, testimonios, prueba social.</span><span class="en">"Dr. X is a forensics expert" — certificates, testimonials, social proof.</span></div>
+      <div class="with-velo"><span class="lbl es">con VELO</span><span class="lbl en">with VELO</span><span class="es">143 casos sellados, 98 aceptados, 12 auditorías, 0 invalidados — sin revelar víctimas ni clientes.</span><span class="en">143 sealed cases, 98 accepted, 12 audits, 0 invalidated — without revealing victims or clients.</span></div>
+    </div>
+    <div class="case-cell">
+      <div class="case-num">02</div>
+      <h4 class="es">Marketplace de peritos</h4><h4 class="en">Expert marketplace</h4>
+      <div class="today"><span class="lbl es">hoy</span><span class="lbl en">today</span><span class="es">Búsqueda por contactos, precio, reputación informal.</span><span class="en">Search by contacts, price, informal reputation.</span></div>
+      <div class="with-velo"><span class="lbl es">con VELO</span><span class="lbl en">with VELO</span><span class="es">Búsqueda estructurada: especialidad, jurisdicción, tasa de aceptación, credencial vigente. El perito muestra trayectoria, no casos.</span><span class="en">Structured search: specialty, jurisdiction, acceptance rate, active credential. The expert shows track record, not cases.</span></div>
+    </div>
+    <div class="case-cell">
+      <div class="case-num">03</div>
+      <h4 class="es">Escrow de evidencia</h4><h4 class="en">Evidence escrow</h4>
+      <div class="today"><span class="lbl es">hoy</span><span class="lbl en">today</span><span class="es">"¿Cómo sabemos que esto no se modificó después del análisis?"</span><span class="en">"How do we know this wasn't changed after the fact?"</span></div>
+      <div class="with-velo"><span class="lbl es">con VELO</span><span class="lbl en">with VELO</span><span class="es">Día 0: commitment creado. Día 100 (juicio): "este análisis existía antes y cumple la regla" — sin divulgar la evidencia.</span><span class="en">Day 0: commitment created. Day 100 (trial): "this analysis existed and satisfies the rule" — without disclosing the evidence.</span></div>
+    </div>
+    <div class="case-cell">
+      <div class="case-num">04</div>
+      <h4 class="es">Instituciones</h4><h4 class="en">Institutions</h4>
+      <div class="today"><span class="lbl es">hoy</span><span class="lbl en">today</span><span class="es">Laboratorios, fiscalías, aseguradoras sin capa de confianza agregada sobre su propio trabajo.</span><span class="en">Labs, prosecutors' offices, insurers with no aggregate trust layer over their own output.</span></div>
+      <div class="with-velo"><span class="lbl es">con VELO</span><span class="lbl en">with VELO</span><span class="es">"Fiscalía X: 2500 peritajes sellados, 98% con cadena verificable, 0 alteraciones post-sellado." Probablemente el caso más rentable.</span><span class="en">"Prosecutor's Office X: 2,500 sealed cases, 98% with a verifiable chain, 0 post-sealing alterations." Likely the most monetizable case.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PITCH -->
+<section>
+  <div class="proof-panel">
+    <div class="section-label es">la frase de pitch</div>
+    <div class="section-label en">the pitch line</div>
+    <p class="claim es">"VELO es una capa de reputación para profesionales forenses: permite que un perito pruebe la calidad y admisibilidad de su trabajo sin exponer la evidencia que se le confió proteger."</p>
+    <p class="claim en">"VELO is a reputation layer for forensic professionals: it lets experts prove the quality and admissibility of their work without exposing the evidence they were trusted to protect."</p>
+  </div>
+</section>
+
+<!-- NEXT ~20H -->
+<section>
+  <div class="section-label es">qué cambia esto para el fin de semana</div>
+  <div class="section-label en">what this changes for the weekend</div>
+  <div class="section-title es">Cambia lo que la demo dice, no lo que se construye</div>
+  <div class="section-title en">Changes what the demo says, not what gets built</div>
+
+  <div class="checklist">
+    <div class="check-row">
+      <div class="check-num">01</div>
+      <div class="check-body es">Cerrar hallazgos de red team e invariantes críticos.</div>
+      <div class="check-body en">Close red-team findings and critical invariants.</div>
+    </div>
+    <div class="check-row">
+      <div class="check-num">02</div>
+      <div class="check-body es">Cablear <span class="mono">attest_case</span> de punta a punta contra el contrato que ya compila.</div>
+      <div class="check-body en">Wire <span class="mono">attest_case</span> end to end against the now-compiling contract.</div>
+    </div>
+    <div class="check-row">
+      <div class="check-num">03</div>
+      <div class="check-body es">UI mínima de wallet: perfil, lista de casos, un caso verificable.</div>
+      <div class="check-body en">Minimal wallet UI: profile, case list, one verifiable case.</div>
+    </div>
+    <div class="check-row">
+      <div class="check-num">04</div>
+      <div class="check-body es">Ensayar la demo como narrativa: "Soy un perito. Tengo este caso. El juez lo verifica. Nunca vio la evidencia."</div>
+      <div class="check-body en">Rehearse the demo as narrative: "I'm an expert. Here's a case. The judge verifies it. They never saw the evidence."</div>
+    </div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <span class="es">VELO · basado en BUSINESS.md · visión y roadmap, no código del hackathon · Midnight / Compact</span>
+  <span class="en">VELO · based on BUSINESS.md · vision and roadmap, not hackathon code · Midnight / Compact</span>
+</footer>
+
+<script>
+  function setLang(lang){
+    document.body.classList.remove('lang-es','lang-en');
+    document.body.classList.add('lang-'+lang);
+    document.getElementById('btn-es').classList.toggle('active', lang==='es');
+    document.getElementById('btn-en').classList.toggle('active', lang==='en');
+    document.documentElement.lang = lang;
+  }
+</script>
+
+</body>
+</html>

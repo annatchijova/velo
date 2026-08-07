@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: Arial, Helvetica, sans-serif; }
+      .mono { font-family: 'Courier New', Consolas, monospace; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#EDE7DA"/>
+
+  <!-- header -->
+  <text x="80" y="90" class="mono" font-size="15" letter-spacing="2" fill="#8B3A2F">VERDICT SCALE</text>
+  <text x="80" y="140" class="serif" font-size="34" font-weight="600" fill="#1C1A17">What the engine can conclude</text>
+  <text x="80" y="172" class="serif" font-style="italic" font-size="17" fill="#3A3F4B">Increasing order of seriousness — plus one refusal that sits outside the scale</text>
+
+  <!-- severity axis line -->
+  <line x1="80" y1="230" x2="1080" y2="230" stroke="#3A3F4B" stroke-width="2"/>
+  <polygon points="1080,230 1068,224 1068,236" fill="#3A3F4B"/>
+  <text x="1090" y="235" class="mono" font-size="13" fill="#3A3F4B">severity</text>
+
+  <!-- NOISE -->
+  <g>
+    <rect x="80" y="270" width="280" height="180" fill="#EDE7DA" stroke="#C9C4B8" stroke-width="1.5"/>
+    <rect x="80" y="270" width="280" height="10" fill="#C9C4B8"/>
+    <text x="105" y="325" class="mono" font-size="22" font-weight="700" fill="#1C1A17">NOISE</text>
+    <text x="105" y="360" class="sans" font-size="14.5" fill="#3A3F4B">Nothing anomalous</text>
+    <text x="105" y="382" class="sans" font-size="14.5" fill="#3A3F4B">found.</text>
+  </g>
+
+  <!-- SUSPICION -->
+  <g>
+    <rect x="400" y="270" width="280" height="180" fill="#E4DDCC" stroke="#9C978A" stroke-width="1.5"/>
+    <rect x="400" y="270" width="280" height="10" fill="#9C978A"/>
+    <text x="425" y="325" class="mono" font-size="22" font-weight="700" fill="#1C1A17">SUSPICION</text>
+    <text x="425" y="360" class="sans" font-size="14.5" fill="#3A3F4B">A real signal, not enough</text>
+    <text x="425" y="382" class="sans" font-size="14.5" fill="#3A3F4B">independent support.</text>
+  </g>
+
+  <!-- MALICE -->
+  <g>
+    <rect x="720" y="270" width="280" height="180" fill="#8B3A2F" stroke="#8B3A2F" stroke-width="1.5"/>
+    <rect x="720" y="270" width="280" height="10" fill="#B08D57"/>
+    <text x="745" y="325" class="mono" font-size="22" font-weight="700" fill="#EDE7DA">MALICE</text>
+    <text x="745" y="360" class="sans" font-size="14.5" fill="#EDE7DA">Corroborated and</text>
+    <text x="745" y="382" class="sans" font-size="14.5" fill="#EDE7DA">deliberate.</text>
+    <text x="745" y="415" class="mono" font-size="12" fill="#EDE7DA" opacity="0.85">requires ≥ 2 independent</text>
+    <text x="745" y="432" class="mono" font-size="12" fill="#EDE7DA" opacity="0.85">sources — a circuit</text>
+    <text x="745" y="449" class="mono" font-size="12" fill="#EDE7DA" opacity="0.85">constraint, not a promise</text>
+  </g>
+
+  <!-- connecting arrows on the axis -->
+  <polygon points="365,360 385,353 385,367" fill="#3A3F4B"/>
+  <polygon points="685,360 705,353 705,367" fill="#3A3F4B"/>
+
+  <!-- divider -->
+  <line x1="80" y1="540" x2="1000" y2="540" stroke="#C9C4B8" stroke-width="1" stroke-dasharray="4 5"/>
+
+  <!-- ABSTAIN — set apart -->
+  <g>
+    <rect x="80" y="580" width="600" height="150" fill="#3A3F4B" stroke="#3A3F4B" stroke-width="1.5"/>
+    <text x="106" y="620" class="mono" font-size="11" letter-spacing="2" fill="#C9C4B8">NOT ON THE SEVERITY SCALE — A REFUSAL</text>
+    <text x="106" y="660" class="mono" font-size="24" font-weight="700" fill="#EDE7DA">ABSTAIN</text>
+    <text x="106" y="692" class="sans" font-size="14" fill="#EDE7DA">Evidence cannot be admitted at all — typically a missing or</text>
+    <text x="106" y="712" class="sans" font-size="14" fill="#EDE7DA">broken chain of custody. The engine declines to rule either way.</text>
+  </g>
+
+  <text x="720" y="640" class="serif" font-style="italic" font-size="15" fill="#3A3F4B" width="380">
+    <tspan x="720" dy="0">The system refusing to answer a</tspan>
+    <tspan x="720" dy="24">question it is not entitled to</tspan>
+    <tspan x="720" dy="24">answer. Most systems have no</tspan>
+    <tspan x="720" dy="24">such state.</tspan>
+  </text>
+
+  <!-- footer -->
+  <text x="80" y="850" class="mono" font-size="11" fill="#9C978A" letter-spacing="1">VELO · based on docs/GLOSSARY.md</text>
+</svg>

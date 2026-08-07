@@ -17,7 +17,7 @@ unless the contract author marks it explicitly.
 
 | | Public (on-chain ledger) | Private (witness, expert's machine only) |
 |---|---|---|
-| Contains | `commitment`, declared `verdict`, `attestation_count`, `case_commitment` | `bundle_fingerprint`, `verdict` detail, `corroboration_count`, `secret_salt` |
+| Contains | `commitment`, declared `verdict`, `attestation_count`, `case_commitment` | `bundle_fingerprint`, `custody_tip`, `verdict` detail, `corroboration_count`, `secret_salt` |
 | Who sees it | Anyone, forever, immutable | Nobody but the expert, never leaves the machine |
 | Proves | That an attestation exists and follows the rules | Nothing directly — it is the input to a ZK proof |
 
@@ -153,7 +153,7 @@ cruza ese límite salvo que el autor del contrato lo marque explícitamente.
 
 | | Público (ledger on-chain) | Privado (witness, solo en la máquina del perito) |
 |---|---|---|
-| Contiene | `commitment`, veredicto declarado, `attestation_count`, `case_commitment` | `bundle_fingerprint`, detalle del `verdict`, `corroboration_count`, `secret_salt` |
+| Contiene | `commitment`, veredicto declarado, `attestation_count`, `case_commitment` | `bundle_fingerprint`, `custody_tip`, detalle del `verdict`, `corroboration_count`, `secret_salt` |
 | Quién lo ve | Cualquiera, para siempre, inmutable | Nadie salvo el perito, nunca sale de la máquina |
 | Prueba | Que existe una atestación y que sigue las reglas | Nada directamente — es el insumo de una prueba ZK |
 

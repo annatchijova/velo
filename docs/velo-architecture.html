@@ -409,6 +409,7 @@
       <p class="zone-caption en">Nobody but the expert, never leaves the machine.</p>
       <ul class="field-list">
         <li>bundle_fingerprint</li>
+        <li>custody_tip</li>
         <li class="es">detalle del verdict</li><li class="en">verdict detail</li>
         <li>corroboration_count</li>
         <li>secret_salt</li>
@@ -425,7 +426,7 @@
     <div class="silhouette es">silueta privada (bundle sellado)</div>
     <div class="silhouette en">private silhouette (sealed bundle)</div>
     <div class="arrow">→</div>
-    <div class="hashval">commitment = persistentHash(bundle_fingerprint, salt)</div>
+    <div class="hashval">commitment = persistentHash(domain, bundle_fingerprint, custody_tip, verdict, corroboration_count, salt)</div>
     <div class="cap es">El cruce del velo: la silueta privada se comprime en un hash que cruza hacia el lado público. Es la visualización literal de <em>hiding</em> + <em>binding</em>, no una animación decorativa.</div>
     <div class="cap en">The crossing of the veil: the private silhouette compresses into a hash that crosses to the public side. It is the literal visualization of <em>hiding</em> + <em>binding</em>, not a decorative animation.</div>
   </div>
@@ -559,8 +560,8 @@
     <div class="fn">
       <h4 class="es">Qué prueba la prueba y qué no</h4>
       <h4 class="en">What the proof does and does not establish</h4>
-      <p class="es">Que el veredicto publicado no fue alterado después del sellado y que la corroboración se cumplió — una garantía criptográfica, no confianza en el perito. No prueba que el análisis original fue honesto: eso sigue siendo responsabilidad humana y judicial.</p>
-      <p class="en">That the published verdict was not altered after sealing and that corroboration was satisfied — a cryptographic guarantee, not trust in the expert. It does not prove the original analysis was honest: that remains a human and judicial responsibility.</p>
+      <p class="es">Que un veredicto consistente con el gate inspirado en Daubert quedó ligado, al momento de atestar, a un <span class="mono">analysis_fingerprint</span> y un <span class="mono">custody_tip</span> específicos, y que ese vínculo no puede alterarse después — una garantía estructural. <strong>No</strong> prueba que el fingerprint venga de una corrida real del motor sobre evidencia real: ese vínculo hoy existe solo en el caller de TypeScript, no dentro del circuito (ver RED_TEAM_ROUND_2.md, hallazgo G1). Tampoco prueba que el análisis original haya sido honesto: eso sigue siendo responsabilidad humana y judicial.</p>
+      <p class="en">That a verdict consistent with the Daubert-inspired gate was bound, at attestation time, to a specific <span class="mono">analysis_fingerprint</span> and <span class="mono">custody_tip</span>, and that this binding cannot be altered afterward — a structural guarantee. It does <strong>not</strong> establish that the fingerprint corresponds to a real engine run on real evidence: that binding exists today only in the TypeScript caller, not inside the circuit (see RED_TEAM_ROUND_2.md, finding G1). Nor does it establish that the original analysis was honest: that remains a human and judicial responsibility.</p>
     </div>
     <div class="fn">
       <h4 class="es">Por qué no IPFS o Arweave</h4>

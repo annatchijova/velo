@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: Arial, Helvetica, sans-serif; }
+      .mono { font-family: 'Courier New', Consolas, monospace; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3A3F4B"/>
+    </marker>
+    <marker id="arrowLight" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EDE7DA"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#EDE7DA"/>
+
+  <!-- header -->
+  <text x="80" y="70" class="mono" font-size="15" letter-spacing="2" fill="#8B3A2F">HOW VELO WORKS</text>
+  <text x="80" y="112" class="serif" font-size="30" font-weight="600" fill="#1C1A17">Raw evidence never crosses the boundary</text>
+
+  <!-- PRIVATE ZONE -->
+  <rect x="80" y="150" width="960" height="680" fill="#3A3F4B" stroke="#3A3F4B" stroke-width="2"/>
+  <text x="112" y="192" class="mono" font-size="12" letter-spacing="1.5" fill="#C9C4B8">THE EXPERT'S MACHINE — raw evidence never leaves</text>
+
+  <!-- node: raw evidence -->
+  <rect x="130" y="230" width="230" height="90" fill="#2E323C" stroke="#5A5F6E" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="245" y="266" text-anchor="middle" class="sans" font-size="15" fill="#EDE7DA">Raw evidence</text>
+  <text x="245" y="288" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#C9C4B8">disk images, captures, logs</text>
+
+  <line x1="245" y1="320" x2="245" y2="365" stroke="#EDE7DA" stroke-width="2" marker-end="url(#arrowLight)"/>
+
+  <!-- node: engine -->
+  <rect x="130" y="368" width="230" height="90" fill="#2E323C" stroke="#5A5F6E" stroke-width="1.5"/>
+  <text x="245" y="404" text-anchor="middle" class="sans" font-size="15" fill="#EDE7DA">Deterministic engine</text>
+  <text x="245" y="426" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#C9C4B8">5 detectors, exact rationals</text>
+
+  <line x1="245" y1="458" x2="245" y2="500" stroke="#EDE7DA" stroke-width="2" marker-end="url(#arrowLight)"/>
+
+  <!-- node: daubert gate (diamond) -->
+  <polygon points="245,500 400,570 245,640 90,570" fill="#8B3A2F" stroke="#8B3A2F"/>
+  <text x="245" y="562" text-anchor="middle" class="sans" font-size="14" font-weight="600" fill="#EDE7DA">Daubert gate</text>
+  <text x="245" y="584" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#EDE7DA">2+ independent sources?</text>
+
+  <!-- yes -> sealed bundle -->
+  <line x1="400" y1="570" x2="500" y2="570" stroke="#EDE7DA" stroke-width="2" marker-end="url(#arrowLight)"/>
+  <text x="415" y="558" class="mono" font-size="12" fill="#EDE7DA">yes</text>
+
+  <rect x="500" y="520" width="230" height="100" fill="#2E323C" stroke="#5A5F6E" stroke-width="1.5"/>
+  <text x="615" y="558" text-anchor="middle" class="sans" font-size="15" fill="#EDE7DA">Sealed bundle</text>
+  <text x="615" y="580" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#C9C4B8">fingerprint + custody tip</text>
+
+  <!-- no -> no proof exists -->
+  <line x1="245" y1="640" x2="245" y2="720" stroke="#EDE7DA" stroke-width="2" marker-end="url(#arrowLight)"/>
+  <text x="258" y="685" class="mono" font-size="12" fill="#EDE7DA">no</text>
+  <rect x="130" y="725" width="230" height="70" fill="none" stroke="#EDE7DA" stroke-width="1.5"/>
+  <text x="245" y="766" text-anchor="middle" class="sans" font-size="14" fill="#EDE7DA">No proof exists</text>
+
+  <!-- crossing arrow to public zone -->
+  <line x1="730" y1="570" x2="1000" y2="570" stroke="#8B3A2F" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="760" y="545" class="mono" font-size="12" fill="#8B3A2F" font-weight="700">ZK proof</text>
+  <text x="760" y="605" class="serif" font-style="italic" font-size="12" fill="#3A3F4B">evidence stays behind</text>
+
+  <!-- PUBLIC ZONE -->
+  <rect x="1080" y="150" width="440" height="680" fill="#EDE7DA" stroke="#3A3F4B" stroke-width="2"/>
+  <text x="1112" y="192" class="mono" font-size="11.5" letter-spacing="1" fill="#8B3A2F">MIDNIGHT LEDGER — public, immutable</text>
+
+  <rect x="1112" y="240" width="376" height="100" fill="#F5F0E8" stroke="#3A3F4B" stroke-width="1.5"/>
+  <text x="1300" y="278" text-anchor="middle" class="sans" font-size="15" fill="#1C1A17">commitment</text>
+  <text x="1300" y="300" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#3A3F4B">binds analysis, custody, verdict, count</text>
+
+  <line x1="1300" y1="340" x2="1300" y2="382" stroke="#3A3F4B" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="1112" y="385" width="376" height="80" fill="#F5F0E8" stroke="#3A3F4B" stroke-width="1.5"/>
+  <text x="1300" y="432" text-anchor="middle" class="sans" font-size="15" fill="#1C1A17">declared verdict</text>
+
+  <line x1="1300" y1="465" x2="1300" y2="507" stroke="#3A3F4B" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="1112" y="510" width="376" height="110" fill="#3A3F4B" stroke="#3A3F4B" stroke-width="1.5"/>
+  <text x="1300" y="552" text-anchor="middle" class="sans" font-size="15" fill="#EDE7DA">Anyone</text>
+  <text x="1300" y="576" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#C9C4B8">judge, opposing expert,</text>
+  <text x="1300" y="596" text-anchor="middle" class="serif" font-style="italic" font-size="12" fill="#C9C4B8">the public</text>
+
+  <!-- caption -->
+  <text x="80" y="856" class="serif" font-style="italic" font-size="14" fill="#3A3F4B">What crosses is a commitment, the declared verdict, a timestamp, and a proof about them — never the evidence itself.</text>
+  <text x="1240" y="856" text-anchor="end" class="mono" font-size="11" fill="#9C978A" letter-spacing="1">VELO · based on README.md</text>
+</svg>
