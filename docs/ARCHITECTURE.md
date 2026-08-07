@@ -69,6 +69,8 @@ later layers extend it, they don't gate it.
    publishes commitments for accredited experts. The circuit proves membership
    (via a Merkle proof inside the ZK proof) without revealing which expert
    attested — the same relationship a wallet address has to its owner's identity.
+   This is a credential check, not a biometric one — see
+   [`IDENTITY.md`](./IDENTITY.md) for why.
 8. **Blind second opinion (scope permitting).** A second expert can attest the
    same `case_commitment` independently; the contract records agreement or
    contradiction between attestations without either expert seeing the other's
@@ -207,7 +209,8 @@ que funciona — las capas siguientes lo extienden, no lo condicionan.
    de acreditación publica commitments de peritos acreditados. El circuito
    prueba pertenencia (vía una prueba de Merkle dentro de la prueba ZK) sin
    revelar cuál perito atestó — la misma relación que tiene una dirección de
-   wallet con la identidad de su dueño.
+   wallet con la identidad de su dueño. Es un chequeo de credencial, no
+   biométrico — ver [`IDENTITY.md`](./IDENTITY.md) para el porqué.
 8. **Segunda opinión ciega (si el alcance lo permite).** Un segundo perito puede
    atestar el mismo `case_commitment` de forma independiente; el contrato
    registra coincidencia o contradicción entre atestaciones sin que ninguno de

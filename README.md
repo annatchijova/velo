@@ -214,13 +214,15 @@ src/mcp/         MCP server — the wallet interface
 contracts/       velo.compact — the ZK gate
 cases/           13 synthetic cases, zero PII
 peritos-syntetic/ 6 synthetic expert-witness profiles
-docs/            architecture, glossary, cases, FAQ, roadmap, red team report
+docs/            architecture, glossary, cases, FAQ, business case, identity, roadmap, red team reports
 ```
 
 Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`GLOSSARY`](./docs/GLOSSARY.md) · [`CASES`](./docs/CASES.md) ·
-[`FAQ`](./docs/FAQ.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
-[`RED TEAM`](./docs/RED_TEAM_ROUND_1.md)
+[`FAQ`](./docs/FAQ.md) · [`BUSINESS`](./docs/BUSINESS.md) ·
+[`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
+[`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
+[`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md)
 
 [`INSPIRATIONS.md`](./INSPIRATIONS.md) records the prior work these concepts
 were adapted from, and why none of it is copy-pasted: those projects are
