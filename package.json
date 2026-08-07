@@ -6,10 +6,10 @@
   "description": "VELO — zero-knowledge forensic attestation on Midnight",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsc -p .",
-    "test": "tsc -p . && node --test dist/tests/*.test.js",
-    "simulate": "tsc -p . && node dist/src/simulate.js",
-    "web": "tsc -p . && node dist/src/web/server.js",
+    "build": "npm run clean && tsc -p .",
+    "test": "npm run clean && tsc -p . && node --test dist/tests/*.test.js",
+    "simulate": "npm run build && node dist/src/simulate.js",
+    "clean": "rm -rf dist",
     "prepare": "husky"
   },
   "workspaces": [
@@ -21,12 +21,15 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@effectstream/midnight-contracts": "0.103.2",
+    "@midnightntwrk/wallet-sdk-abstractions": "2.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@midnight-ntwrk/compact-runtime": "^0.16.0",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
     "@types/node": "^22.0.0",
     "husky": "^9.1.7",
     "typescript": "^5.6.0"

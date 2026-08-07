@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     caseId: body.bundle.caseId,
     verdict: body.bundle.verdict,
     status: "local_pending_contract",
-    networkId: body.networkId ?? "preprod",
+    networkId: body.networkId ?? "preview",
     attestedAt: new Date().toISOString(),
     note: "Placeholder commitment computed locally following the F3 shape (fingerprint + custody tip + verdict + corroboration count + random salt). Compact's persistentHash is not SHA-256, so this demo value is clearly a seam: the real on-chain commitment comes from the compiled contract. The salt is a server-side witness and is never returned.",
     saltDiscarded: true,

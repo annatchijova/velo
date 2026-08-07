@@ -13,6 +13,7 @@ local-cases/
 
 # Internal team notes, not part of the submission
 PROGRESS_LOCAL.md
+GUION_VIDEO.md
 
 # Env / secrets
 .env
