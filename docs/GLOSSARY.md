@@ -17,10 +17,12 @@ Identifies one specific sealing event rather than the analysis it contains. Kept
 distinct from `bundle_fingerprint` so that a deterministic replay can be
 verified independently of when it happened.
 
-**Commitment** — `persistentHash(bundle_fingerprint, salt)`. Published on-chain.
-Hiding: reveals nothing about the fingerprint because the salt is random.
-Binding: once published, cannot be reinterpreted as the commitment of a
-different fingerprint.
+**Commitment** — `persistentHash(bundle_fingerprint, custody_tip, salt)`.
+Published on-chain. Hiding: reveals nothing about the fingerprint because the
+salt is random. Binding: once published, cannot be reinterpreted as the
+commitment of a different fingerprint — or of a different custody history.
+The custody tip is part of the commitment on purpose: without it, the chain of
+custody would not be anchored by anything published (see **Custody chain**).
 
 **Corroboration count / Daubert gate** — The number of independent sources
 supporting a finding. A `MALICE` verdict cannot be attested unless
@@ -30,7 +32,13 @@ expert evidence.
 
 **Custody chain** — The hash-linked sequence of events in a case's lifecycle,
 from a genesis entry bound to the `case_id` onward. Each entry seals the
-previous one; a `chain_tip` value detects truncation.
+previous one, so altering, reordering or inserting an entry is detectable by
+replaying the chain. **Truncation is different:** a chain with entries removed
+from the end is still internally consistent, so it cannot be detected by
+inspecting the chain alone. What detects it is the `chain_tip` being part of
+the on-chain **commitment** — comparing a local chain against that published
+value reveals a shortened copy, because the attacker cannot rewrite what is
+already on the ledger.
 
 **`devil_advocate` field** — A mandatory field on any `MALICE` verdict that
 records the strongest counter-explanation considered and why it was rejected.
@@ -70,10 +78,12 @@ Identifica un evento de sellado particular, no el análisis que contiene. Se
 mantiene separado del `bundle_fingerprint` para poder verificar un replay
 determinista independientemente de cuándo ocurrió.
 
-**Commitment** — `persistentHash(bundle_fingerprint, salt)`. Se publica
-on-chain. Hiding: no revela nada del fingerprint porque el salt es aleatorio.
-Binding: una vez publicado, no puede reinterpretarse como el commitment de otro
-fingerprint.
+**Commitment** — `persistentHash(bundle_fingerprint, custody_tip, salt)`. Se
+publica on-chain. Hiding: no revela nada del fingerprint porque el salt es
+aleatorio. Binding: una vez publicado, no puede reinterpretarse como el
+commitment de otro fingerprint — ni de otra historia de custodia. El tip de
+custodia forma parte del commitment a propósito: sin él, la cadena de custodia
+no quedaría anclada a nada publicado (ver **Cadena de custodia**).
 
 **Conteo de corroboración / gate Daubert** — La cantidad de fuentes
 independientes que respaldan un hallazgo. Un veredicto `MALICE` no puede
@@ -83,7 +93,13 @@ para evidencia pericial admisible.
 
 **Cadena de custodia** — La secuencia de eventos del ciclo de vida de un caso,
 encadenada por hash, desde una entrada génesis atada al `case_id`. Cada entrada
-sella a la anterior; un valor `chain_tip` detecta truncamiento.
+sella a la anterior, así que alterar, reordenar o insertar una entrada se
+detecta reproduciendo la cadena. **El truncamiento es distinto:** una cadena a
+la que se le borraron entradas del final sigue siendo internamente consistente,
+así que no se detecta inspeccionando la cadena sola. Lo que sí lo detecta es
+que el `chain_tip` forme parte del **commitment** on-chain — comparar una
+cadena local contra ese valor publicado revela una copia acortada, porque el
+atacante no puede reescribir lo que ya está en el ledger.
 
 **Campo `devil_advocate`** — Un campo obligatorio en todo veredicto `MALICE` que
 registra la contraexplicación más fuerte considerada y por qué se descartó.
