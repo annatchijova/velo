@@ -152,12 +152,14 @@ the failure mode this whole system exists to prevent.
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
 | Red team round 1 | **12 of 13 findings fixed**, [full report](./docs/RED_TEAM_ROUND_1.md) |
-| Compact contract | **Written, NOT compiled** — no toolchain on the build machine. Three open questions flagged in the source |
-| On-chain attestation, selective disclosure, ZK expert credential | **Not built** |
+| Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
+| On-chain attestation (deploy + call from the app) | **Not wired yet** — the contract compiles, the client integration does not exist |
+| Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
-The contract not being compiled is the honest bottom line: everything on the
-expert's side of the boundary runs and is tested; the ledger side is designed
-and written but unproven against a compiler.
+The honest bottom line: the expert's side of the boundary runs and is tested,
+and the circuit compiles into real proving keys — but nothing has been deployed
+to a network and `attest_case` is still a stub that returns an explicit error
+rather than pretending.
 
 ## Repository
 
@@ -209,10 +211,12 @@ idéntica, resultado opuesto: la admisibilidad es una propiedad del proceso, no
 de qué tan incriminatoria se ve la evidencia.
 
 **Estado honesto:** todo lo del lado del perito funciona y está testeado (34
-tests). El contrato Compact está escrito pero **no compilado** — no hay
-toolchain en la máquina donde se construyó, y hay tres preguntas abiertas
-marcadas en el código. La atestación on-chain, la divulgación selectiva y la
-credencial ZK del perito todavía no están construidas.
+tests), y el contrato Compact **compila** — los dos circuitos, con claves de
+prueba y verificación generadas (`bash scripts/compile-contract.sh`). Lo que
+todavía no existe es la integración cliente: nada se desplegó a una red y
+`attest_case` sigue siendo un stub que devuelve un error explícito en vez de
+simular. La divulgación selectiva y la credencial ZK del perito tampoco están
+construidas.
 
 ---
 
