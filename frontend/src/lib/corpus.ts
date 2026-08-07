@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { isValidCaseId } from "velo/mcp/store.js";
 import type { CaseFile, PeritoFile } from "@/lib/types";
 
 /**
@@ -22,15 +23,11 @@ export const CASES_DIR = join(REPO_ROOT, "cases");
 export const PERITOS_DIR = join(REPO_ROOT, "peritos-syntetic");
 
 /**
- * A case ID is a filename component, never a path. Same rule as the
- * engine's store (red team F1) — a caller-supplied ID reaching the
- * filesystem is a filesystem read unless it is constrained first.
+ * A case ID is a filename component, never a path — red team F1. The
+ * validator is imported from the engine rather than re-declared here:
+ * this file briefly had its own copy of the regex, which is how a
+ * security check ends up relaxed in one place and not the others.
  */
-const CASE_ID_PATTERN = /^[A-Za-z0-9._-]+$/;
-
-export function isValidCaseId(caseId: string): boolean {
-  return CASE_ID_PATTERN.test(caseId) && caseId !== "." && caseId !== "..";
-}
 
 function jsonFilesIn(dir: string): string[] {
   if (!existsSync(dir)) {
