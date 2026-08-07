@@ -50,11 +50,22 @@ export async function sealCase(caseFile: CaseFile): Promise<SealResult> {
   return res.json();
 }
 
-export async function verifyBundle(bundle: unknown): Promise<VerifyResult> {
+/**
+ * Bug fix: this used to take a single `bundle: unknown` argument and wrap
+ * it as `{ bundle }` in the POST body. ActionPanel.tsx calls this as
+ * `verifyBundle({ bundle, tamper: mode })` -- passing an options object,
+ * not the bundle itself -- so the real bundle ended up double-nested at
+ * `body.bundle.bundle`, and `/api/verify` read `body.bundle.custodyChain`,
+ * which was always undefined. Every "Verify" click crashed the route with
+ * a 500/503, no matter which case or tamper mode. Signature now matches
+ * how the route (and the caller) actually use it: bundle and tamper mode
+ * as two separate parameters.
+ */
+export async function verifyBundle(bundle: unknown, tamper?: string): Promise<VerifyResult> {
   const res = await fetch("/api/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bundle }),
+    body: JSON.stringify({ bundle, tamper }),
   });
   if (!res.ok) throw new Error("Verification failed");
   return res.json();

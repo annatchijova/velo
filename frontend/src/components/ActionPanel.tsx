@@ -87,7 +87,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
     setTamper(mode);
     setVerification(null);
     try {
-      const res = await verifyBundle({ bundle, tamper: mode });
+      const res = await verifyBundle(bundle, mode);
       setVerification(res);
       setStep("verified");
       if (!res.internallyConsistent) {
