@@ -148,6 +148,30 @@ the hook without strong reason.
    `MERGEABLE / CLEAN`, not `UNKNOWN` (which only means GitHub has not finished
    computing it yet — re-run it).
 
+   **Do not read `git diff origin/main..your-branch` as "what merging will
+   do".** Two-dot diff compares the two tips, so everything `main` gained that
+   your branch never saw shows up as a deletion. It looks exactly like your PR
+   is about to revert a teammate's work. Merging does not work that way: it is
+   a three-way merge from the common ancestor, and files added on `main` and
+   untouched by you survive untouched.
+
+   When the stakes justify certainty, do not reason about it — run it:
+
+   ```bash
+   git worktree add -q --detach /tmp/merge-check origin/main
+   cd /tmp/merge-check && git merge --no-commit --no-ff origin/<your-branch>
+   git diff --cached --stat HEAD      # empty means the PR has become a no-op
+   ```
+
+   That also answers a question worth asking before every merge in a repository
+   with several agents in it: has someone already pushed your work directly, so
+   that the PR now changes nothing? Close it as landed rather than merging an
+   empty diff.
+
+   A separate `git worktree` is also the way to rebase or test at all when
+   another session has uncommitted edits in the shared checkout — switching
+   branches there would demand stashing work that is not yours.
+
 4. **Push.** Push the branch and set its upstream:
    ```bash
    git push -u origin <branch-name>
