@@ -580,10 +580,11 @@ Lo que este documento afirma es el *estado*, no el cronómetro.
 
 **Inmediato (cerrar el loop que ya está abierto):**
 
-1. Ejercitar una prueba real contra el contrato desplegado con un vector de test
-   vivo, y reemplazar el `local_pending_contract` de `attest_case` por la
-   interacción de cadena real. Es el ítem pendiente de mayor valor: convierte
-   "claves generadas" en "prueba aceptada".
+1. Conectar las *interfaces* a la interacción de cadena que el CLI ya prueba.
+   `deploy/attest-case.ts` produce pruebas reales y una atestación real, pero
+   `attest_case` (MCP) y `POST /api/attest` siguen devolviendo
+   `local_pending_contract`. Lo que queda es plomería, no demostración: la
+   pregunta difícil — si el circuito acepta una prueba real — ya está contestada.
 2. Reconciliar `CASES.md` con los 14 fixtures que se entregan y sacar del árbol
    la generación anterior a F5 del corpus en español.
 3. Meter `ruleVersion` en el commitment (G7) — un cambio chico con una vida

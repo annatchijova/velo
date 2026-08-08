@@ -318,6 +318,7 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`FAQ`](./docs/FAQ.md) · [`BUSINESS`](./docs/BUSINESS.md) ·
 [`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
 [`CHAIN`](./docs/CHAIN.md) · [`LEARNINGS`](./docs/LEARNINGS.md) ·
+[`STRUCTURE`](./docs/STRUCTURE.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
@@ -365,44 +366,61 @@ Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Español
 
-Hoy un perito forense tiene dos opciones, y las dos son malas: **publicar la
-evidencia cruda** para que otros puedan verificar el veredicto —exponiendo a la
-víctima ante todos los que no necesitaban verla— o **no publicar nada** y pedirle
-al tribunal que confíe en su palabra.
+📄 **[README en español](./README.es.md)** — versión completa, con las limitaciones
+conocidas y el estado real de cada capa.
 
-VELO no elige ninguna. El perito corre un motor determinista en su propia
-máquina, sella el resultado, y publica **solo un commitment y una prueba de
-conocimiento cero**. La prueba establece dos cosas a la vez: que el veredicto
-publicado corresponde al análisis sellado, y que se cumplió un criterio de
-admisibilidad formalizado, inspirado en el estándar Daubert — *al menos dos
-fuentes, declaradas independientes por el analista y distintas por raíz de
-cadena de proveniencia, para un veredicto `MALICE`*.
+---
 
-> VELO prueba que un veredicto específico fue producido por un proceso
-> específico, bajo restricciones especificadas, y que la atestación resultante
-> no puede alterarse después. No reemplaza el juicio forense; lo hace
-> auditable. (Ver "Qué prueba la prueba y qué no" en
-> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) para saber exactamente
-> dónde está ese límite.)
+## Known limitations
 
-Esa regla no es una nota de política ni una convención de code review. Es una
-restricción dentro del circuito: **una atestación que la viole no puede
-producirse.**
+This section exists because a system built not to overclaim has to start by not
+overclaiming about itself. None of the below is an open bug: they are **boundaries
+of what a zero-knowledge proof can establish**, documented in full across the four
+red team rounds. The Spanish README carries the same list.
 
-Lo interesante no es que el sistema diga que sí, sino cómo se niega. `npm run
-simulate` demuestra las dos negativas en vivo: evidencia que alcanzaría para
-`MALICE` pero proviene de una sola adquisición degrada a `SUSPICION`; y la
-*misma* evidencia byte a byte, sin cadena de custodia, da `ABSTAIN`. Evidencia
-idéntica, resultado opuesto: la admisibilidad es una propiedad del proceso, no
-de qué tan incriminatoria se ve la evidencia.
+**What the circuit cannot see** *(G1, G3)* — The circuit proves relationships
+*between* the witnesses it is handed: that the verdict is bound to the fingerprint,
+that the count clears the gate. What it cannot see is whether those witnesses
+describe **a real engine run on real evidence**. That binding lives only in the
+caller (`src/witness/witnesses.ts`), which is precisely the part a ZK proof does not
+cover. Concretely: `corroborationCount` is a number the prover supplies. The circuit
+checks it is `>= 2`, not that the two sources are *actually* independent — that is
+computed off-chain from distinct provenance roots, and is **analyst-declared**, not
+cryptographically proven. Closing it needs a witness-provenance mechanism (engine
+signature, accredited-expert credential, or environment attestation). This is not a
+VELO-specific weakness — it is what "zero-knowledge proof" means for *any* system
+attesting to real-world facts rather than pure computation.
 
-**Estado honesto:** todo lo del lado del perito funciona y está testeado (34
-tests), y el contrato Compact **compila** — los dos circuitos, con claves de
-prueba y verificación generadas (`bash scripts/compile-contract.sh`). Lo que
-todavía no existe es la integración cliente: nada se desplegó a una red y
-`attest_case` sigue siendo un stub que devuelve un error explícito en vez de
-simular. La divulgación selectiva y la credencial ZK del perito tampoco están
-construidas.
+**What leaks even though the evidence does not** *(G4, G5)* — The commitment, the
+verdict and a timestamp do leave, by design. Anyone watching the chain learns an
+investigation existed, roughly when, and its outcome category. And attestations from
+the same wallet are linkable to each other by address — revealing an expert's case
+count, verdict distribution and cadence, though never case content. The anonymous
+accredited-expert credential would mitigate that; it is not built.
+
+**What depends on something else existing first** *(G7, G8)* — No rule-version
+binding: the `>= 2` threshold is fixed in the circuit, and older attestations carry
+no marker of which rule checked them. Only matters once a second contract version
+ships. No revocation model for an expert whose accreditation lapses — meaningless to
+design before the credential it would revoke.
+
+**What the server does not validate** *(F15)* — When an LLM agent builds the
+`seal_case` call, free-text evidence enters its context. One prompt-injection
+attempt was **run and failed** — the agent recognised and refused it — but that
+defense came from the model's judgment, **not from the server**. VELO does not verify
+that `devilAdvocate` is anchored to the actual evidence. A different framing, or a
+different model, could go the other way.
+
+**What is not built** — The browser-signed path: attesting today goes through the
+CLI with a seed-derived wallet on the analyst's own machine, not the analyst's 1AM
+wallet signing from the UI. Selective disclosure, the ZK expert credential and the
+blind second opinion are designed ([`IDENTITY`](./docs/IDENTITY.md),
+[`ROADMAP`](./docs/ROADMAP.md)) and unimplemented.
+
+**And what it explicitly does not solve** — VELO does **not** stop an expert who
+lies from the start. It removes post-hoc tampering and unverifiable claims of
+experience. It does not remove a corrupt expert; that remains a human and judicial
+responsibility, exactly as with any forensic report today.
 
 ---
 

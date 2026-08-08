@@ -1,6 +1,6 @@
 # Demo Cases
 
-Ten synthetic cases the engine is designed to classify, spanning all four
+Fourteen synthetic cases the engine is designed to classify, spanning all four
 verdicts. Each is fictional, contains no PII, and exists to exercise a specific
 detector or gate.
 
@@ -18,8 +18,12 @@ detector or gate.
 | 8 | A one-line commit labeled "cleanup" that silently disables authentication-failure alerts | `MALICE` | Minimal-surface, maximal-impact detector |
 | 9 | A "non-technical" support ticket whose attached screenshot shows a kernel exploit mid-execution, with no corroborating process trace | `SUSPICION` | Staged-evidence detector, single source |
 | 10 | An ordinary morning of routine activity | `NOISE` | Negative case — no detector should fire |
+| 11 | A badge opens a datacenter door while the same credential logs in over VPN 900 km away, five seconds later | `SUSPICION` | Cross-source contradiction — physically impossible, but one contradiction from one source |
+| 12 | A DLP log records 4,200 files copied to a removable device the night before a resignation; the device registry shows nothing was ever connected | `SUSPICION` | Log vs. device registry — one of the two is lying, and nothing says which |
+| 13 | An unsigned PDF appears in the evidence intake folder accusing a named employee, with no submitter and no acquisition record | `ABSTAIN` | Provenance requirement, again — a serious claim with no traceable origin is not evidence yet |
+| 14 | Same clean artifacts as case 10, same valid custody, same score of zero — but the proxy log rotated before anyone asked for it and the second machine was never imaged | `ABSTAIN` | **Absence of evidence is not evidence of absence.** Declared coverage gaps degrade a *negative* finding |
 
-**The rule underlying all ten:** `MALICE` requires a high score *and* at least
+**The rule underlying all fourteen:** `MALICE` requires a high score *and* at least
 two independent sources; `SUSPICION` is a strong signal without corroboration;
 `ABSTAIN` is evidence that cannot be admitted regardless of what it seems to
 show; `NOISE` is normal activity — the engine does not manufacture threats.
@@ -40,8 +44,12 @@ show; `NOISE` is normal activity — the engine does not manufacture threats.
 | 8 | Un commit de una línea etiquetado "limpieza" que silenciosamente desactiva las alertas de fallo de autenticación | `MALICE` | Detector de superficie mínima, impacto máximo |
 | 9 | Un ticket de soporte "no técnico" cuya captura adjunta muestra un exploit de kernel en ejecución, sin rastro de proceso que lo corrobore | `SUSPICION` | Detector de evidencia escenificada, una sola fuente |
 | 10 | Una mañana normal de actividad de rutina | `NOISE` | Caso negativo — ningún detector debería dispararse |
+| 11 | Una credencial abre la puerta del datacenter mientras la misma identidad inicia sesión por VPN a 900 km, cinco segundos después | `SUSPICION` | Contradicción entre fuentes — físicamente imposible, pero es una sola contradicción de una sola fuente |
+| 12 | Un log de DLP registra 4.200 archivos copiados a un dispositivo extraíble la noche previa a una renuncia; el registro de dispositivos dice que nunca se conectó ninguno | `SUSPICION` | Log contra registro de dispositivos — uno de los dos miente, y nada dice cuál |
+| 13 | Aparece un PDF sin firmar en la carpeta de ingreso acusando a un empleado, sin remitente ni registro de adquisición | `ABSTAIN` | Requisito de proveniencia, otra vez — una afirmación grave sin origen rastreable todavía no es evidencia |
+| 14 | Los mismos artefactos limpios que el caso 10, la misma custodia válida, el mismo score cero — pero el log del proxy rotó antes de que alguien lo pidiera y la segunda máquina nunca se imagenó | `ABSTAIN` | **La ausencia de evidencia no es evidencia de ausencia.** Los huecos de cobertura declarados degradan un hallazgo *negativo* |
 
-**La regla detrás de los diez:** `MALICE` exige un score alto *y* al menos dos
+**La regla detrás de los catorce:** `MALICE` exige un score alto *y* al menos dos
 fuentes independientes; `SUSPICION` es una señal fuerte sin corroboración;
 `ABSTAIN` es evidencia que no se puede admitir sin importar lo que parezca
 mostrar; `NOISE` es actividad normal — el motor no inventa amenazas.
