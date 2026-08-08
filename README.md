@@ -3,6 +3,14 @@
 > **The verdict is visible. The victim is not.**
 > *El veredicto se ve, la víctima no.*
 
+<div align="center">
+
+## ▶ [Open the VELO Hub — the whole project on one page](https://velo-hub-zeta.vercel.app/)
+
+[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
+
+</div>
+
 Zero-knowledge attestation of forensic verdicts on [Midnight](https://midnight.network).
 A forensic expert can prove their verdict is legitimate **without ever
 publishing the evidence it came from**.

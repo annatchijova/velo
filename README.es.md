@@ -2,6 +2,14 @@
 
 > **El veredicto se ve, la víctima no.**
 
+<div align="center">
+
+## ▶ [Abrí el VELO Hub — todo el proyecto en una página](https://velo-hub-zeta.vercel.app/)
+
+[![Abrí el VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-abrir_todo_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
+
+</div>
+
 Atestación de veredictos forenses con conocimiento cero sobre [Midnight](https://midnight.network).
 Un perito puede probar que su veredicto es legítimo **sin publicar nunca la
 evidencia de la que salió**.
