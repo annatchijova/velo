@@ -13,6 +13,8 @@ instrucciones de deploy.
 
 **Demo en vivo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
 
+**Video demo: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — un recorrido del flujo, de punta a punta.
+
 ![VELO — del registro de casos a un veredicto MALICIA que se gana, y una ABSTENCIÓN cuando la cadena de custodia está rota](./visual/velo-demo-ES.gif)
 
 ## Explorar
