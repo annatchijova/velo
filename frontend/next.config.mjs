@@ -8,12 +8,12 @@ const nextConfig = {
   // server bundle — see the webpack() externals below for why. All velo
   // imports are server-side (API routes), so nothing needs it client-side.
   // Monorepo: trace files from the repo root, not from frontend/. Without
-  // this, Vercel's nft cannot see the workspace package or the files loaded
-  // through runtime-computed paths.
+  // this, the production bundler's file tracer cannot see the workspace
+  // package or the files loaded through runtime-computed paths.
   outputFileTracingRoot: join(dirname(fileURLToPath(import.meta.url)), ".."),
-  // Files loaded at request time through runtime-computed paths that nft
-  // cannot discover on its own (repoRoot() walk-up + dynamic import). See
-  // ADR-005 and the "chain reads fail on Vercel" risk in the MVP plan.
+  // Files loaded at request time through runtime-computed paths that the
+  // tracer cannot discover on its own (repoRoot() walk-up + dynamic import).
+  // See ADR-005 / ADR-007 and the "chain reads in production builds" note.
   outputFileTracingIncludes: {
     "/api/chain": [
       "contracts/velo.compact",

@@ -154,7 +154,7 @@ Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 ```bash
 npm install
 npm test          # 58 tests del motor, incluidos los adversariales
-cd frontend && npx vitest run   # 44 más — 102 entre las dos suites
+cd frontend && npx vitest run   # 47 más — 105 entre las dos suites
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -162,31 +162,45 @@ El ciclo completo contra Midnight `preview` está en
 **[`docs/CHAIN.md`](./docs/CHAIN.md)**: sellar local → atestar on-chain → leer
 desde el ledger.
 
-### Despliegue en Vercel
+### Despliegue (Google Cloud Run)
 
-El frontend Next.js se despliega en Vercel como proyecto monorepo: **Root
-Directory `frontend/`**, framework Next.js, Node 20+. Dos configuraciones en
-`frontend/vercel.json` son estructurales:
+La app está **viva en
+[velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)**,
+desplegada como contenedor desde el `Dockerfile` de la raíz del repo
+(multi-etapa: instalar → compilar el motor raíz → `next build` → `next start`
+en el `$PORT` de Cloud Run):
 
-- `installCommand: "cd .. && npm ci"` — instala desde el lockfile de la raíz
-  del workspace, para que el paquete `velo` (el motor) resuelva.
-- `buildCommand: "npm run build:deploy"` — compila el paquete raíz (`tsc`)
-  antes de `next build`, porque el frontend importa `velo/*` → `dist/src/*`.
+```bash
+gcloud run deploy velo --source . --region us-central1
+```
+
+Proyecto `vigia-497422`, `us-central1`, `--allow-unauthenticated`,
+`min-instances 0` (escala a cero; unos segundos de cold start en el primer
+request). El contexto de build es la **raíz del repo**: la imagen debe llevar
+el `dist/` del paquete raíz, el corpus, `contracts/managed/` (los bindings
+commiteados que `/api/chain` carga en cada request) y
+`deploy/managed-shim/` (la dirección del contrato desplegado).
 
 Las rutas del corpus (`/api/cases`, `/api/cases/:id`, `/api/peritos`) son
 **estáticas en el build** (`force-static` + `generateStaticParams`), así el
-runtime serverless nunca lee el filesystem del repo para servirlas. Las
-lecturas de cadena (`GET /api/chain`) corren serverless con los bindings del
-contrato commiteados (`contracts/managed/`) — sin wallet, sin claves, sin
-costo. Las **escrituras** de atestación nunca corren en Vercel; quedan en la
-máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
+runtime nunca lee el filesystem del repo para servirlas. Las lecturas de
+cadena (`GET /api/chain`) corren en el contenedor con los bindings del
+contrato commiteados — sin wallet, sin claves, sin costo. Las **escrituras**
+de atestación nunca corren en la app hosteada; quedan en la máquina del perito
+(`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
+
+Por qué no Vercel: el builder `@vercel/next` falló de forma reproducible de su
+lado (`ENOENT` en `export-detail.json` después de un `next build` exitoso); el
+pivote está registrado en [`ADR-007`](./docs/ADRS_001_006.md).
+`frontend/vercel.json` y la configuración relacionada quedan en el repo, sin
+uso.
 
 ## Estado — qué es real y qué no
 
 | Capa | Estado |
 |---|---|
 | Motor determinista + gate de Daubert | **Funciona**, 58 tests |
-| Cobertura de tests entre las dos suites | **102 en verde** — 58 del motor (`npm test`) + 44 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados |
+| Cobertura de tests entre las dos suites | **105 en verde** — 58 del motor (`npm test`) + 47 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |

@@ -55,16 +55,16 @@ later layers extend it, they don't gate it.
    corroboration rule as a circuit constraint rather than a policy note: a
    `MALICE` verdict cannot be attested without `corroboration_count >= 2`. Any
    attempt to attest `MALICE` from a single source fails to produce a proof at all.
-4. **Interfaces.** The Next.js frontend — hosted on Vercel (the engine runs
-   serverless there), developed locally from `frontend/` — exposes seal,
-   verify and chain reads; attestation writes stay on the expert's machine
-   (`deploy/attest-case.ts`, see [`CHAIN.md`](./CHAIN.md)), and a parallel MCP
-   server exposes the same actions as tools, following the same shape as a
-   crypto wallet: the asset is a sealed case, not a token. What crosses the
-   hosted boundary: artifact manifest metadata, custody events,
-   verdict/score/bundle JSON. What never crosses it: raw evidence bytes,
-   wallet keys, salts, witness values. Both TDD workflows are mandatory:
-   [`FRONTEND_TDD.md`](./FRONTEND_TDD.md) for the frontend and
+4. **Interfaces.** The Next.js frontend — hosted on Google Cloud Run as a
+   container (the engine runs inside it), developed locally from `frontend/`
+   — exposes seal, verify and chain reads; attestation writes stay on the
+   expert's machine (`deploy/attest-case.ts`, see [`CHAIN.md`](./CHAIN.md)),
+   and a parallel MCP server exposes the same actions as tools, following the
+   same shape as a crypto wallet: the asset is a sealed case, not a token.
+   What crosses the hosted boundary: artifact manifest metadata, custody
+   events, verdict/score/bundle JSON. What never crosses it: raw evidence
+   bytes, wallet keys, salts, witness values. Both TDD workflows are
+   mandatory: [`FRONTEND_TDD.md`](./FRONTEND_TDD.md) for the frontend and
    [`ROOT_TDD.md`](./ROOT_TDD.md) for the root package.
 5. **Tests and simulation.** Threshold tests, corroboration-gate tests,
    determinism tests (same input twice → same fingerprint), and adversarial tests
@@ -200,18 +200,18 @@ que funciona — las capas siguientes lo extienden, no lo condicionan.
    política: un veredicto `MALICE` no puede atestarse sin
    `corroboration_count >= 2`. Cualquier intento de atestar `MALICE` con una sola
    fuente directamente no produce una prueba.
-4. **Interfaces.** El frontend Next.js — hosteado en Vercel (el motor corre
-   serverless ahí), desarrollado localmente desde `frontend/` — expone sellar,
-   verificar y lecturas de cadena; las escrituras de atestación quedan en la
-   máquina del perito (`deploy/attest-case.ts`, ver
-   [`CHAIN.md`](./CHAIN.md)), y un servidor MCP paralelo expone las mismas
-   acciones como tools, siguiendo la misma forma que una wallet cripto: el
-   activo es un caso sellado, no un token. Lo que cruza el límite hosteado:
-   metadatos del manifiesto de artefactos, eventos de custodia, JSON de
-   veredicto/score/bundle. Lo que nunca lo cruza: bytes de evidencia cruda,
-   claves de wallet, salts, valores de witness. Ambos flujos de TDD son
-   obligatorios: [`FRONTEND_TDD.md`](./FRONTEND_TDD.md) para el frontend y
-   [`ROOT_TDD.md`](./ROOT_TDD.md) para el paquete raíz.
+4. **Interfaces.** El frontend Next.js — hosteado en Google Cloud Run como
+   contenedor (el motor corre adentro), desarrollado localmente desde
+   `frontend/` — expone sellar, verificar y lecturas de cadena; las
+   escrituras de atestación quedan en la máquina del perito
+   (`deploy/attest-case.ts`, ver [`CHAIN.md`](./CHAIN.md)), y un servidor MCP
+   paralelo expone las mismas acciones como tools, siguiendo la misma forma
+   que una wallet cripto: el activo es un caso sellado, no un token. Lo que
+   cruza el límite hosteado: metadatos del manifiesto de artefactos, eventos
+   de custodia, JSON de veredicto/score/bundle. Lo que nunca lo cruza: bytes
+   de evidencia cruda, claves de wallet, salts, valores de witness. Ambos
+   flujos de TDD son obligatorios: [`FRONTEND_TDD.md`](./FRONTEND_TDD.md)
+   para el frontend y [`ROOT_TDD.md`](./ROOT_TDD.md) para el paquete raíz.
 5. **Tests y simulación.** Tests de umbrales, del gate de corroboración, de
    determinismo (mismo input dos veces → mismo fingerprint), y tests
    adversariales (truncar la cadena de custodia, alterar un campo, enviar un

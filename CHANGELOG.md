@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs re-aligned to the Cloud Run reality.** The app is live on Google
+  Cloud Run (ADR-007); the Vercel path was abandoned after the `@vercel/next`
+  builder failed reproducibly on its side. `PRD_MVP.md` (Cloud Run hosting +
+  phase statuses), `ADRS_001_006.md` (ADR-001/005 supersession status + DB
+  adapter decision), `ROADMAP.md` (current phase map + deferred red-team
+  hardening), README/README.es ("Deploying to Vercel" → "Deploying (Google
+  Cloud Run)"), and `ARCHITECTURE.md` layer 4 (EN+ES) all now describe what
+  actually runs. Test counts synced to the runners (58 engine + 47 frontend).
+
+### Fixed
+
+- **Red team F24 (code half).** The placeholder-commitment seam's return type
+  no longer carries the salt: `computeCommitment` generates it internally and
+  returns only `{ fingerprint, commitment, covers }`. Pinned by three new
+  tests (`frontend/src/lib/contract.test.ts`); the seam is retired entirely
+  in MVP Phase 4.
+
 ### Added
 
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
