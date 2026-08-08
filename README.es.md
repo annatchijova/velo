@@ -25,6 +25,9 @@ evidencia de la que salió**.
 📄 **[English README](./README.md)** — versión completa, con diagramas, la API y las
 instrucciones de deploy.
 
+⚡ **[Inicio rápido (EN/ES)](./docs/QUICKSTART.md)** — instalación para copiar y pegar,
+los 14 casos de a uno, las demos, y cada script adversarial con qué prueba.
+
 **Demo en vivo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
 
 **Video demo: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — un recorrido del flujo, de punta a punta.
@@ -141,14 +144,9 @@ Evidencia idéntica, resultado opuesto. La admisibilidad es una propiedad del
 puede rastrear hasta una adquisición legal no es un hallazgo más débil: es uno
 inadmisible.
 
-## Inicio rápido
-
-Para levantarlo en una máquina nueva, o para correr los casos y los scripts
-adversariales uno por uno:
-[**docs/QUICKSTART.md**](./docs/QUICKSTART.md) — la guía de copiar y pegar,
-bilingüe.
-
 ## Probalo
+
+Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)**.
 
 ```bash
 npm install

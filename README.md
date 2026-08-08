@@ -32,6 +32,8 @@ publishing the evidence it came from**.
 
 📄 **[Léelo en español (README.es.md)](./README.es.md)**
 
+⚡ **[Quick start (EN/ES)](./docs/QUICKSTART.md)** — copy-paste setup, the 14 cases one at a time, the demos, and every adversarial script with what it proves.
+
 **Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
 
 **Demo video: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — a walkthrough of the flow, end to end.
@@ -54,10 +56,7 @@ Every page below is bilingual (EN/ES).
 
 ## Run it locally
 
-**In a hurry, or setting this up on a fresh machine?**
-[**docs/QUICKSTART.md**](./docs/QUICKSTART.md) is the copy-paste guide —
-install, the 14 cases (all at once or one at a time), the demos, and every
-adversarial script with what it proves. Bilingual.
+Step by step, on a fresh machine: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)**.
 
 No secrets are needed to browse the demo — the wallet and keys only matter for *attesting* (the write path), never for running the UI or reading the chain.
 
@@ -528,13 +527,6 @@ automatically where possible.
   local guards.
 
 Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-
----
-
-## Español
-
-📄 **[README en español](./README.es.md)** — versión completa, con las limitaciones
-conocidas y el estado real de cada capa.
 
 ---
 
