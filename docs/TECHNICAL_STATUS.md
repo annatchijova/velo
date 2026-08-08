@@ -1,7 +1,7 @@
 # VELO — Technical Status
 
 **Zero-knowledge forensic attestation on Midnight**
-Midnight Hack Buenos Aires · v0.1.0 · status as of 2026-08-08
+Midnight Hack Buenos Aires · v0.1.0 · status as of 2026-08-07
 
 > The verdict is visible. The victim is not.
 
@@ -39,9 +39,11 @@ network. The properties are the product. The UI is how you look at them.
 | Dependency-free offline verifier | **Yes** — `node:crypto` + `node:fs` only, runs without npm, re-checks the admissibility gate independently |
 | MCP server (wallet-shaped tool surface) | **Yes** — `list_my_cases`, `get_case`, `seal_case`, `verify_commitment`, `attest_case` |
 | Local-first frontend (Next.js 15 / React 19) | **Yes** — landing, wallet connect (Lace + 1AM via DApp Connector v4), case ledger, live engine run, seal → attest → verify, adversarial tamper demo |
-| Synthetic corpus with zero PII | **Yes** — 13 cases across all four verdicts, 6 expert-witness profiles |
+| Synthetic corpus with zero PII | **Yes** — 14 cases across all four verdicts, 6 expert-witness profiles |
+| Absence of evidence is distinguished from evidence of absence | **Yes** — declared coverage gaps degrade a *negative* finding to `ABSTAIN` and are sealed into the fingerprint. See §3.10 |
 | Adversarial audit of our own system | **Yes** — 4 red team rounds, 27 findings, 11 attack vectors executed and defeated |
-| End-to-end proof against the deployed contract | **Not yet** — keys generated, `attest_case` still returns `local_pending_contract`. See §5. |
+| End-to-end proof against the deployed contract | **Yes** — a sealed case was proved and attested on `preview`; commitment `632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b` records `MALICE`, readable by anyone. Via the CLI (`deploy/attest-case.ts`); the browser-signed path is **not** built. See §5 |
+| Reading the ledger back | **Yes** — `GET /api/chain`, MCP `chain_status` / `lookup_commitment`, and `scripts/verify-chain-read.mjs`. No wallet, keys or fees needed to read |
 
 ---
 
@@ -211,7 +213,7 @@ neither is enforced by an `if`:
 - The threshold comparison is `greaterThan` — strictly greater. Exactly
   `33/100` is not enough.
 
-### 3.2 Fail-closed is the default, in four independent places
+### 3.2 Fail-closed is the default, in five independent places
 
 - **No custody, no verdict.** `score()` short-circuits to `ABSTAIN` *before any
   detector output is consulted* if the custody chain fails. `custodyValid` is
@@ -228,6 +230,9 @@ neither is enforced by an `if`:
 - **Malformed input yields a sentence, not a stack trace.** The offline verifier
   validates shape at the boundary and exits non-zero — it never reaches
   `valid: true` by accident (finding **F12**).
+- **No coverage, no negative finding.** If the analyst declares that a source
+  which should have been examined was not, a "nothing found" result degrades to
+  `ABSTAIN` and names what was missing. See §3.10.
 
 ### 3.3 Canonicalization: built so an opposing expert's reimplementation agrees
 
@@ -377,13 +382,80 @@ AA contrast, 44×44 px touch targets, `:focus-visible` order,
 `prefers-reduced-motion`.
 
 Suite progression through the audit rounds, as recorded at the time:
-**9/9 → 14/14 → 34/34 → 41/41 → 38/38** (the drop is the retirement of the
-loopback HTTP server after F14, not a regression). Across the engine and
-frontend suites there are **54 declared test blocks, expanding to roughly 83
-runtime cases** once parameterized tests and the 13-case corpus loop are
-counted — see §6 for the caveat on that number.
+**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53** (the one drop is the retirement
+of the loopback HTTP server after F14, not a regression; the last step is the
+coverage-gap and on-chain-read work). Across the engine and frontend suites
+there are **54 declared test blocks, expanding to roughly 83 runtime cases**
+once parameterized tests and the 14-case corpus loop are counted — see §6 for
+the caveat on that number.
 
 ---
+
+### 3.10 Absence of evidence is not evidence of absence
+
+The engine used to say two different things with one word.
+
+| What actually happened | What the engine reported |
+|---|---|
+| We examined everything and found nothing | `NOISE` |
+| The log that would have settled it rotated before anyone asked | `NOISE` |
+| The second machine was never imaged | `NOISE` |
+
+The first is a finding. The other two are an **unknown**. Reporting them
+identically is the exact overclaim this project exists to prevent, committed by
+the engine about its own output — and it was verified as real behaviour before
+being changed: zero artifacts with a valid custody chain returned `NOISE`.
+
+An analyst can now declare a **coverage gap**: a source that should have been
+examined and was not, with the reason. A declared gap degrades a **negative**
+finding to `ABSTAIN` and names what was missing:
+
+> Nothing anomalous was found in what was examined, but 2 expected source(s)
+> could not be examined: Corporate proxy logs, 8–20 July 2026 (retained for 7
+> days and rotated…); USB device history (…). A negative finding is not
+> supportable over evidence that was never available.
+
+Three properties make this a mechanism rather than a label:
+
+- **It degrades negatives only.** A corroborated `MALICE` with the same gaps
+  stays `MALICE`. An unrelated log rotating does not erase evidence of what *is*
+  there. The gap undermines the claim that nothing is there, not the finding.
+- **It is declared, never inferred.** The engine cannot know what was never
+  collected, so this is a human assertion of the same kind as a custody event.
+  A test pins that boundary so nobody later tries to detect it automatically.
+- **It is sealed into the analysis fingerprint.** Stripping the gaps to promote
+  an `ABSTAIN` back to `NOISE` fails verification — both the fingerprint and the
+  bundle hash mismatch. Leaving them outside the commitment would have been the
+  same defect as F3, where the custody tip sat outside the hash meant to anchor
+  it.
+
+**The demonstration is a controlled pair.** `VELO-010` and `VELO-014` were built
+as twins:
+
+| | `VELO-010` | `VELO-014` |
+|---|---|---|
+| Score | `0/1` | `0/1` |
+| Detectors fired | none | none |
+| Custody chain | valid | valid |
+| Declared coverage gaps | none | 2 |
+| **Verdict** | **`NOISE`** | **`ABSTAIN`** |
+
+Identical evidentiary weight, one difference, and the verdict moves. A test
+asserts the scores stay identical — without it the pair could drift into
+differing for some unrelated reason while still appearing to isolate the
+variable — that the reasoning names each missing source, and that withholding
+the gaps returns `VELO-014` to `NOISE`.
+
+`VELO-014`'s two gaps are a proxy log that rotated seven days before it was
+requested and a registry hive destroyed by a routine IT reimage. Both are
+ordinary process, not anyone hiding anything. That is deliberate: the honest
+version of this problem is not sabotage, it is a case arriving at the lab three
+weeks late.
+
+Note that *evidence of absence* was already handled and always has been —
+`log_cleared`, `usn_journal_gap` and `surgical_deletion` are detector markers,
+and `VELO-006` ("The Surgical Void") is built on exactly that. What had nowhere
+to go was *absence of evidence*.
 
 ## 4. The five things you cannot fake in ten hours
 
@@ -438,7 +510,7 @@ it makes forensic judgment auditable.
 | **G10 — devil's advocate is unverifiable** | The gate checks the field is non-empty after trimming. `"x"` passes. **Deliberately not "fixed"** — a keyword heuristic is gameable and would create false confidence, and an LLM grader would put a model back in the decision path. | Roadmap: a structured result whose *shape* is checkable without pretending to verify content |
 | **F15 — agent-driven writes are unvalidated server-side** | Nothing on the server checks that a devil's advocate is anchored to real evidence. All resistance in the one tested run came from the calling model's judgment — not a property we can regression-test. | Open architectural gap |
 | **Circuit behaviour end-to-end** | Prover and verifier keys are generated and the contract is deployed, but a proof has **not** been exercised against a live test vector. `attest_case` still returns `local_pending_contract` rather than simulating a chain interaction. | Next milestone |
-| **Corpus documentation drift** | `CASES.md` documents 10 cases; 13 fixtures ship (VELO-011, -012, -013 are undocumented there). An older pre-F5 Spanish fixture set also still sits in the tree and would fail today's canonicalizer. | Housekeeping, tracked |
+| **Corpus documentation drift** | `CASES.md` documents 10 cases; 14 fixtures ship (VELO-011 through -014 are undocumented there; `cases/README.md` does cover them). An older pre-F5 Spanish fixture set also still sits in the tree and would fail today's canonicalizer. | Housekeeping, tracked |
 
 Separately, and independently of all of the above: VELO does not establish that
 the examiner's original analysis was performed honestly. That remains a human
@@ -459,7 +531,7 @@ examiner at the moment of analysis.**
 | Minimum independent sources for `MALICE` | 2 | circuit constraint + `scorer.ts` |
 | Canonical format version | v2 | `src/seal/canonical.ts` |
 | Custody event vocabulary | 6 closed types | ISO/IEC 27037:2012 + `SEALED`, `ANALYZED` |
-| Synthetic cases / examiner profiles | 13 / 6 | `cases/`, `peritos-syntetic/` |
+| Synthetic cases / examiner profiles | 14 / 6 | `cases/`, `peritos-syntetic/` |
 | Red team rounds | 4 | `docs/RED_TEAM_ROUND_1–4.md` |
 | Findings raised / fixed | 27 / 21 | same |
 | Attack vectors executed and defeated | 11 | rounds 1 and 3 discarded-vector tables |
@@ -467,11 +539,11 @@ examiner at the moment of analysis.**
 | Marker-pair monotonicity sweep | 19×19, 0 violations | round 1, experiment E14e |
 | npm advisories cleared by the Next patch bump | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories consciously deferred | 2 | same, with dated reasoning |
-| Root suite at last recorded run | 38/38 green | round 3 post-fix verification |
+| Root suite at last recorded run | 53/53 green | `npm test` on `main`, 2026-08-07 |
 
 **Caveat on the test count.** The "83 runtime cases" figure is partly derived
 rather than literal: the engine corpus test declares one `test(...)` inside a
-loop over 13 case fixtures, and several frontend tests use `it.each`. The
+loop over 14 case fixtures, and several frontend tests use `it.each`. The
 literal count of declared test blocks is 54. We are reporting both rather than
 picking the flattering one.
 
@@ -489,7 +561,7 @@ the *state*, not the stopwatch.
    and replace `attest_case`'s `local_pending_contract` return with the real
    chain interaction. This is the single highest-value remaining item: it
    converts "keys generated" into "proof accepted."
-2. Reconcile `CASES.md` with the 13 shipped fixtures and remove the pre-F5
+2. Reconcile `CASES.md` with the 14 shipped fixtures and remove the pre-F5
    Spanish corpus generation from the tree.
 3. Fold `ruleVersion` into the commitment (G7) — a small change with a long
    half-life, and much cheaper now than after attestations exist.
@@ -567,7 +639,7 @@ src/mcp/                        wallet-shaped tool surface
 src/simulate.ts                 end-to-end demo, including both refusal moments
 deploy/                         register-dust, deploy-contract, redact-seed
 frontend/                       Next.js 15 · TDD-mandatory · Vitest + Playwright
-cases/  peritos-syntetic/       13 synthetic cases, 6 examiner profiles, zero PII
+cases/  peritos-syntetic/       14 synthetic cases, 6 examiner profiles, zero PII
 docs/RED_TEAM_ROUND_1–4.md      the adversarial audit
 docs/LEARNINGS.md               what we got wrong first and understood second
 docs/DEPENDENCY_SECURITY.md     the upgrade taken and the one deliberately deferred
@@ -575,6 +647,7 @@ docs/DEPENDENCY_SECURITY.md     the upgrade taken and the one deliberately defer
 
 ---
 
-*Prepared for the Midnight Hack Buenos Aires jury, 2026-08-08. Every finding ID
+*Prepared for the Midnight Hack Buenos Aires jury, presented 2026-08-08; status
+verified 2026-08-07. Every finding ID
 in this document resolves to a dated section in the repository's own audit
 record. Spanish version: `ESTADO_TECNICO.md`.*

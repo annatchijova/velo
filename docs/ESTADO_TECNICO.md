@@ -1,7 +1,7 @@
 # VELO — Estado técnico
 
 **Atestación forense de conocimiento cero sobre Midnight**
-Midnight Hack Buenos Aires · v0.1.0 · estado al 2026-08-08
+Midnight Hack Buenos Aires · v0.1.0 · estado al 2026-08-07
 
 > El veredicto se ve, la víctima no.
 
@@ -41,9 +41,11 @@ cómo se las mira.
 | Verificador offline sin dependencias | **Sí** — solo `node:crypto` y `node:fs`, corre sin npm, re-chequea el gate de admisibilidad por su cuenta |
 | Servidor MCP (superficie con forma de wallet) | **Sí** — `list_my_cases`, `get_case`, `seal_case`, `verify_commitment`, `attest_case` |
 | Frontend local-first (Next.js 15 / React 19) | **Sí** — landing, conexión de wallet (Lace y 1AM vía DApp Connector v4), ledger de casos, corrida en vivo del motor, sellar → atestar → verificar, demo adversarial de manipulación |
-| Corpus sintético sin PII | **Sí** — 13 casos cubriendo los cuatro veredictos, 6 perfiles de perito |
+| Corpus sintético sin PII | **Sí** — 14 casos cubriendo los cuatro veredictos, 6 perfiles de perito |
+| Se distingue ausencia de evidencia de evidencia de ausencia | **Sí** — los huecos de cobertura declarados degradan un hallazgo *negativo* a `ABSTAIN` y quedan sellados en el fingerprint. Ver §3.10 |
 | Auditoría adversarial de nuestro propio sistema | **Sí** — 4 rondas de red team, 27 hallazgos, 11 vectores de ataque ejecutados y bloqueados |
-| Prueba end-to-end contra el contrato desplegado | **Todavía no** — claves generadas, `attest_case` sigue devolviendo `local_pending_contract`. Ver §5. |
+| Prueba end-to-end contra el contrato desplegado | **Sí** — un caso sellado fue probado y atestado en `preview`; el commitment `632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b` registra `MALICE`, legible por cualquiera. Vía CLI (`deploy/attest-case.ts`); el camino firmado desde el navegador **no** está construido. Ver §5 |
+| Lectura del ledger | **Sí** — `GET /api/chain`, MCP `chain_status` / `lookup_commitment`, y `scripts/verify-chain-read.mjs`. Leer no requiere wallet, claves ni fees |
 
 ---
 
@@ -218,7 +220,7 @@ ninguna de las dos la impone un `if`:
 - La comparación del umbral es `greaterThan` — estrictamente mayor. Exactamente
   `33/100` no alcanza.
 
-### 3.2 Fail-closed por default, en cuatro lugares independientes
+### 3.2 Fail-closed por default, en cinco lugares independientes
 
 - **Sin custodia no hay veredicto.** `score()` corta a `ABSTAIN` *antes de
   consultar cualquier salida de detector* si la cadena de custodia falla.
@@ -237,6 +239,9 @@ ninguna de las dos la impone un `if`:
 - **La entrada malformada devuelve una oración, no un stack trace.** El
   verificador offline valida la forma en el borde y sale con código distinto de
   cero — nunca llega a `valid: true` por accidente (hallazgo **F12**).
+- **Sin cobertura no hay hallazgo negativo.** Si el perito declara que una fuente
+  que debía examinarse no se examinó, un resultado de "no se encontró nada" se
+  degrada a `ABSTAIN` y nombra qué faltó. Ver §3.10.
 
 ### 3.3 Canonicalización: hecha para que la reimplementación del perito de la contraparte coincida
 
@@ -397,13 +402,83 @@ contraste WCAG 2.1 AA, targets táctiles de 44×44 px, orden de `:focus-visible`
 `prefers-reduced-motion`.
 
 Progresión de la suite a lo largo de las rondas de auditoría, tal como quedó
-registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38** (la caída es el
-retiro del servidor HTTP de loopback después de F14, no una regresión). Entre las
-suites de motor y frontend hay **54 bloques de test declarados, que se expanden a
-unos 83 casos en runtime** contando los tests parametrizados y el loop sobre los
-13 casos del corpus — ver §6 para la salvedad sobre ese número.
+registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53** (la única caída es el
+retiro del servidor HTTP de loopback después de F14, no una regresión; el último
+paso es el trabajo de huecos de cobertura y lectura on-chain). Entre las suites
+de motor y frontend hay **54 bloques de test declarados, que se expanden a unos
+83 casos en runtime** contando los tests parametrizados y el loop sobre los 14
+casos del corpus — ver §6 para la salvedad sobre ese número.
 
 ---
+
+### 3.10 La ausencia de evidencia no es evidencia de ausencia
+
+El motor decía dos cosas distintas con una sola palabra.
+
+| Qué pasó realmente | Qué informaba el motor |
+|---|---|
+| Examinamos todo y no encontramos nada | `NOISE` |
+| El log que lo habría resuelto rotó antes de que alguien lo pidiera | `NOISE` |
+| La segunda máquina nunca se imagenó | `NOISE` |
+
+Lo primero es un hallazgo. Los otros dos son un **desconocido**. Informarlos
+igual es exactamente la sobreafirmación que este proyecto existe para prevenir,
+cometida por el motor sobre su propia salida — y se verificó como comportamiento
+real antes de cambiar nada: cero artefactos con cadena de custodia válida
+devolvía `NOISE`.
+
+Ahora el perito puede declarar un **hueco de cobertura**: una fuente que debía
+examinarse y no se examinó, con el motivo. Un hueco declarado degrada un
+hallazgo **negativo** a `ABSTAIN` y nombra qué faltó:
+
+> No se encontró nada anómalo en lo examinado, pero 2 fuente(s) esperada(s) no
+> pudieron examinarse: logs del proxy corporativo, 8–20 de julio de 2026 (se
+> retienen 7 días y rotaron…); historial de dispositivos USB (…). Un hallazgo
+> negativo no se sostiene sobre evidencia que nunca estuvo disponible.
+
+Tres propiedades lo convierten en un mecanismo y no en una etiqueta:
+
+- **Degrada solo negativos.** Un `MALICE` corroborado con los mismos huecos
+  sigue siendo `MALICE`. Que un log no relacionado haya rotado no borra la
+  evidencia de lo que **sí** está. El hueco socava la afirmación de que no hay
+  nada, no el hallazgo.
+- **Se declara, nunca se infiere.** El motor no puede saber qué nunca se
+  recolectó, así que esto es una afirmación humana del mismo tipo que un evento
+  de custodia. Un test fija ese límite para que nadie después intente detectarlo
+  automáticamente.
+- **Va sellado dentro del fingerprint del análisis.** Borrar los huecos para
+  promover un `ABSTAIN` de vuelta a `NOISE` falla la verificación: no coinciden
+  ni el fingerprint ni el hash del bundle. Dejarlos fuera del commitment habría
+  sido el mismo defecto que F3, donde el tip de custodia quedaba fuera del hash
+  que supuestamente lo anclaba.
+
+**La demostración es un par controlado.** `VELO-010` y `VELO-014` se
+construyeron como gemelos:
+
+| | `VELO-010` | `VELO-014` |
+|---|---|---|
+| Score | `0/1` | `0/1` |
+| Detectores disparados | ninguno | ninguno |
+| Cadena de custodia | válida | válida |
+| Huecos de cobertura declarados | ninguno | 2 |
+| **Veredicto** | **`NOISE`** | **`ABSTAIN`** |
+
+Idéntico peso probatorio, una sola diferencia, y el veredicto se mueve. Un test
+fija que los scores se mantengan idénticos — sin eso el par podría terminar
+difiriendo por alguna razón no relacionada y seguir pareciendo que aísla la
+variable —, que el razonamiento nombre cada fuente faltante, y que retirar los
+huecos devuelva `VELO-014` a `NOISE`.
+
+Los dos huecos de `VELO-014` son un log de proxy que rotó siete días antes de
+que lo pidieran y una rama de registro destruida por un reimagen de rutina de
+IT. Los dos son proceso ordinario, nadie escondiendo nada. Es deliberado: la
+versión honesta de este problema no es el sabotaje, es un caso que llega al
+laboratorio tres semanas tarde.
+
+Notar que la *evidencia de ausencia* ya estaba resuelta y siempre lo estuvo:
+`log_cleared`, `usn_journal_gap` y `surgical_deletion` son marcadores de
+detector, y `VELO-006` ("El Vacío Quirúrgico") está construido exactamente sobre
+eso. Lo que no tenía a dónde ir era la *ausencia de evidencia*.
 
 ## 4. Las cinco cosas que no se pueden fingir en diez horas
 
@@ -457,8 +532,8 @@ auditable.
 | **G8 — sin modelo de revocación** | Hoy no es un defecto, porque todavía no existe la credencial de acreditación. Cuando exista, un perito revocado tiene que dejar de poder producir pruebas válidas. | Patrón estándar: árbol de Merkle de revocación, prueba de no-membresía al atestar |
 | **G10 — el abogado del diablo no es verificable** | El gate chequea que el campo no esté vacío después de trimear. `"x"` pasa. **Deliberadamente no "arreglado"** — una heurística de palabras clave es gameable y generaría falsa confianza, y un grader LLM volvería a meter un modelo en el camino de decisión. | Roadmap: un resultado estructurado cuya *forma* sí se pueda chequear, sin pretender verificar el contenido |
 | **F15 — las escrituras manejadas por agentes no se validan del lado del servidor** | Nada en el servidor chequea que un abogado del diablo esté anclado en evidencia real. Toda la resistencia en la única corrida testeada vino del criterio del modelo que llamaba — no es una propiedad que podamos testear contra regresiones. | Hueco arquitectónico abierto |
-| **Comportamiento del circuito end-to-end** | Las claves de prover y verifier están generadas y el contrato está desplegado, pero **no** se ejercitó una prueba contra un vector de test vivo. `attest_case` todavía devuelve `local_pending_contract` en vez de simular una interacción de cadena. | Próximo hito |
-| **Deriva en la documentación del corpus** | `CASES.md` documenta 10 casos; se entregan 13 fixtures (VELO-011, -012 y -013 no están documentados ahí). Además queda en el árbol un set anterior de fixtures en español, previo a F5, que hoy fallaría el canonicalizador. | Tarea de higiene, trackeada |
+| **Firma desde el navegador** | El ciclo completo (sellar → atestar → leer) corre contra `preview`, pero la firma la hace una wallet derivada de seed en la máquina del perito vía `deploy/attest-case.ts`. `POST /api/attest` sigue calculando un commitment local: la wallet 1AM del perito **no** firma desde la UI todavía. | Próximo hito |
+| **Deriva en la documentación del corpus** | `CASES.md` documenta 10 casos; se entregan 14 fixtures (VELO-011 a -014 no están documentados ahí; `cases/README.md` sí los cubre). Además queda en el árbol un set anterior de fixtures en español, previo a F5, que hoy fallaría el canonicalizador. | Tarea de higiene, trackeada |
 
 Aparte, e independientemente de todo lo anterior: VELO no establece que el
 análisis original del perito se haya hecho honestamente. Eso sigue siendo
@@ -479,7 +554,7 @@ corrupto en el momento del análisis.**
 | Fuentes independientes mínimas para `MALICE` | 2 | restricción del circuito + `scorer.ts` |
 | Versión del formato canónico | v2 | `src/seal/canonical.ts` |
 | Vocabulario de eventos de custodia | 6 tipos cerrados | ISO/IEC 27037:2012 + `SEALED`, `ANALYZED` |
-| Casos sintéticos / perfiles de perito | 13 / 6 | `cases/`, `peritos-syntetic/` |
+| Casos sintéticos / perfiles de perito | 14 / 6 | `cases/`, `peritos-syntetic/` |
 | Rondas de red team | 4 | `docs/RED_TEAM_ROUND_1–4.md` |
 | Hallazgos levantados / arreglados | 27 / 21 | ídem |
 | Vectores de ataque ejecutados y bloqueados | 11 | tablas de vectores descartados de las rondas 1 y 3 |
@@ -487,11 +562,11 @@ corrupto en el momento del análisis.**
 | Barrido de monotonicidad de pares de marcadores | 19×19, 0 violaciones | ronda 1, experimento E14e |
 | Advisories de npm limpiadas por el bump de parche de Next | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories diferidas conscientemente | 2 | ídem, con razonamiento fechado |
-| Suite raíz en la última corrida registrada | 38/38 en verde | verificación posterior al fix de la ronda 3 |
+| Suite raíz en la última corrida registrada | 53/53 en verde | `npm test` sobre `main`, 2026-08-07 |
 
 **Salvedad sobre el conteo de tests.** La cifra de "83 casos en runtime" es en
 parte derivada y no literal: el test de corpus del motor declara un solo
-`test(...)` dentro de un loop sobre 13 fixtures, y varios tests de frontend usan
+`test(...)` dentro de un loop sobre 14 fixtures, y varios tests de frontend usan
 `it.each`. El conteo literal de bloques de test declarados es 54. Reportamos los
 dos en vez de elegir el que queda mejor.
 
@@ -509,7 +584,7 @@ Lo que este documento afirma es el *estado*, no el cronómetro.
    vivo, y reemplazar el `local_pending_contract` de `attest_case` por la
    interacción de cadena real. Es el ítem pendiente de mayor valor: convierte
    "claves generadas" en "prueba aceptada".
-2. Reconciliar `CASES.md` con los 13 fixtures que se entregan y sacar del árbol
+2. Reconciliar `CASES.md` con los 14 fixtures que se entregan y sacar del árbol
    la generación anterior a F5 del corpus en español.
 3. Meter `ruleVersion` en el commitment (G7) — un cambio chico con una vida
    media larga, y mucho más barato ahora que después de que existan
@@ -590,7 +665,7 @@ src/mcp/                        superficie de tools con forma de wallet
 src/simulate.ts                 demo end-to-end, con los dos momentos de rechazo
 deploy/                         register-dust, deploy-contract, redact-seed
 frontend/                       Next.js 15 · TDD obligatorio · Vitest + Playwright
-cases/  peritos-syntetic/       13 casos sintéticos, 6 perfiles de perito, cero PII
+cases/  peritos-syntetic/       14 casos sintéticos, 6 perfiles de perito, cero PII
 docs/RED_TEAM_ROUND_1–4.md      la auditoría adversarial
 docs/LEARNINGS.md               lo que entendimos mal primero y bien después
 docs/DEPENDENCY_SECURITY.md     el upgrade que tomamos y el que diferimos a propósito
@@ -598,6 +673,7 @@ docs/DEPENDENCY_SECURITY.md     el upgrade que tomamos y el que diferimos a prop
 
 ---
 
-*Preparado para el jurado de Midnight Hack Buenos Aires, 2026-08-08. Cada ID de
+*Preparado para el jurado de Midnight Hack Buenos Aires, presentado el 2026-08-08;
+estado verificado el 2026-08-07. Cada ID de
 hallazgo de este documento resuelve a una sección fechada del propio registro de
 auditoría del repositorio. Versión en inglés: `TECHNICAL_STATUS.md`.*
