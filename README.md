@@ -138,19 +138,30 @@ report](./docs/RED_TEAM_ROUND_1.md).
 ### The local UI and its API
 
 ```bash
-npm run web     # http://127.0.0.1:4310
+cd frontend && npm run dev     # http://127.0.0.1:3000
 ```
 
-Binds to `127.0.0.1` and nothing else, by design rather than by default:
-a machine holding a victim's evidence must not open a port to its network.
-Static files come from `src/web/static/` (override with `VELO_STATIC_DIR`).
+The `dev` script passes `--hostname 127.0.0.1` explicitly. Next.js binds to
+`0.0.0.0` by default — verified in its own CLI definition, which documents
+`-H, --hostname` as `(default: 0.0.0.0)` — so without that flag the dev
+server is reachable from every machine on the network. A machine holding
+someone else's evidence must not open a port to its network, and that has
+to be stated in the script rather than assumed from a default that says the
+opposite.
+
+`npm start` is deliberately left on the default. It is the container entry
+point (see `frontend/Dockerfile`), and inside a container binding to
+`0.0.0.0` is correct — the isolation boundary is the container, not the
+interface. Do not "fix" it to match `dev`.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/seal` | Run the engine and seal a case |
 | `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
-| `GET` | `/api/cases/:caseId` | Public summary of one case |
-| `GET` | `/api/cases/:caseId/verify` | Internal-consistency check |
+| `GET` | `/api/cases/:id` | Public summary of one case |
+| `POST` | `/api/verify` | Internal-consistency check. Takes `{ bundle, tamper? }`; `tamper` re-runs the check against a deliberately corrupted copy, so the UI can demonstrate detection rather than claim it |
+| `GET` | `/api/chain` | What the Midnight ledger says right now. Reading needs no wallet, proving keys, or proof server, so it keeps working on a machine that cannot produce a proof |
+| `GET` | `/api/peritos` | The synthetic expert-witness corpus |
 | `GET` | `/api/attest` | `501` — the contract is deployed, but this endpoint does not call it yet |
 
 `POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
