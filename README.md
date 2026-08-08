@@ -135,23 +135,31 @@ It prints `internally consistent: YES/NO` — deliberately *not* the word
 consistency is a strictly weaker claim. See [F4 in the red team
 report](./docs/RED_TEAM_ROUND_1.md).
 
-### The local UI and its API
+### The browser frontend
+
+The UI is the Next.js app in [`frontend/`](./frontend/) — pages plus API
+routes that run the same engine server-side through the `velo` package. Local
+development:
 
 ```bash
-npm run web     # http://127.0.0.1:4310
-```
+# from the repo root — workspaces install both packages, and the root build
+# produces the dist/ the frontend imports
+npm install
+npm run build
 
-Binds to `127.0.0.1` and nothing else, by design rather than by default:
-a machine holding a victim's evidence must not open a port to its network.
-Static files come from `src/web/static/` (override with `VELO_STATIC_DIR`).
+# then, from frontend/
+npm run dev       # http://localhost:3000
+```
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/seal` | Run the engine and seal a case |
-| `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
-| `GET` | `/api/cases/:caseId` | Public summary of one case |
-| `GET` | `/api/cases/:caseId/verify` | Internal-consistency check |
-| `GET` | `/api/attest` | `501` — the contract is deployed, but this endpoint does not call it yet |
+| `POST` | `/api/verify` | Internal-consistency + custody check of a bundle |
+| `POST` | `/api/attest` | Placeholder seam — returns `local_pending_contract`; real attestation runs through the local CLI ([CHAIN](./docs/CHAIN.md)) |
+| `GET` | `/api/cases` | List the synthetic corpus |
+| `GET` | `/api/cases/:caseId` | One corpus case |
+| `GET` | `/api/peritos` | Synthetic expert-witness profiles |
+| `GET` | `/api/chain` | Real on-chain ledger read — no wallet, no keys, no fees |
 
 `POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
 and returns the sealed summary plus `reasoning`, `custodyValid`,
@@ -161,9 +169,9 @@ a verdict landed where it did, without ever receiving the evidence.
 Sending `custodyEvents: []` is not an error: it produces `ABSTAIN`, because
 evidence with no acquisition history is inadmissible whatever it shows.
 
-Both interfaces call the same functions in `src/core/operations.ts`. Neither
-reimplements the other — red team F8 was two copies of one function that had
-already drifted apart before anyone noticed.
+The browser API routes and the MCP server call the same functions in
+`src/core/operations.ts`. Neither reimplements the other — red team F8 was two
+copies of one function that had already drifted apart before anyone noticed.
 
 ### Deploying to Vercel
 
@@ -318,7 +326,7 @@ src/seal/        canonicalization, hash-chained custody, bundle sealing, standal
 src/witness/     the circuit's private inputs, TypeScript side
 src/mcp/         MCP server — the wallet interface
 contracts/       velo.compact — the ZK gate
-cases/           13 synthetic cases, zero PII
+cases/           14 synthetic cases, zero PII
 peritos-syntetic/ 6 synthetic expert-witness profiles
 docs/            architecture, glossary, cases, FAQ, business case, identity, roadmap, red team reports
 visual/          deck backgrounds + standalone SVG diagrams
@@ -334,7 +342,8 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
 [`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
-[`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
+[`MVP PRD`](./docs/PRD_MVP.md) · [`MVP ADRs`](./docs/ADRS_001_006.md)
 
 Standalone illustrated pages, same visual system, EN/ES toggle in the page
 itself: [`Architecture`](./docs/velo-architecture.html) ·

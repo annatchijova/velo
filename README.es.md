@@ -209,7 +209,9 @@ Toda bilingüe (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
-[`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md)
+[`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
+[`PRD MVP`](./docs/PRD_MVP.md) · [`ADRs MVP`](./docs/ADRS_001_006.md)
 
 [`LEARNINGS.md`](./docs/LEARNINGS.md) registra lo que este equipo entendió mal
 primero y bien después — se mantiene porque un proyecto construido sobre "no
