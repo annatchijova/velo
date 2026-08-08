@@ -493,8 +493,6 @@ responsibility, exactly as with any forensic report today.
 - [olgavasilievaveg-hash](https://github.com/olgavasilievaveg-hash/)
 - [Dahgoth](https://github.com/Dahgoth)
 
-Project page: [annatchijova.github.io/vigia/velo.html](https://annatchijova.github.io/vigia/velo.html)
-
 ## License
 
 Apache License 2.0 — see [`LICENSE`](./LICENSE).
