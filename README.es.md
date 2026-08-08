@@ -28,6 +28,9 @@ instrucciones de deploy.
 ⚡ **[Inicio rápido (EN/ES)](./docs/QUICKSTART.md)** — instalación para copiar y pegar,
 los 14 casos de a uno, las demos, y cada script adversarial con qué prueba.
 
+🔗 **[Verificalo en el explorer de Midnight](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)** — el contrato desplegado y sus
+atestaciones en un explorador de bloques que no controlamos. Sin instalar nada.
+
 **Demo en vivo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
 
 **Video demo: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — un recorrido del flujo, de punta a punta.
@@ -186,11 +189,27 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |
 | Contrato Compact | **Compila** — `compactc 0.31.1`, ambos circuitos, claves reales |
-| Contrato desplegado | **Vivo en `preview`** — [`46cac58c…3d9d`](./docs/CHAIN.md) |
+| Contrato desplegado | **Vivo en `preview`** — [`46cac58c…3d9d`](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d), verificable en el explorer |
 | Atestación on-chain | **Funciona** vía CLI (`deploy/attest-case.ts`). **Dos atestaciones reales registradas**, ambas `MALICE` |
 | Lectura del ledger | **Funciona** — `GET /api/chain`, MCP `chain_status` |
 | Firma desde el navegador | **No construida** — ver Limitaciones |
 | Red team | **6 rondas** — reportes completos RT1–RT6 abajo |
+
+### O no nos creas nada
+
+Los dos primeros chequeos corren código de este repositorio. El tercero no: es
+un explorador de bloques de terceros que no controlamos, leyendo la misma
+cadena pública.
+
+```bash
+npm test                            # el motor y el corpus
+node scripts/verify-chain-read.mjs  # el ledger, sin billetera ni claves
+```
+
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
+`DEPLOYED`, con la transacción de despliegue, el bloque en el que entró, y
+`attest` como el punto de entrada que se llama.
 
 ---
 

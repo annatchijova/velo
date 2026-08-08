@@ -609,6 +609,9 @@ node scripts/verify-chain-read.mjs
 read used no wallet, no keys and no fees — which is the point: anyone can check
 it, and nobody learns anything about the evidence.
 
+Confirm it independently on a block explorer we do not control:
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
 **8. The replay guard.** Run the same attestation again:
 
 ```bash
@@ -831,6 +834,15 @@ Afterwards, the whole set is readable by anyone, with no wallet:
 ```bash
 node scripts/verify-chain-read.mjs
 ```
+
+And confirm it somewhere that runs none of this repository's code — a
+third-party block explorer, reading the same public chain:
+
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
+Your attestations appear there as calls to `attest` on the contract. That is
+the check worth showing someone: it does not depend on trusting anything we
+wrote.
 
 ---
 ---
@@ -1346,6 +1358,10 @@ node scripts/verify-chain-read.mjs
 usó billetera, ni claves, ni comisiones — que es el punto: cualquiera puede
 chequearlo, y nadie aprende nada sobre la evidencia.
 
+Confirmalo de forma independiente en un explorador de bloques que no
+controlamos:
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
 **8. La guarda de replay.** Corré la misma atestación otra vez:
 
 ```bash
@@ -1568,3 +1584,12 @@ Después, el conjunto entero es legible por cualquiera, sin billetera:
 ```bash
 node scripts/verify-chain-read.mjs
 ```
+
+Y confirmalo en un lugar que no corre nada del código de este repositorio: un
+explorador de bloques de terceros, leyendo la misma cadena pública.
+
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
+Tus atestaciones aparecen ahí como llamadas a `attest` sobre el contrato. Ese
+es el chequeo que vale la pena mostrarle a alguien: no depende de confiar en
+nada que hayamos escrito nosotros.

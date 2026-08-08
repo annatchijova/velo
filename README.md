@@ -34,6 +34,8 @@ publishing the evidence it came from**.
 
 ⚡ **[Quick start (EN/ES)](./docs/QUICKSTART.md)** — copy-paste setup, the 14 cases one at a time, the demos, and every adversarial script with what it proves.
 
+🔗 **[Verify it on the Midnight explorer](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)** — the deployed contract and its attestations, on a block explorer we do not control. Nothing to install.
+
 **Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
 
 **Demo video: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — a walkthrough of the flow, end to end.
