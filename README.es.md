@@ -28,6 +28,7 @@ Cada página es bilingüe (EN/ES).
 - **[Estado técnico](https://annatchijova.github.io/vigia/velotechnical-status.html)** — qué es real y qué está pendiente, capa por capa.
 - **[Modelo de identidad](https://annatchijova.github.io/vigia/velo-identity.html)** — autorización de perito acreditado, no identificación biométrica.
 - **[Caso de negocio](https://annatchijova.github.io/vigia/velo-business.html)** — la capa de reputación forense y sus casos de uso.
+- **[Por qué el ZK es esencial](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html)** — por qué el zero-knowledge es estructural para VELO, no un feature opcional.
 - **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — las capas entregadas y lo que viene.
 
 ## Levantarlo localmente

@@ -16,6 +16,8 @@ publishing the evidence it came from**.
 
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
+📄 **[Léelo en español (README.es.md)](./README.es.md)**
+
 **Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
 
 **Demo video: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — a walkthrough of the flow, end to end.
@@ -33,6 +35,7 @@ Every page below is bilingual (EN/ES).
 - **[Technical status](https://annatchijova.github.io/vigia/velotechnical-status.html)** — what is real vs. pending, layer by layer.
 - **[Identity model](https://annatchijova.github.io/vigia/velo-identity.html)** — accredited-expert authorization, not biometric identification.
 - **[Business case](https://annatchijova.github.io/vigia/velo-business.html)** — the forensic-reputation layer and its use cases.
+- **[Why ZK is load-bearing](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html)** — why zero-knowledge is architecturally essential to VELO, not an optional feature.
 - **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — delivered layers and what comes next.
 
 ## Run it locally
