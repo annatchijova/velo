@@ -1,0 +1,110 @@
+{
+  "case_id": "VELO-014",
+  "name": "What Was Never Looked At",
+  "name_es": "Lo Que Nunca Se Miró",
+  "description": "A departing employee is accused of taking the client list. The workstation was imaged and shows nothing. But the two sources that would have settled it were gone before anyone asked for them. Deliberately built as the twin of VELO-010: the artifacts examined here fire exactly as few detectors, and the verdict is not the same.",
+  "description_es": "Se acusa a un empleado que se va de llevarse la cartera de clientes. Se imagenó la estación de trabajo y no muestra nada. Pero las dos fuentes que lo habrían resuelto ya no existían cuando alguien las pidió. Construido a propósito como gemelo de VELO-010: los artefactos examinados acá disparan exactamente tan pocos detectores, y el veredicto no es el mismo.",
+  "expected_verdict": "ABSTAIN",
+  "expected_corroboration_count": 0,
+  "devil_advocate": "",
+  "custodyEvents": [
+    {
+      "eventType": "IDENTIFIED",
+      "timestamp": "2026-07-28T11:00:00Z",
+      "detail": "HR referral 19 days after the resignation took effect. The delay is the whole problem, and it is documented rather than hidden.",
+      "detail_es": "Derivación de RRHH 19 días después de efectivizada la renuncia. La demora es todo el problema, y queda documentada en vez de escondida."
+    },
+    {
+      "eventType": "ACQUIRED",
+      "timestamp": "2026-07-28T14:20:00Z",
+      "detail": "Full disk image of the returned workstation, write-blocked. Hash verified against acquisition log.",
+      "detail_es": "Imagen completa del disco de la estación devuelta, con bloqueo de escritura. Hash verificado contra el log de adquisición."
+    },
+    {
+      "eventType": "PRESERVED",
+      "timestamp": "2026-07-28T15:00:00Z",
+      "detail": "Image stored in evidence locker. Requests filed for proxy logs and for the pre-reimage registry hives.",
+      "detail_es": "Imagen guardada en el depósito de evidencia. Se pidieron los logs de proxy y las ramas de registro previas al reimagen."
+    },
+    {
+      "eventType": "ANALYZED",
+      "timestamp": "2026-07-29T09:30:00Z",
+      "detail": "Deterministic engine ran over what was actually available. Both requests had come back empty.",
+      "detail_es": "El motor determinista corrió sobre lo que realmente estaba disponible. Ambos pedidos volvieron vacíos."
+    }
+  ],
+  "coverageGaps": [
+    {
+      "expected": "Corporate proxy logs, 8–20 July 2026",
+      "expected_es": "Logs del proxy corporativo, 8 al 20 de julio de 2026",
+      "reason": "Retained for 7 days and rotated. The request was filed on day 19, nine days after the window closed. Any upload to a personal cloud account would have been recorded here and nowhere else on the examined image.",
+      "reason_es": "Se retienen 7 días y rotaron. El pedido se hizo el día 19, nueve días después de que se cerrara la ventana. Cualquier subida a una nube personal habría quedado registrada acá y en ningún otro lado de la imagen examinada."
+    },
+    {
+      "expected": "USB device history (SYSTEM and SOFTWARE registry hives, pre-reimage)",
+      "expected_es": "Historial de dispositivos USB (ramas SYSTEM y SOFTWARE del registro, previas al reimagen)",
+      "reason": "IT reimaged the workstation for reassignment on 21 July, before the referral reached the lab. The image acquired is of the rebuilt machine. Removable-media history from the relevant period no longer exists on any medium.",
+      "reason_es": "IT reimagenó la estación para reasignarla el 21 de julio, antes de que la derivación llegara al laboratorio. La imagen adquirida es de la máquina reconstruida. El historial de medios removibles del período relevante ya no existe en ningún soporte."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "v014-crm-export",
+      "type": "log",
+      "timestamp": "2026-07-09T10:12:00Z",
+      "source": "application_log",
+      "process": "crm-server",
+      "path": "/var/log/crm/export_audit.log",
+      "entropyMilliBits": 4100,
+      "markers": [],
+      "description": "CRM export audit: one client-list export by this user, within their role, during business hours. The same export appears in the logs of four other account managers that week.",
+      "description_es": "Auditoría de exportación del CRM: una exportación de la cartera de clientes por este usuario, dentro de su rol, en horario laboral. La misma exportación aparece en los logs de otros cuatro ejecutivos de cuenta esa semana.",
+      "provenanceChain": [
+        "sha256:v014crm01"
+      ]
+    },
+    {
+      "id": "v014-mail",
+      "type": "log",
+      "timestamp": "2026-07-14T16:40:00Z",
+      "source": "mail_gateway",
+      "process": "postfix",
+      "path": "/var/log/mail/outbound.log",
+      "entropyMilliBits": 4300,
+      "markers": [],
+      "description": "Outbound mail gateway, full retention for the period. No attachment to any external address. This source was complete and it exonerates on its own narrow question.",
+      "description_es": "Gateway de correo saliente, retención completa para el período. Ningún adjunto a direcciones externas. Esta fuente estaba completa y exonera sobre su propia pregunta acotada.",
+      "provenanceChain": [
+        "sha256:v014mail02"
+      ]
+    },
+    {
+      "id": "v014-disk",
+      "type": "file",
+      "timestamp": "2026-07-28T14:20:00Z",
+      "source": "disk_image",
+      "process": "dd",
+      "path": "/evidence/ws-4471.dd",
+      "entropyMilliBits": 3900,
+      "markers": [],
+      "description": "Reimaged workstation. Filesystem is 7 days old at acquisition. Nothing anomalous, which is exactly what a 7-day-old filesystem is expected to show.",
+      "description_es": "Estación reimagenada. El sistema de archivos tiene 7 días al momento de la adquisición. Nada anómalo, que es exactamente lo que se espera de un sistema de archivos de 7 días.",
+      "provenanceChain": [
+        "sha256:v014disk03"
+      ]
+    }
+  ],
+  "expected_fractures": [],
+  "peirce_chain": {
+    "firstness": "An accusation, and an image that shows nothing.",
+    "secondness": "No detector fires — but two of the sources that would have made the finding meaningful were destroyed by ordinary retention policy and ordinary IT process, not by anyone hiding anything.",
+    "thirdness": "The honest output is not innocence. It is that this cannot be answered from what survives."
+  },
+  "peirce_chain_es": {
+    "firstness": "Una acusación, y una imagen que no muestra nada.",
+    "secondness": "Ningún detector dispara — pero dos de las fuentes que habrían hecho significativo el hallazgo fueron destruidas por una política de retención ordinaria y un proceso de IT ordinario, no por alguien escondiendo algo.",
+    "thirdness": "La salida honesta no es la inocencia. Es que esto no se puede responder con lo que sobrevive."
+  },
+  "demo_quote": "Same evidence as a clean case. Different answer, because the engine is told what it never got to see.",
+  "demo_quote_es": "La misma evidencia que un caso limpio. Otra respuesta, porque al motor se le dice qué es lo que nunca llegó a ver."
+}
