@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **MVP Phase 3 — persistence + wallet identity (AC-J2.*).** Sealed cases now
+  persist behind a database adapter (`frontend/src/db/`): one Drizzle schema,
+  two drivers — Neon (`@neondatabase/serverless`) and Cloud SQL (`pg`) —
+  selected at deploy time via `DB_ADAPTER` (decision recorded in
+  `docs/ADRS_001_006.md`, ADR-001 status). With no database configured the
+  app keeps its demo behavior honestly (`persisted: false` + reason).
+  - Wallet connect now establishes a server session: `POST /api/auth/session`
+    issues an HS256 JWT httpOnly cookie (`jose`, `AUTH_SECRET`); identity is
+    the wallet address, no passwords (ADR-004). Unknown wallets get a session
+    with role `none` — persistence is the action that gets refused (AC-J2.6).
+    First login of a registered expert issues the CLI API key once, stored
+    hashed (ADR-006).
+  - Public sealed ledger: `GET /api/sealed` (filters + pagination, limit
+    capped at 100), `GET /api/sealed/:id` (full stored bundle), and the
+    `/sealed` page with verdict filters and attestation badges (EN/ES).
+  - `POST /api/seal` persists for registered experts and reports
+    `persisted`/`sealedId`/`persistenceReason`; the UI toasts the difference.
+  - Tooling: `drizzle.config.ts`, committed migration `0000_init.sql`,
+    `db:generate`/`db:migrate`/`db:seed` scripts; the seed runs the
+    deterministic engine over all 14 corpus cases under a synthetic expert.
+  - E2e (new `frontend/e2e/`, desktop + mobile viewports): page loads,
+    ledger degradation paths, and the full wallet session flow with a mocked
+    connector; CI runs Playwright (chromium).
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
   1–5 never covered: the attestation/deploy tooling, the witness module, the
   frontend beyond the F14 routes, and the coverage-gap engine change. One
@@ -33,6 +56,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Fixed
 
+- **Request-body size cap (red team F22).** `POST /api/seal`, `/api/verify`,
+  `/api/attest`, and `/api/auth/session` now read their bodies through
+  `readJsonBody`, which enforces a 256 KB cap while streaming (both the
+  declared `Content-Length` and the actual bytes received) and turns
+  malformed JSON into a 400 instead of a crash.
+- **Navbar disconnect button accessible name.** The icon-only disconnect
+  button now has an `aria-label` (and `title`) so it is reachable by screen
+  readers and by the mobile e2e project at every viewport.
 - **Chain state decoding fails closed (red team F25).** `hexToBytes` in
   `src/chain/read.ts` decoded the indexer's contract-state blob with
   `hex.match(/../g)` + `Number.parseInt`, which turned a non-hex pair into

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { computeCommitment } from "@/lib/contract";
-import { requireJsonContentType } from "@/lib/http";
+import { readJsonBody, requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -23,12 +23,12 @@ export async function POST(req: Request) {
   const contentTypeError = requireJsonContentType(req);
   if (contentTypeError) return contentTypeError;
 
-  let body: AttestBody;
-  try {
-    body = (await req.json()) as AttestBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  // F22: capped body read.
+  const parsed = await readJsonBody(req);
+  if (parsed.status !== 200) {
+    return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   }
+  const body = parsed.body as AttestBody;
 
   if (!body.bundle?.analysisFingerprint) {
     return NextResponse.json({ error: "bundle.analysisFingerprint is required" }, { status: 400 });

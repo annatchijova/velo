@@ -176,6 +176,42 @@ export interface SealResponse {
   bundle: SealedBundle;
   summary: CaseSummary;
   custodyValid: boolean;
+  selfCheck?: { internallyConsistent: boolean; reasons: string[]; doesNotEstablish: string };
+  attestationPayload?: { analysisFingerprint: string; custodyTip: string };
+  persisted?: boolean;
+  sealedId?: string;
+  persistenceReason?: string;
+}
+
+export interface SessionResponse {
+  address: string;
+  role: "expert" | "none";
+  name: string | null;
+  peritoRef: string | null;
+  apiKey?: string;
+  apiKeyNote?: string;
+}
+
+export interface SealedAttestationInfo {
+  txHash: string;
+  commitment: string;
+  attestedAt: string | null;
+}
+
+export interface SealedLedgerRow {
+  id: string;
+  caseId: string;
+  bundleHash: string;
+  verdict: string;
+  expertAddress: string;
+  sealedAt: string;
+  attestation: SealedAttestationInfo | null;
+}
+
+export interface SealedLedgerResponse {
+  sealed: SealedLedgerRow[];
+  total: number;
+  configured: boolean;
 }
 
 export interface VerifyResponse {

@@ -26,3 +26,16 @@ jobs:
       - name: Next.js build
         working-directory: frontend
         run: npx next build
+      # E2e runs against the dev server (playwright webServer) with no
+      # database configured — the specs assert the honest degradation paths
+      # (AC-J2.3/J2.6) plus the wallet-session flow with a mocked connector.
+      # DB-backed flows need a provisioned database branch and are a
+      # separate, future CI gate.
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: E2E tests
+        working-directory: frontend
+        run: npx playwright test
+        env:
+          CI: "true"

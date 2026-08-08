@@ -52,7 +52,11 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
       setVerification(null);
       setTamper("none");
       setStep("sealed");
-      push(t("toast.sealedSuccess"), "success");
+      if (res.persisted) {
+        push(t("toast.sealedPersisted"), "success");
+      } else {
+        push(t("toast.sealedSuccess"), "success");
+      }
     } catch (err) {
       push(err instanceof Error ? err.message : t("toast.sealingFailed"), "error");
     } finally {
