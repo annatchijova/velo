@@ -122,23 +122,49 @@ the hook without strong reason.
    Keep commits focused; prefer several small conventional commits over one
    large one.
 
-3. **Push.** Push the branch and set its upstream:
+3. **Rebase onto current `main` — immediately before pushing, not before
+   branching.**
+   ```bash
+   git fetch origin main && git rebase origin/main
+   ```
+   Step 1 branched off the `main` of that moment. `main` moves while you work,
+   and the gap is not measured in days: several agents commit to this
+   repository in parallel, sometimes minutes apart. A PR built on a stale base
+   silently reverts whatever landed in between — that is not hypothetical here,
+   it is why PR #6 had to be closed rather than merged, and it nearly happened
+   again to PR #9 on a base that was three commits behind.
+
+   Rebase even when git reports no conflict. A clean textual merge says the
+   same lines were not edited twice; it says nothing about whether your change
+   still makes sense against what arrived. Read what came in.
+
+   ```bash
+   git log --oneline HEAD..origin/main                    # what landed while you worked
+   git log --oneline origin/main ^HEAD -- <your files>    # did anyone touch yours?
+   ```
+
+   Then confirm the PR is actually clean against `main` before asking anyone to
+   look at it — `gh pr view <n> --json mergeable,mergeStateStatus` should read
+   `MERGEABLE / CLEAN`, not `UNKNOWN` (which only means GitHub has not finished
+   computing it yet — re-run it).
+
+4. **Push.** Push the branch and set its upstream:
    ```bash
    git push -u origin <branch-name>
    ```
 
-4. **Pull request.** Open a PR from the branch into `main`:
+5. **Pull request.** Open a PR from the branch into `main`:
    ```bash
    gh pr create --base main --head <branch-name> --title "<summary>" --body "<description>"
    ```
    The PR title should be a concise summary (Conventional Commit style). The PR
    body should describe what changed and why, and include any relevant links.
 
-5. **Review.** Address review feedback in additional commits on the same branch
+6. **Review.** Address review feedback in additional commits on the same branch
    (do not rewrite history while the PR is under review unless asked). Pushing
    new commits updates the PR automatically.
 
-6. **Merge.** Merge through the GitHub UI or `gh pr merge` once the PR passes
+7. **Merge.** Merge through the GitHub UI or `gh pr merge` once the PR passes
    review. Prefer squash merging so the PR lands on `main` as one clean commit.
    After merging, delete the feature branch and pull `main`:
    ```bash
