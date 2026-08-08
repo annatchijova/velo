@@ -364,7 +364,7 @@ the failure mode this whole system exists to prevent.
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
 | Red team | **6 rounds** — full reports RT1–RT6 linked below |
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
-| Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
+| Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
 | Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. **Two attestations are live on preview**, both `MALICE`. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
 | Writing from the browser UI | **Not wired** — `POST /api/attest` still computes a local commitment; the 1AM-signed path does not exist yet |
@@ -415,6 +415,30 @@ to a `MALICE` verdict, each carrying a proof that the Daubert gate held when it
 was written. What they do **not** establish is who produced the analyses behind
 them, or that those analyses are correct — the chain shows that someone
 attested, under the circuit's constraints, and nothing more.
+
+### Or don't take our word for any of it
+
+Both checks above run code from this repository. The last one does not — it is
+a third-party block explorer we do not control, reading the same public chain:
+
+**[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)**
+
+![Midnight block explorer showing the VELO contract marked DEPLOYED, with its address, deployment transaction, block number and the attest entry point](./visual/explorer-contract-deployed.png)
+
+`DEPLOYED`, with the deployment transaction, the block it landed in, and
+`attest` as the entry point being called.
+
+![The contract's raw ledger state on the explorer — several thousand characters of hexadecimal with no readable structure](./visual/explorer-ledger-state.png)
+
+And this is the whole public state of the contract — everything anyone,
+anywhere, can see about the two forensic analyses behind it.
+
+That wall of hexadecimal is not a limitation of the explorer. It is the
+product. Two verdicts were published, permanently and verifiably, and what
+came with them is this: no case name, no victim, no evidence, no expert, no
+file, no date of the incident. A judge can confirm a verdict exists and that
+it satisfied the admissibility rule. Nobody can read the case out of it —
+including us.
 
 ## Repository
 
