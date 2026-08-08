@@ -1,6 +1,8 @@
 # Frontend Test-Driven Development (TDD)
 
 > **Scope:** This document applies **only** to the `frontend/` codebase. It does not authorize, require, or permit changes to backend test coverage, backend API tests, or any non-frontend test suite.
+>
+> Root-package work (engine, sealing, witnesses, chain reads, MCP server, deploy/CLI tooling) follows the parallel workflow in [`ROOT_TDD.md`](./ROOT_TDD.md).
 
 ## Mandatory TDD workflow
 

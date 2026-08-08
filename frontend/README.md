@@ -13,7 +13,7 @@ dependency); the Compact contract is integrated behind a single seam in
 
 - Next.js 15 (App Router) + React 19 + TypeScript
 - Tailwind CSS 3.4, Framer Motion, lucide-react
-- `velo` (`file:../velo`) — deterministic forensic engine + sealing
+- `velo` (`file:..`, the repo root) — deterministic forensic engine + sealing
 - `@midnight-ntwrk/dapp-connector-api` — Lace + 1AM wallet connection (v4)
 - **Vitest + React Testing Library** — unit and integration tests
 - **Playwright** — end-to-end tests
@@ -32,10 +32,12 @@ No frontend feature, component, or module may be added without its corresponding
 ## Run
 
 ```bash
-# the main repo must be built first (it ships compiled dist to import)
-(cd ../velo && npm install && npm run build)
-
+# from the repo root — npm workspaces installs both packages, and the root
+# build produces the dist/ this app imports
 npm install
+npm run build
+
+# then, from this directory
 npm run dev        # http://localhost:3000
 ```
 
@@ -44,7 +46,7 @@ npm run dev        # http://localhost:3000
 - **Landing** — pitch + generated hero visual (no external assets)
 - **Connect** — Lace (`window.midnight.mnLace`) and 1AM (`window.midnight['1am']`)
   via the DApp Connector v4 API, plus an anonymous-examiner demo mode
-- **Case ledger** — 13 synthetic cases, search, verdict filters, grid/table
+- **Case ledger** — 14 synthetic cases, search, verdict filters, grid/table
 - **Case detail** — live engine run (detectors, score, corroboration, custody),
   then the examiner workflow: **seal → attest → verify**, including an
   adversarial tamper demo (swap verdict / corrupt fingerprint / truncate chain)
@@ -53,12 +55,15 @@ npm run dev        # http://localhost:3000
 
 ## The attestation seam
 
-The Compact contract (`contracts/velo.compact` in the main repo) is compiled
-separately. Until it deploys, `/api/attest` computes the commitment locally
-(hiding + binding over the sealed fingerprint) and returns
-`status: "local_pending_contract"` — honest, no simulated chain interaction.
-`src/lib/contract.ts` is the single function to swap when the contract
-artifacts exist.
+The Compact contract (`contracts/velo.compact` in the main repo) is **deployed
+on `preview`** — the on-chain runbook is [`docs/CHAIN.md`](../docs/CHAIN.md).
+Attestations are written by the local CLI (`deploy/attest-case.ts`), and the
+ledger is read by `GET /api/chain` (no wallet, no keys, no fees). Until the
+browser-side wiring lands (MVP Phase 4, see
+[`docs/PRD_MVP.md`](../docs/PRD_MVP.md)), `/api/attest` computes the
+commitment locally and returns `status: "local_pending_contract"` — honest, no
+simulated chain interaction. `src/lib/contract.ts` is the placeholder seam that
+phase retires.
 
 ## Test
 
