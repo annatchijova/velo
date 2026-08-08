@@ -13,7 +13,7 @@ Every claim below is either **verified** (we ran it and read the output), a
 **code fact** (read in the exact shipped source, not from memory or from a
 document describing it), or **explicitly marked as not yet established**. That
 distinction is not decoration — it is the same epistemic ladder the project's
-own four red team rounds run on, and applying it to our own status report is
+own six red team rounds run on, and applying it to our own status report is
 the only version of this document that would survive being checked.
 
 Where a number comes from a specific artifact in the repository, the artifact
@@ -41,7 +41,7 @@ network. The properties are the product. The UI is how you look at them.
 | Local-first frontend (Next.js 15 / React 19) | **Yes** — landing, wallet connect (Lace + 1AM via DApp Connector v4), case ledger, live engine run, seal → attest → verify, adversarial tamper demo |
 | Synthetic corpus with zero PII | **Yes** — 14 cases across all four verdicts, 6 expert-witness profiles |
 | Absence of evidence is distinguished from evidence of absence | **Yes** — declared coverage gaps degrade a *negative* finding to `ABSTAIN` and are sealed into the fingerprint. See §3.10 |
-| Adversarial audit of our own system | **Yes** — 5 red team rounds, 29 findings, 11 attack vectors executed and defeated |
+| Adversarial audit of our own system | **Yes** — 6 red team rounds, 35 findings, 11 attack vectors executed and defeated |
 | End-to-end proof against the deployed contract | **Yes** — a sealed case was proved and attested on `preview`; commitment `632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b` records `MALICE`, readable by anyone. Via the CLI (`deploy/attest-case.ts`); the browser-signed path is **not** built. See §5 |
 | Reading the ledger back | **Yes** — `GET /api/chain`, MCP `chain_status` / `lookup_commitment`, and `scripts/verify-chain-read.mjs`. No wallet, keys or fees needed to read |
 
@@ -308,7 +308,7 @@ deliberate architecture choice, not an omission: a system whose output is
 evidence cannot have a probabilistic component between the input and the
 verdict.
 
-### 3.7 Adversarial audit of our own system: five rounds
+### 3.7 Adversarial audit of our own system: six rounds
 
 | Round | Scope | Findings | Result |
 |---|---|---|---|
@@ -317,9 +317,9 @@ verdict.
 | 3 | Web / loopback surface | 2 (**F14–F15**) | 1 fixed, 1 attack falsified, 1 architectural gap left open |
 | 4 | Deploy tooling and the wallet that holds real value | 3 (**F16–F18**) | 1 mitigated, 2 fixed |
 
-**Totals across the five rounds: 30 entries / 29 findings. 23 fixed, 1
+**Totals across the six rounds: 36 entries / 35 findings. 26 fixed, 1
 mitigated, 4 documented as standing limitations, 1 attack falsified and kept in
-the record, 1 reclassified as business framing rather than a defect. 11 separate
+the record, 1 reclassified as business framing rather than a defect, 3 open and documented (round 6). 11 separate
 attack vectors were executed and defeated** — including path traversal across six
 encodings, chain reordering, mid-chain insertion, chain grafting onto another
 case, truncation without rehash, a `MALICE`-from-one-detector attempt, and a
@@ -602,8 +602,8 @@ the *state*, not the stopwatch.
 Age is not the measure; what is *bound* is the measure. The contract is
 deployed, the commitment covers six elements including the verdict itself, the
 admissibility rule is a circuit constraint rather than a policy note, and the
-system has been attacked five times by its own authors with 29 findings written
-down and 23 fixed. Look at what we recorded as broken — that is the part that
+system has been attacked six times by its own authors with 35 findings written
+down and 26 fixed. Look at what we recorded as broken — that is the part that
 takes time and cannot be borrowed.
 
 **"What stops you from just attesting whatever you want?"**

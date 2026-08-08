@@ -13,7 +13,7 @@ Cada afirmación de acá abajo es una de tres cosas: **verificada** (lo corrimos
 leímos la salida), un **hecho de código** (leído en el fuente exacto que se
 entrega, no de memoria ni del documento que lo describe), o está **marcada
 explícitamente como todavía no establecida**. Esa distinción no es decorativa:
-es la misma escalera epistémica que usan las cinco rondas de red team del
+es la misma escalera epistémica que usan las seis rondas de red team del
 proyecto, y aplicarla a nuestro propio informe de estado es la única versión de
 este documento que sobreviviría a que la chequeen.
 
@@ -43,7 +43,7 @@ cómo se las mira.
 | Frontend local-first (Next.js 15 / React 19) | **Sí** — landing, conexión de wallet (Lace y 1AM vía DApp Connector v4), ledger de casos, corrida en vivo del motor, sellar → atestar → verificar, demo adversarial de manipulación |
 | Corpus sintético sin PII | **Sí** — 14 casos cubriendo los cuatro veredictos, 6 perfiles de perito |
 | Se distingue ausencia de evidencia de evidencia de ausencia | **Sí** — los huecos de cobertura declarados degradan un hallazgo *negativo* a `ABSTAIN` y quedan sellados en el fingerprint. Ver §3.10 |
-| Auditoría adversarial de nuestro propio sistema | **Sí** — 5 rondas de red team, 29 hallazgos, 11 vectores de ataque ejecutados y bloqueados |
+| Auditoría adversarial de nuestro propio sistema | **Sí** — 6 rondas de red team, 35 hallazgos, 11 vectores de ataque ejecutados y bloqueados |
 | Prueba end-to-end contra el contrato desplegado | **Sí** — un caso sellado fue probado y atestado en `preview`; el commitment `632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b` registra `MALICE`, legible por cualquiera. Vía CLI (`deploy/attest-case.ts`); el camino firmado desde el navegador **no** está construido. Ver §5 |
 | Lectura del ledger | **Sí** — `GET /api/chain`, MCP `chain_status` / `lookup_commitment`, y `scripts/verify-chain-read.mjs`. Leer no requiere wallet, claves ni fees |
 
@@ -325,7 +325,7 @@ narración. Es una decisión de arquitectura deliberada, no una omisión: un sis
 cuya salida es evidencia no puede tener un componente probabilístico entre la
 entrada y el veredicto.
 
-### 3.7 Auditoría adversarial de nuestro propio sistema: cinco rondas
+### 3.7 Auditoría adversarial de nuestro propio sistema: seis rondas
 
 | Ronda | Alcance | Hallazgos | Resultado |
 |---|---|---|---|
@@ -334,10 +334,10 @@ entrada y el veredicto.
 | 3 | Superficie web / loopback | 2 (**F14–F15**) | 1 arreglado, 1 ataque falsado, 1 hueco arquitectónico abierto |
 | 4 | Tooling de deploy y la wallet que maneja valor real | 3 (**F16–F18**) | 1 mitigado, 2 arreglados |
 
-**Totales de las cinco rondas: 30 entradas / 29 hallazgos. 23 arreglados, 1
+**Totales de las seis rondas: 36 entradas / 35 hallazgos. 26 arreglados, 1
 mitigado, 4 documentados como limitaciones vigentes, 1 ataque falsado y
 conservado en el registro, 1 reclasificado como encuadre de negocio y no como
-defecto. Se ejecutaron y bloquearon 11 vectores de ataque distintos** — entre ellos path
+defecto, 3 abiertos y documentados (ronda 6). Se ejecutaron y bloquearon 11 vectores de ataque distintos** — entre ellos path
 traversal en seis codificaciones, reordenamiento de la cadena, inserción en el
 medio, injerto de cadena en otro caso, truncamiento sin rehash, un intento de
 `MALICE` con un solo detector, y un barrido de monotonicidad sobre los 19×19
@@ -627,8 +627,8 @@ Lo que este documento afirma es el *estado*, no el cronómetro.
 La edad no es la medida; la medida es *qué queda atado*. El contrato está
 desplegado, el commitment cubre seis elementos incluyendo el veredicto mismo, la
 regla de admisibilidad es una restricción de circuito y no una nota de política,
-y el sistema fue atacado cinco veces por sus propios autores con 29 hallazgos
-escritos y 23 arreglados. Miren lo que registramos como roto: esa es la parte
+y el sistema fue atacado seis veces por sus propios autores con 35 hallazgos
+escritos y 26 arreglados. Miren lo que registramos como roto: esa es la parte
 que lleva tiempo y no se puede pedir prestada.
 
 **"¿Qué les impide atestar lo que se les cante?"**
