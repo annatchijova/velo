@@ -256,7 +256,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
           <li><span class="dot y"></span><span data-es-html="<b>Servidor MCP</b> — superficie de tools con forma de wallet: el activo es un caso sellado, no un token"><b>MCP server</b> — wallet-shaped tool surface: the asset is a sealed case, not a token</span></li>
           <li><span class="dot y"></span><span data-es-html="<b>Frontend local-first</b> — Next.js 15 / React 19, Lace y 1AM vía DApp Connector v4, sellar → atestar → verificar, demo adversarial de manipulación"><b>Local-first frontend</b> — Next.js 15 / React 19, Lace and 1AM via DApp Connector v4, seal → attest → verify, adversarial tamper demo</span></li>
           <li><span class="dot y"></span><span data-es-html="<b>Corpus sintético sin PII</b> — 14 casos cubriendo los cuatro veredictos, 6 perfiles de perito"><b>Synthetic corpus, zero PII</b> — 14 cases across all four verdicts, 6 examiner profiles</span></li>
-          <li><span class="dot y"></span><span data-es-html="<b>Auditoría adversarial propia</b> — 4 rondas, 27 hallazgos, 11 vectores bloqueados"><b>Adversarial audit of ourselves</b> — 4 rounds, 27 findings, 11 vectors defeated</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Auditoría adversarial propia</b> — 5 rondas, 29 hallazgos, 11 vectores bloqueados"><b>Adversarial audit of ourselves</b> — 5 rounds, 29 findings, 11 vectors defeated</span></li>
           <li><span class="dot y"></span><span data-es-html="<b>Prueba end-to-end contra el contrato desplegado</b> — sí. Un caso sellado fue probado y atestado en <code>preview</code>; el commitment <code>632dbf01…</code> registra <code>MALICE</code>, legible por cualquiera, vía la CLI (<code>deploy/attest-case.ts</code>). El camino firmado desde el navegador es el próximo hito."><b>End-to-end proof against the deployed contract</b> — yes. A sealed case was proved and attested on <code>preview</code>; commitment <code>632dbf01…</code> records <code>MALICE</code>, readable by anyone, via the CLI (<code>deploy/attest-case.ts</code>). The browser-signed path is the next milestone.</span></li>
         </ul>
       </div>
@@ -406,8 +406,8 @@ entry_hash   = sha256(canonicalize({
 <section>
   <div class="wrap">
     <p class="eyebrow" data-es="Auditoría adversarial">Adversarial audit</p>
-    <h2 data-es="Cuatro rondas contra nuestro propio sistema">Four rounds against our own system</h2>
-    <p class="lede" data-es="Cuatro rondas: 28 entradas, 27 hallazgos. 21 arreglados, 1 mitigado, 4 documentados como limitaciones vigentes, 1 ataque falsado y conservado en el registro.">Four rounds: 28 entries, 27 findings. 21 fixed, 1 mitigated, 4 documented as standing limitations, 1 attack falsified and kept in the record.</p>
+    <h2 data-es="Cinco rondas contra nuestro propio sistema">Five rounds against our own system</h2>
+    <p class="lede" data-es="Cinco rondas: 30 entradas, 29 hallazgos. 23 arreglados, 1 mitigado, 4 documentados como limitaciones vigentes, 1 ataque falsado y conservado en el registro.">Five rounds: 30 entries, 29 findings. 23 fixed, 1 mitigated, 4 documented as standing limitations, 1 attack falsified and kept in the record.</p>
 
     <div class="card">
       <div class="tscroll">
@@ -580,7 +580,7 @@ entry_hash   = sha256(canonicalize({
     <div class="grid2">
       <div class="card">
         <h3 data-es="«Tiene diez horas de vida. ¿Cómo va a ser serio?»">"It's ten hours old. How can it be serious?"</h3>
-        <p style="font-size:14.5px" class="muted" data-es="La edad no es la medida; la medida es qué queda atado. El contrato está desplegado, el commitment cubre seis elementos incluyendo el veredicto mismo, la regla de admisibilidad es una restricción de circuito, y el sistema fue atacado cuatro veces por sus propios autores con 27 hallazgos escritos y 21 arreglados. Miren lo que registramos como roto: esa es la parte que lleva tiempo y no se puede pedir prestada.">Age is not the measure; what is bound is the measure. The contract is deployed, the commitment covers six elements including the verdict itself, the admissibility rule is a circuit constraint, and the system has been attacked four times by its own authors with 27 findings written down and 21 fixed. Look at what we recorded as broken — that is the part that takes time and cannot be borrowed.</p>
+        <p style="font-size:14.5px" class="muted" data-es="La edad no es la medida; la medida es qué queda atado. El contrato está desplegado, el commitment cubre seis elementos incluyendo el veredicto mismo, la regla de admisibilidad es una restricción de circuito, y el sistema fue atacado cinco veces por sus propios autores con 29 hallazgos escritos y 23 arreglados. Miren lo que registramos como roto: esa es la parte que lleva tiempo y no se puede pedir prestada.">Age is not the measure; what is bound is the measure. The contract is deployed, the commitment covers six elements including the verdict itself, the admissibility rule is a circuit constraint, and the system has been attacked five times by its own authors with 29 findings written down and 23 fixed. Look at what we recorded as broken — that is the part that takes time and cannot be borrowed.</p>
       </div>
       <div class="card">
         <h3 data-es="«¿Qué les impide atestar lo que se les cante?»">"What stops you from just attesting whatever you want?"</h3>
