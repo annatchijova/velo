@@ -11,6 +11,41 @@ evidencia de la que salió**.
 📄 **[English README](./README.md)** — versión completa, con diagramas, la API y las
 instrucciones de deploy.
 
+**Demo en vivo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
+
+![VELO — del registro de casos a un veredicto MALICIA que se gana, y una ABSTENCIÓN cuando la cadena de custodia está rota](./visual/velo-demo-ES.gif)
+
+## Explorar
+
+Cada página es bilingüe (EN/ES).
+
+- **[App en vivo](https://velo-1028999311218.us-central1.run.app)** — el frontend corriendo en Google Cloud Run, leyendo el ledger real on-chain.
+- **[Pitch deck](https://annatchijova.github.io/vigia/velo-pitch-deck.html)** — el deck de slides bilingüe.
+- **[Diagrama de arquitectura](https://annatchijova.github.io/vigia/veloarchitecture-diagram.html)** — la vista de una imagen: "un lado prueba, el otro queda sellado".
+- **[Arquitectura](https://annatchijova.github.io/vigia/velo-architecture.html)** — el documento completo, desde [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+- **[Estado técnico](https://annatchijova.github.io/vigia/velotechnical-status.html)** — qué es real y qué está pendiente, capa por capa.
+- **[Modelo de identidad](https://annatchijova.github.io/vigia/velo-identity.html)** — autorización de perito acreditado, no identificación biométrica.
+- **[Caso de negocio](https://annatchijova.github.io/vigia/velo-business.html)** — la capa de reputación forense y sus casos de uso.
+- **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — las capas entregadas y lo que viene.
+
+## Levantarlo localmente
+
+No hacen falta secretos para ver la demo — la wallet y las claves solo importan para *atestar* (el write path), nunca para correr la UI ni leer la cadena.
+
+```bash
+git clone https://github.com/annatchijova/velo.git
+cd velo
+
+npm install        # workspaces de npm: instala el motor root + el frontend
+npm run build      # compila dist/, que el frontend importa como `velo/*`
+
+cd frontend
+npm run dev        # http://localhost:3000
+```
+
+Requiere Node 20+. La primera carga compila on-demand, así que tarda unos
+segundos — es Next.js buildeando, no está colgado.
+
 ---
 
 ## El problema
@@ -111,7 +146,7 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 | Atestación on-chain | **Funciona** vía CLI (`deploy/attest-case.ts`). Una atestación real registrada |
 | Lectura del ledger | **Funciona** — `GET /api/chain`, MCP `chain_status` |
 | Firma desde el navegador | **No construida** — ver Limitaciones |
-| 4 rondas de red team | **28 hallazgos**, todos los defectos de código arreglados |
+| Red team | **6 rondas** — reportes completos RT1–RT6 abajo |
 
 ---
 
@@ -210,6 +245,8 @@ Toda bilingüe (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
 [`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
+[`RED TEAM 5`](./docs/RED_TEAM_ROUND_5.md) ·
+[`RED TEAM 6`](./docs/RED_TEAM_ROUND_6.md) ·
 [`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
 [`PRD MVP`](./docs/PRD_MVP.md) · [`ADRs MVP`](./docs/ADRS_001_006.md)
 
