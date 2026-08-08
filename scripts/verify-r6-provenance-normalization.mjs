@@ -65,12 +65,37 @@ const A = run("A) same physical source, provenance roots differ only by case:", 
 const B = run("B) control — identical provenance roots:", [a1, a3]);
 const C = run("C) source-field fallback IS case-folded (asymmetry check):", [b1, b2]);
 
+// The predictions above describe the DEFECT, stated before the experiment
+// was run, as the method requires. They are left exactly as written — that
+// is the audit trail, and rewriting them to match today's behaviour would
+// destroy the evidence that the finding was real.
 const predictionA = A.corroborationCount === 2 && A.verdict === "MALICE";
 const predictionB = B.corroborationCount === 1 && B.verdict === "SUSPICION";
 const predictionC = C.corroborationCount === 1;
 
 console.log();
-console.log(`prediction A (case variants count as 2 sources, MALICE): ${predictionA ? "HELD" : "FALSIFIED"}`);
-console.log(`prediction B (identical roots count as 1, SUSPICION):    ${predictionB ? "HELD" : "FALSIFIED"}`);
-console.log(`prediction C (source fallback dedupes case variants):    ${predictionC ? "HELD" : "FALSIFIED"}`);
-process.exit(predictionA && predictionB && predictionC ? 0 : 1);
+console.log("Original round 6 predictions (describing the DEFECT, before the fix):");
+console.log(`  A (case variants count as 2 sources, MALICE): ${predictionA ? "HELD" : "FALSIFIED"}`);
+console.log(`  B (identical roots count as 1, SUSPICION):    ${predictionB ? "HELD" : "FALSIFIED"}`);
+console.log(`  C (source fallback dedupes case variants):    ${predictionC ? "HELD" : "FALSIFIED"}`);
+
+// After the fix, A must FALSIFY: two roots differing only by case are one
+// physical source, so they must count as one and hold at SUSPICION. B and C
+// were never defect-dependent — they must still hold, or the fix broke
+// something it was not supposed to touch.
+const fixHolds =
+  A.corroborationCount === 1 && A.verdict === "SUSPICION" && predictionB && predictionC;
+
+console.log();
+console.log("Post-fix expectation (what this script now asserts):");
+console.log(`  case-variant roots collapse to ONE source, SUSPICION: ${fixHolds ? "HOLDS" : "BROKEN"}`);
+console.log(
+  fixHolds
+    ? "\nF20 fix verified. Prediction A falsifying is the point: the defect it described is gone."
+    : "\nREGRESSION: the F20 normalization no longer holds. See docs/RED_TEAM_ROUND_6.md.",
+);
+
+// Exit 0 when the FIX holds, matching every other scripts/verify-*.mjs.
+// Before this, the script exited 0 only while the defect was still present,
+// so a correct repo read as a failing one.
+process.exit(fixHolds ? 0 : 1);
