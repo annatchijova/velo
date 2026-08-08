@@ -366,7 +366,7 @@ the failure mode this whole system exists to prevent.
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
 | Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
-| Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. One attestation is live on preview. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
+| Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. **Two attestations are live on preview**, both `MALICE`. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
 | Writing from the browser UI | **Not wired** — `POST /api/attest` still computes a local commitment; the 1AM-signed path does not exist yet |
 | Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
@@ -381,6 +381,40 @@ wallet sign the transaction. Attesting today goes through
 analyst's own machine. Architecturally that is the CLI equivalent of the same
 thing, but it is not the same as the wallet-connected UI the demo shows, and
 this table would rather say so than let one imply the other.
+
+### The write path, end to end
+
+Not a diagram of the intended flow — the actual terminal, on `preview`.
+
+![Attesting a sealed case: the CLI balances and submits the transaction that carries the ZK proof. The salt is generated locally and the line reads "32 bytes, never printed" — it is the one value that must never leave the analyst's machine](./visual/attest-submitting-proof.png)
+
+`attest()` proving and submitting. The salt line is the point: it is generated
+locally and never printed, because knowing it is what would let someone confirm
+a guess at the values behind the commitment.
+
+![Independent verification against the deployed contract: attestationCount 2, two commitments each mapping to MALICE, ending in "OK: the contract is deployed and its ledger is readable"](./visual/attest-verified-onchain.png)
+
+Then the same claim checked from the other side, by a script that shares no
+state with the one that wrote it:
+
+```
+attestationCount : 2
+attestations     : 2
+   1b54f14996b871ebc052789f604472b827aa9b98acf7bf1f70b39fa80d92940a  ->  MALICE
+   632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b  ->  MALICE
+```
+
+Reproduce it yourself — no wallet, no keys, no proof server, no fees:
+
+```bash
+npm run build && node scripts/verify-chain-read.mjs
+```
+
+What those two lines establish: two commitments exist on `preview`, each bound
+to a `MALICE` verdict, each carrying a proof that the Daubert gate held when it
+was written. What they do **not** establish is who produced the analyses behind
+them, or that those analyses are correct — the chain shows that someone
+attested, under the circuit's constraints, and nothing more.
 
 ## Repository
 

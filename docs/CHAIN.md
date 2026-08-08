@@ -81,7 +81,9 @@ node scripts/verify-chain-read.mjs
 ```
 
 ```
-attestationCount : 1
+attestationCount : 2
+attestations     : 2
+   1b54f14996b871ebc052789f604472b827aa9b98acf7bf1f70b39fa80d92940a  ->  MALICE
    632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b  ->  MALICE
 ```
 
