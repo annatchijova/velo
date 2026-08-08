@@ -39,7 +39,7 @@ import {
 } from "@effectstream/midnight-contracts";
 import * as Velo from "../contracts/managed/velo/contract/index.js";
 import { loadBundle } from "../src/mcp/store.js";
-import { emptyPrivateState, makeWitnesses } from "../src/witness/witnesses.js";
+import { emptyPrivateState, getOrCreateSalt, makeWitnesses, type VeloPrivateState } from "../src/witness/witnesses.js";
 import { midnightNetworkConfig } from "./network-config.js";
 import { safeNetworkConfigForLogging, withSeedRedaction } from "./redact-seed.js";
 
@@ -149,7 +149,29 @@ async function main(): Promise<void> {
     CompiledContract.withCompiledFileAssets(ZK_ASSETS),
   );
 
-  await providers.privateStateProvider.set(PRIVATE_STATE_ID, emptyPrivateState() as never);
+  // The private state store is scoped by contract address, so the scope has
+  // to be set before anything is read or written through it.
+  await providers.privateStateProvider.setContractAddress(address);
+
+  // Seed the salt BEFORE proving, rather than letting the witnesses mint one
+  // lazily during proof generation.
+  //
+  // `getOrCreateSalt` generates a salt only when the private state does not
+  // already carry one for this case. If the state went in empty, the first
+  // witness call would create it and every later call in the same execution
+  // would depend on the runtime threading that updated state back through —
+  // and if it did not, different witnesses would see different salts and the
+  // commitment would be computed over values that never coexisted. Seeding it
+  // here removes that dependency entirely.
+  //
+  // Reading the existing state first is what makes re-attesting the same case
+  // reproducible: the salt is the one value that cannot be recovered from the
+  // bundle, so overwriting it would permanently orphan the commitment from its
+  // own author (see the note on getOrCreateSalt in src/witness/witnesses.ts).
+  const storedState = (await providers.privateStateProvider.get(PRIVATE_STATE_ID)) as VeloPrivateState | null;
+  const { state: privateState, salt } = getOrCreateSalt(storedState ?? emptyPrivateState(), bundle.caseId);
+  await providers.privateStateProvider.set(PRIVATE_STATE_ID, privateState as never);
+  console.log(`salt            : ${storedState?.salts?.[bundle.caseId] ? "reused from private state" : "generated now"} (${salt.length} bytes, never printed)`);
 
   console.log("Submitting attest() — this generates a ZK proof, which takes a while...\n");
   const result = await submitCallTx(providers as never, {
