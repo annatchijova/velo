@@ -1,0 +1,13 @@
+# Bun resolves dependencies for deploy/*.ts (the scripts that talk to
+# Midnight). Without this, Bun's auto-install pulls newer copies into its
+# own global cache and ignores what npm put in node_modules — observed
+# drift: compact-js 2.5.1 -> 2.5.3, ledger-v8 8.1.0 -> 8.1.1,
+# onchain-runtime-v3 3.0.0 -> 3.1.0.
+#
+# That is not cosmetic. The Midnight team names "cross-line version
+# mismatches" as a cause of `Custom error: 170` (InvalidDustSpendProof),
+# and the compatibility matrix pins compact-js to 2.5.1 for Preview.
+# Deploy and attest must run against the same versions the lockfile and
+# the matrix agree on, not whatever is newest.
+[install]
+auto = "disable"
