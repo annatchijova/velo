@@ -3,6 +3,15 @@ import { createHash, randomBytes } from "node:crypto";
 /**
  * Contract seam — Capa 2 (the Compact gate).
  *
+ * STATUS (MVP Phase 4): RETIRED. Nothing imports this module anymore. The
+ * browser `/api/attest` route that used `computeCommitment` was deleted:
+ * attestation happens on the expert's machine via the local CLI
+ * (`deploy/attest-case.ts`), and the web app reads the real on-chain state
+ * through `GET /api/chain` and the `/verify` panel. This placeholder is kept
+ * only because the future browser-signed path (post-MVP, ADR-003 evolution)
+ * may plug back in here; until then it is dead code by design, and its
+ * F24-fixed return shape (no salt) is pinned by contract.test.ts.
+ *
  * The Compact contract (`contracts/velo.compact`) is compiled AND deployed
  * to Midnight `preview` (address
  * `46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`), and a

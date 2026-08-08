@@ -14,8 +14,8 @@ import {
   FileX2,
   Link2Off,
 } from "lucide-react";
-import type { CaseFile, SealedBundle, AttestResponse, VerifyResponse } from "@/lib/types";
-import { sealCase, verifyBundle, attestCase } from "@/lib/api";
+import type { CaseFile, SealedBundle, VerifyResponse } from "@/lib/types";
+import { sealCase, verifyBundle } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
@@ -23,7 +23,7 @@ import { shortHash } from "@/lib/utils";
 import { VerdictBadge } from "@/components/VerdictBadge";
 
 type TamperMode = "none" | "verdict" | "fingerprint" | "truncate";
-type Step = "idle" | "sealing" | "sealed" | "attesting" | "attested" | "verifying" | "verified";
+type Step = "idle" | "sealing" | "sealed" | "verifying" | "verified";
 
 const TAMPER_OPTIONS: { mode: TamperMode; labelKey: "action.swapVerdict" | "action.corruptFingerprint" | "action.truncateCustody"; icon: typeof Wand2 }[] = [
   { mode: "verdict", labelKey: "action.swapVerdict", icon: Wand2 },
@@ -38,7 +38,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
 
   const [step, setStep] = useState<Step>("idle");
   const [bundle, setBundle] = useState<SealedBundle | null>(null);
-  const [attestation, setAttestation] = useState<AttestResponse | null>(null);
+  const [showAttestInfo, setShowAttestInfo] = useState(false);
   const [verification, setVerification] = useState<VerifyResponse | null>(null);
   const [tamper, setTamper] = useState<TamperMode>("none");
   const [busy, setBusy] = useState(false);
@@ -48,7 +48,7 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
     try {
       const res = await sealCase(caseFile);
       setBundle(res.bundle as SealedBundle);
-      setAttestation(null);
+      setShowAttestInfo(false);
       setVerification(null);
       setTamper("none");
       setStep("sealed");
@@ -64,25 +64,16 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
     }
   }
 
-  async function handleAttest() {
+  /**
+   * The browser attest seam was retired (MVP Phase 4, AC-J1.4 supersession):
+   * attesting needs the local proof server, the wallet key store, and the
+   * compiled circuit — all of which live on the expert's machine by design
+   * (ADR-003). This panel now explains that honestly instead of computing a
+   * fake local commitment.
+   */
+  function handleAttest() {
     if (!bundle) return;
-    if (!isAttestor) {
-      push(t("toast.attestRequiresWallet"), "error");
-      return;
-    }
-    setBusy(true);
-    setStep("attesting");
-    try {
-      const res = await attestCase(bundle, session?.name ?? "wallet");
-      setAttestation(res);
-      setStep("attested");
-      push(t("toast.commitmentComputed"), "success");
-    } catch (err) {
-      setStep("sealed");
-      push(err instanceof Error ? err.message : t("toast.attestationFailed"), "error");
-    } finally {
-      setBusy(false);
-    }
+    setShowAttestInfo((v) => !v);
   }
 
   async function handleVerify(mode: TamperMode) {
@@ -177,21 +168,17 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
               </div>
             </div>
 
-            {/* Step 2 — Attest */}
+            {/* Step 2 — Attest (local CLI, per ADR-003) */}
             <button
               onClick={handleAttest}
-              disabled={busy || walletRequired}
-              className="btn-ghost flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold disabled:opacity-50"
+              disabled={busy}
+              className="btn-ghost flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold"
             >
-              {busy && step === "attesting" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              <Eye className="h-4 w-4" />
               {t("detail.attest")} {walletRequired ? `· ${t("action.connectFirst")}` : `· ${session?.name}`}
             </button>
 
-            {attestation && (
+            {showAttestInfo && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -199,18 +186,38 @@ export function ActionPanel({ caseFile }: { caseFile: CaseFile }) {
               >
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-brand-indigo/15 px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-brand-deep">
-                    {t("detail.commitment")}
+                    {t("detail.attest")}
                   </span>
                   <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-amber-700">
-                    {t("detail.pending")}
+                    {t("action.attestLocalOnly")}
                   </span>
                 </div>
-                <p className="mt-2 break-all font-mono text-[12px] text-ink-900">
-                  {attestation.commitment}
-                </p>
-                <p className="mt-2 text-[11.5px] leading-relaxed text-ink-500">
-                  {attestation.note}
-                </p>
+                {isAttestor ? (
+                  <>
+                    <p className="mt-2 text-[12.5px] leading-relaxed text-ink-700">
+                      {t("action.attestHowExpert")}
+                    </p>
+                    <pre className="mt-2 overflow-x-auto rounded-xl bg-ink-900 px-3 py-2.5 font-mono text-[11.5px] leading-relaxed text-white">
+                      {`bun run deploy/attest-case.ts ${caseFile.case_id}`}
+                    </pre>
+                    <p className="mt-2 text-[11.5px] leading-relaxed text-ink-500">
+                      {t("action.attestHowEnv")}
+                    </p>
+                    <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-500">
+                      {t("action.attestHowReplay")}
+                    </p>
+                    <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-500">
+                      {t("action.attestHowView")}{" "}
+                      <a href="/verify" className="font-bold text-brand-deep underline">
+                        /verify
+                      </a>
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-ink-700">
+                    {t("action.attestHowDemo")}
+                  </p>
+                )}
               </motion.div>
             )}
 

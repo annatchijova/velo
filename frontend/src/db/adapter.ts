@@ -45,11 +45,13 @@ export interface DatabaseAdapter {
   listSealedBundles(filter: SealedBundleFilter): Promise<{ rows: SealedBundleRow[]; total: number }>;
   getSealedBundle(id: string): Promise<SealedBundleRow | null>;
   getSealedBundleByHash(bundleHash: string): Promise<SealedBundleRow | null>;
+  getSealedBundleByCommitment(commitment: string): Promise<SealedBundleRow | null>;
   recordAttestation(
     id: string,
     attestation: { txHash: string; commitment: string },
   ): Promise<SealedBundleRow | null>;
   getExpert(walletAddress: string): Promise<ExpertRow | null>;
+  getExpertByApiKeyHash(apiKeyHash: string): Promise<ExpertRow | null>;
   insertExpert(row: NewExpertRow): Promise<ExpertRow>;
   setExpertApiKeyHash(walletAddress: string, apiKeyHash: string): Promise<void>;
 }
@@ -127,6 +129,14 @@ function adapterFor(kind: AdapterKind, env: Record<string, string | undefined>):
         .limit(1);
       return rows[0] ?? null;
     },
+    async getSealedBundleByCommitment(commitment) {
+      const rows = await db
+        .select()
+        .from(sealedBundles)
+        .where(eq(sealedBundles.attest_commitment, commitment))
+        .limit(1);
+      return rows[0] ?? null;
+    },
     async recordAttestation(id, attestation) {
       const updated = await db
         .update(sealedBundles)
@@ -144,6 +154,14 @@ function adapterFor(kind: AdapterKind, env: Record<string, string | undefined>):
         .select()
         .from(experts)
         .where(eq(experts.wallet_address, walletAddress))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+    async getExpertByApiKeyHash(apiKeyHash) {
+      const rows = await db
+        .select()
+        .from(experts)
+        .where(eq(experts.api_key_hash, apiKeyHash))
         .limit(1);
       return rows[0] ?? null;
     },
