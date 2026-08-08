@@ -93,6 +93,32 @@ acá.
 Esa es la diferencia entre una regla y una garantía, y es la razón por la que el
 gate vive en el circuito y no en `scorer.ts`.
 
+**VERIFICADO POR INDUCCIÓN, no afirmado (2026-08-08).** Es la frase que más
+peso carga en el proyecto, así que era la única afirmación que no debía
+descansar en leer el código. `deploy/attest-forced-malice.ts` la ataca
+directamente contra el contrato desplegado en `preview`, salteando todos los
+controles de la aplicación: el motor no puede producir ese estado (`scorer.ts`
+degrada `MALICE` a `SUSPICION` con menos de dos fuentes) y `attest-case.ts` lo
+rechaza localmente, así que la sonda fuerza `corroborationCountWitness` a
+devolver `1` mientras pasa `MALICE` como argumento público. Solo se falsifica
+el conteo — un bundle que además mintiera sobre su fingerprint fallaría por
+otra razón y no probaría nada sobre corroboración. No queda nada entre la
+llamada y el circuito.
+
+La predicción se enunció antes de correr, y la transacción fue rechazada por
+el assert del propio circuito:
+
+```
+failed assert: MALICE requires at least 2 independent corroborating sources — the Daubert gate
+```
+
+La sonda reporta cualquiera de los dos resultados y sale con código distinto de
+cero si la cadena *acepta* la atestación forzada, diciendo que esta sección es
+falsa tal como está escrita — un experimento que solo puede confirmar no es un
+experimento. También distingue "rechazado por el gate" de "rechazado por otra
+razón", así una falla de dust o de red no puede leerse como un resultado
+verde.
+
 ### 2.3 Protección contra replay
 
 La ronda 2 (hallazgo **G2**) encontró que re-atestar una tupla idéntica

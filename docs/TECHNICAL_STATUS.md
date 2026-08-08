@@ -42,6 +42,7 @@ network. The properties are the product. The UI is how you look at them.
 | Synthetic corpus with zero PII | **Yes** — 14 cases across all four verdicts, 6 expert-witness profiles |
 | Absence of evidence is distinguished from evidence of absence | **Yes** — declared coverage gaps degrade a *negative* finding to `ABSTAIN` and are sealed into the fingerprint. See §3.10 |
 | Adversarial audit of our own system | **Yes** — 6 red team rounds, 35 findings, 11 attack vectors executed and defeated |
+| The Daubert gate holds against a direct attack | **Yes** — `deploy/attest-forced-malice.ts` forced `MALICE` with one source straight at the deployed circuit, bypassing the engine and every application check. Refused by the circuit's own assert. See §2.2 |
 | End-to-end proof against the deployed contract | **Yes** — a sealed case was proved and attested on `preview`; commitment `632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b` records `MALICE`, readable by anyone. Via the CLI (`deploy/attest-case.ts`); the browser-signed path is **not** built. See §5 |
 | Reading the ledger back | **Yes** — `GET /api/chain`, MCP `chain_status` / `lookup_commitment`, and `scripts/verify-chain-read.mjs`. No wallet, keys or fees needed to read |
 
@@ -89,6 +90,30 @@ source, because the constraint is part of what "valid proof" means here.
 
 This is the difference between a rule and a guarantee, and it is the reason the
 gate lives in the circuit instead of in `scorer.ts`.
+
+**VERIFIED BY INDUCTION, not asserted (2026-08-08).** This is the project's
+most load-bearing sentence, so it was the one claim that should not rest on
+reading the source. `deploy/attest-forced-malice.ts` attacks it directly
+against the deployed contract on `preview`, bypassing every application-level
+check: the engine cannot emit this state at all (`scorer.ts` degrades `MALICE`
+to `SUSPICION` below two sources) and `attest-case.ts` refuses locally, so the
+probe overrides `corroborationCountWitness` to return `1` while passing
+`MALICE` as the public argument. Only the count is forged — a bundle also
+lying about its fingerprint would fail for a different reason and prove
+nothing about corroboration. Nothing is left between the call and the circuit.
+
+The prediction was stated before running, and the transaction was refused by
+the circuit's own assert:
+
+```
+failed assert: MALICE requires at least 2 independent corroborating sources — the Daubert gate
+```
+
+The probe reports either outcome and exits non-zero if the chain *accepts* the
+forced attestation, stating that this section is false as written — an
+experiment that can only confirm is not an experiment. It also distinguishes
+"refused by the gate" from "refused for some other reason", so a dust or
+network failure cannot read as a green result.
 
 ### 2.3 Replay protection
 

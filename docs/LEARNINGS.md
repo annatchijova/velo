@@ -563,3 +563,85 @@ and exits cleanly. Confirmed on-chain and readable via
 Still not built: the browser-signed path. Attesting goes through the CLI with a
 seed-derived wallet on the analyst's own machine, not the analyst's 1AM wallet
 signing from the UI.
+
+---
+
+## L5 — Testing the sentence the whole project rests on
+
+**Date:** 2026-08-08 · **Outcome:** the central claim moved from *read* to
+*verified*.
+
+### What we hit
+
+Nothing failed. That is the point of this entry.
+
+Auditing our own status document, one line stood out — `TECHNICAL_STATUS` §2.2,
+the sentence the project's whole argument stands on:
+
+> An attempt to attest `MALICE` from a single source does not produce a
+> rejected transaction. **It fails to produce a proof at all.**
+
+That is the difference between "we have a rule" and "we have a guarantee". And
+it was a **CODE FACT**: read in `contracts/velo.compact`, never executed. Every
+lesser claim in the project had been run. The most important one had not.
+
+### Why that asymmetry is the dangerous shape
+
+It is the inverse of how attention usually gets allocated. The claims that feel
+risky get tested; the claim that feels obviously true — *we wrote the assert, we
+can see it right there* — gets assumed. But an assert that never executes is
+indistinguishable, from the outside, from an assert that does not work. And this
+was the one a jury would push on hardest.
+
+Reading the source proves the assert is *present*. It does not prove it is
+*reachable*, that the witness path feeds it the values we think, or that the
+runtime enforces it rather than optimizing it away.
+
+### What we did
+
+`deploy/attest-forced-malice.ts` attacks the gate directly against the deployed
+contract, with every application-level check deliberately bypassed:
+
+- the **engine** cannot produce this state — `scorer.ts` degrades `MALICE` to
+  `SUSPICION` below two sources, so no sealed bundle can carry it;
+- **`attest-case.ts`** refuses locally before submitting;
+- so the probe overrides `corroborationCountWitness` to return `1` while
+  passing `MALICE` as the public argument.
+
+Nothing was left between the call and the circuit.
+
+Two design choices worth naming. **Only the count is forged** — a bundle that
+also lied about its fingerprint would fail for a different reason and prove
+nothing about corroboration. And **the probe can fail**: it exits non-zero if
+the chain *accepts* the forced attestation and says §2.2 is false as written. An
+experiment that can only confirm is not an experiment.
+
+### Result
+
+Prediction stated before running. Refused by the circuit's own assert:
+
+```
+failed assert: MALICE requires at least 2 independent corroborating sources — the Daubert gate
+```
+
+§2.2 is now **CONFIRMED BY INDUCTION**, against the live network, with the
+engine and every application guard out of the loop.
+
+### The generalizable lesson
+
+**Test the claim you would least like to be wrong about, precisely because you
+would least like to be wrong about it.** Confidence is a reason to run the
+experiment, not a substitute for it.
+
+L2 was the same shape from the other direction: there, a green check in the
+wrong runtime created false confidence. Here, correct code created false
+confidence by never being exercised. Both come back to the rule these red team
+rounds are built on — *do not trust the description of a thing, read the thing*
+— with one addition earned tonight: **reading it is not running it.**
+
+### Still not exercised
+
+`lookupVerdict`, the contract's second circuit. Prover and verifier keys were
+generated for it at compile time and it has never been called. Its `assert`
+("no attestation exists for this commitment") is in exactly the state §2.2 was
+in this morning.
