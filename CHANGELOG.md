@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **MVP definition.** The deployed-app PRD with numbered acceptance criteria
+  (`docs/PRD_MVP.md`), six architecture decision records for the Vercel/Neon
+  MVP — hosting, static corpus, local attestation with web reads, wallet
+  identity without passwords, monorepo deploy config, expert API keys for the
+  CLI (`docs/ADRS_001_006.md`) — and a root-package TDD workflow extending
+  mandatory TDD beyond the frontend (`docs/ROOT_TDD.md`). README and frontend
+  README aligned with the current state (retired loopback UI, deployed
+  contract, 14 cases, 53 root tests).
 - **Absence of evidence.** The engine distinguishes "nothing was found" from
   "the source that would have settled it was never available". An analyst can
   declare `coverageGaps`; a declared gap degrades a **negative** finding to

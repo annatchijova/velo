@@ -2,6 +2,13 @@
 
 ## English
 
+**Current MVP plan.** The deployed-app roadmap — Vercel hosting, persisted and
+queryable sealed cases (Neon), wallet-based expert identity, and the
+attestation linkage with a public verification panel — is specified in
+[`PRD_MVP.md`](./PRD_MVP.md), with the decisions recorded in
+[`ADRS_001_006.md`](./ADRS_001_006.md). This document keeps the hackathon
+history and the longer horizon below.
+
 **Hackathon scope (net-new code only, written during the event).** The
 deterministic engine and local sealing (layers 1-2), the Compact contract
 enforcing the corroboration rule as a circuit constraint (layer 3), a local
@@ -28,6 +35,13 @@ mandatory TDD workflow documented in `docs/FRONTEND_TDD.md`.
   mainnet deployment.
 
 ## Español
+
+**Plan MVP actual.** La hoja de ruta de la app desplegada — hosting en Vercel,
+casos sellados persistidos y consultables (Neon), identidad de perito por
+wallet, y el vínculo de atestaciones con un panel público de verificación —
+está especificada en [`PRD_MVP.md`](./PRD_MVP.md), con las decisiones
+registradas en [`ADRS_001_006.md`](./ADRS_001_006.md). Este documento conserva
+la historia del hackathon y el horizonte más largo de abajo.
 
 **Alcance del hackathon (solo código net-new, escrito durante el evento).** El
 motor determinista y el sellado local (capas 1-2), el contrato Compact que
