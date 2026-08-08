@@ -18,6 +18,8 @@ publishing the evidence it came from**.
 
 **Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
 
+**Demo video: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — a walkthrough of the flow, end to end.
+
 ![VELO — from the case ledger to a MALICE verdict that is earned, and an ABSTAIN when the chain of custody is broken](./visual/velo-demo-EN.gif)
 
 ## Explore
