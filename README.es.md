@@ -82,6 +82,33 @@ Hoy un perito forense tiene dos opciones, y las dos son malas:
 Todo flujo de trabajo forense en producción elige una de las dos. VELO no elige
 ninguna.
 
+## En simple, paso a paso
+
+1. **El perito tiene el caso en su computadora** — discos, logs, capturas.
+   Nunca sale de ahí.
+2. **Le pide a VELO que lo analice**, hablándole por MCP (el mismo protocolo
+   que usan los agentes de IA para llamar herramientas) — el perito conecta
+   su cliente y llama a `seal_case`. No hay formulario ni upload.
+3. **Un motor matemático analiza la evidencia — no una IA.** Busca 5 tipos de
+   señales de manipulación con reglas fijas, sin redondeo ni azar: los
+   mismos datos siempre dan el mismo veredicto, en cualquier máquina.
+4. **El motor exige que el perito se cuestione a sí mismo.** Si el resultado
+   es el veredicto más grave (`MALICE`), el sistema lo degrada
+   automáticamente a menos que el perito haya escrito un argumento en contra
+   de su propio hallazgo.
+5. **Todo se sella localmente** con una cadena de hashes — como un precinto
+   que se rompe visiblemente si alguien lo toca después.
+6. **Se genera una prueba de conocimiento cero (ZK)** de que se siguieron las
+   reglas de admisibilidad, sin revelar una sola línea del caso.
+7. **Solo esa prueba, un hash (el "commitment") y el veredicto se publican en
+   Midnight.** La evidencia cruda jamás cruza esa línea.
+8. **Cualquiera —un juez, la contraparte, el público— puede verificar** que
+   el veredicto es real y que se siguieron las reglas, sin ver ni un archivo
+   del caso.
+
+Abajo está la versión técnica del mismo flujo, con el diagrama y las reglas
+exactas que el circuito hace cumplir.
+
 ## Cómo
 
 ![Arquitectura de VELO — en la máquina privada del perito, la evidencia pasa por el motor determinista, el gate de admisibilidad (NOISE / SUSPICION / MALICE / ABSTAIN), el sellado canónico y la cadena de custodia; un circuito ZK (contracts/velo.compact) fuerza el gate de Daubert (MALICE exige corroboración >= 2) y el assert de no-replay; solo cruzan el commitment, el veredicto declarado y una prueba por el borde disclose() (compiler-enforced) al ledger público de Midnight, verificable offline](./visual/arquitectura.png)

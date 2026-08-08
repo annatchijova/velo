@@ -89,6 +89,34 @@ options today, and both are bad:
 
 Every digital forensics workflow in production picks one. VELO picks neither.
 
+## In plain terms, step by step
+
+1. **The expert has the case on their own computer** — disk images, logs,
+   captures. It never leaves that machine.
+2. **They ask VELO to analyze it over MCP** (the same protocol AI agents use
+   to call tools) — the expert connects their client and calls `seal_case`.
+   There is no upload form.
+3. **A mathematical engine analyzes the evidence — not an AI.** It checks for
+   5 kinds of tampering signals using fixed rules, no rounding, no
+   randomness: the same input always produces the same verdict, on any
+   machine.
+4. **The engine forces the expert to argue against themselves.** If the
+   result qualifies for the most serious verdict (`MALICE`), the system
+   automatically downgrades it unless the expert has written a
+   counter-argument against their own finding.
+5. **Everything is sealed locally** with a hash chain — a seal that visibly
+   breaks if anyone touches it afterward.
+6. **A zero-knowledge proof is generated** that the admissibility rules were
+   followed, without revealing a single line of the case.
+7. **Only that proof, a hash (the "commitment"), and the verdict get
+   published to Midnight.** The raw evidence never crosses that line.
+8. **Anyone — a judge, opposing counsel, the public — can verify** that the
+   verdict is real and that the rules were followed, without seeing a single
+   file from the case.
+
+The technical version of the same flow — diagram and the exact rules the
+circuit enforces — follows below.
+
 ## How
 
 ![VELO architecture — on the examiner's private machine, evidence flows through the deterministic engine, the admissibility gate (NOISE / SUSPICION / MALICE / ABSTAIN), canonical sealing and the custody chain; a ZK circuit (contracts/velo.compact) enforces the Daubert gate (MALICE requires corroboration >= 2) and the no-replay assertion; only a commitment, the declared verdict and a proof cross the compiler-enforced disclose() boundary to the public Midnight ledger, verifiable offline](./visual/arquitectura.png)
