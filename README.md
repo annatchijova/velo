@@ -16,6 +16,41 @@ publishing the evidence it came from**.
 
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
+**Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
+
+![VELO — from the case ledger to a MALICE verdict that is earned, and an ABSTAIN when the chain of custody is broken](./visual/velo-demo-EN.gif)
+
+## Explore
+
+Every page below is bilingual (EN/ES).
+
+- **[Live app](https://velo-1028999311218.us-central1.run.app)** — the running frontend on Google Cloud Run, reading the real on-chain ledger.
+- **[Pitch deck](https://annatchijova.github.io/vigia/velo-pitch-deck.html)** — the bilingual slide deck.
+- **[Architecture diagram](https://annatchijova.github.io/vigia/veloarchitecture-diagram.html)** — the one-picture "one side proves, the other stays sealed" view.
+- **[Architecture](https://annatchijova.github.io/vigia/velo-architecture.html)** — the full write-up, from [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+- **[Technical status](https://annatchijova.github.io/vigia/velotechnical-status.html)** — what is real vs. pending, layer by layer.
+- **[Identity model](https://annatchijova.github.io/vigia/velo-identity.html)** — accredited-expert authorization, not biometric identification.
+- **[Business case](https://annatchijova.github.io/vigia/velo-business.html)** — the forensic-reputation layer and its use cases.
+- **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — delivered layers and what comes next.
+
+## Run it locally
+
+No secrets are needed to browse the demo — the wallet and keys only matter for *attesting* (the write path), never for running the UI or reading the chain.
+
+```bash
+git clone https://github.com/annatchijova/velo.git
+cd velo
+
+npm install        # npm workspaces: installs the root engine + the frontend
+npm run build      # compiles dist/, which the frontend imports as `velo/*`
+
+cd frontend
+npm run dev        # http://localhost:3000
+```
+
+Node 20+ is required. The first page load compiles on demand, so it takes a few
+seconds — that is Next.js building, not a hang.
+
 ---
 
 ## The problem
@@ -119,7 +154,7 @@ finding. It is an inadmissible one.
 
 ```bash
 npm install
-npm test          # 34 tests, including adversarial ones
+npm test          # 53 tests, including adversarial ones
 npm run simulate  # full end-to-end story, both refusals
 ```
 
@@ -135,7 +170,11 @@ It prints `internally consistent: YES/NO` — deliberately *not* the word
 consistency is a strictly weaker claim. See [F4 in the red team
 report](./docs/RED_TEAM_ROUND_1.md).
 
-### The local UI and its API
+### The browser frontend
+
+The UI is the Next.js app in [`frontend/`](./frontend/) — pages plus API
+routes that run the same engine server-side through the `velo` package. Local
+development:
 
 ```bash
 cd frontend && npm run dev     # http://127.0.0.1:3000
@@ -172,9 +211,28 @@ a verdict landed where it did, without ever receiving the evidence.
 Sending `custodyEvents: []` is not an error: it produces `ABSTAIN`, because
 evidence with no acquisition history is inadmissible whatever it shows.
 
-Both interfaces call the same functions in `src/core/operations.ts`. Neither
-reimplements the other — red team F8 was two copies of one function that had
-already drifted apart before anyone noticed.
+The browser API routes and the MCP server call the same functions in
+`src/core/operations.ts`. Neither reimplements the other — red team F8 was two
+copies of one function that had already drifted apart before anyone noticed.
+
+### Deploying to Vercel
+
+The Next.js frontend deploys to Vercel as a monorepo project: **Root
+Directory `frontend/`**, framework Next.js, Node 20+. Two settings in
+`frontend/vercel.json` are load-bearing:
+
+- `installCommand: "cd .. && npm ci"` — installs from the workspace root
+  lockfile, so the `velo` engine package resolves.
+- `buildCommand: "npm run build:deploy"` — compiles the root package (`tsc`)
+  before `next build`, because the frontend imports `velo/*` → `dist/src/*`.
+
+The corpus routes (`/api/cases`, `/api/cases/:id`, `/api/peritos`) are
+**static at build time** (`force-static` + `generateStaticParams`), so the
+serverless runtime never reads the repo filesystem for them. Chain reads
+(`GET /api/chain`) run serverless via the committed contract bindings
+(`contracts/managed/`) — no wallet, keys, or fees on Vercel. Attestation
+**writes never run on Vercel**; they stay on the expert's machine
+(`deploy/attest-case.ts`, see [CHAIN](./docs/CHAIN.md)).
 
 ### As an MCP server
 
@@ -278,25 +336,29 @@ the failure mode this whole system exists to prevent.
 
 | Layer | State |
 |---|---|
-| Deterministic engine + Daubert gate | **Working**, 34 tests |
+| Deterministic engine + Daubert gate | **Working**, 53 tests |
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
-| Red team round 1 | **12 of 13 findings fixed**, [full report](./docs/RED_TEAM_ROUND_1.md) |
+| Red team | **6 rounds** — full reports RT1–RT6 linked below |
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
 | Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
-| Writing (`attest`) from the app | **Not wired** — `attest_case` / `POST /api/attest` still compute a local commitment and do not call the deployed contract |
+| Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. One attestation is live on preview. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
+| Writing from the browser UI | **Not wired** — `POST /api/attest` still computes a local commitment; the 1AM-signed path does not exist yet |
 | Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
-The honest bottom line: the expert's side of the boundary runs and is tested,
-the circuit compiles into real proving keys, and the contract is deployed and
-live on `preview`. What does **not** yet exist is the last hop — `attest_case`
-and `POST /api/attest` still compute a commitment locally and return
-`local_pending_contract`; neither calls the deployed contract's `attest`
-circuit. A deployed contract nobody calls is a deployed contract, not a working
-attestation, and this table says so rather than letting "deployed" imply
-"working end to end".
+The honest bottom line: the loop closes. A case is sealed locally, attested
+on-chain with a real ZK proof, and read back from the ledger by anyone — all
+three steps run against Midnight `preview`, not a simulation.
+
+What does **not** yet exist is the browser-signed path: `POST /api/attest`
+still computes a commitment locally rather than having the analyst's own 1AM
+wallet sign the transaction. Attesting today goes through
+`deploy/attest-case.ts`, which signs with a seed-derived wallet on the
+analyst's own machine. Architecturally that is the CLI equivalent of the same
+thing, but it is not the same as the wallet-connected UI the demo shows, and
+this table would rather say so than let one imply the other.
 
 ## Repository
 
@@ -306,7 +368,7 @@ src/seal/        canonicalization, hash-chained custody, bundle sealing, standal
 src/witness/     the circuit's private inputs, TypeScript side
 src/mcp/         MCP server — the wallet interface
 contracts/       velo.compact — the ZK gate
-cases/           13 synthetic cases, zero PII
+cases/           14 synthetic cases, zero PII
 peritos-syntetic/ 6 synthetic expert-witness profiles
 docs/            architecture, glossary, cases, FAQ, business case, identity, roadmap, red team reports
 visual/          deck backgrounds + standalone SVG diagrams
@@ -316,11 +378,16 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`GLOSSARY`](./docs/GLOSSARY.md) · [`CASES`](./docs/CASES.md) ·
 [`FAQ`](./docs/FAQ.md) · [`BUSINESS`](./docs/BUSINESS.md) ·
 [`IDENTITY`](./docs/IDENTITY.md) · [`ROADMAP`](./docs/ROADMAP.md) ·
+[`CHAIN`](./docs/CHAIN.md) · [`LEARNINGS`](./docs/LEARNINGS.md) ·
+[`STRUCTURE`](./docs/STRUCTURE.md) ·
 [`RED TEAM 1`](./docs/RED_TEAM_ROUND_1.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
 [`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
-[`FRONTEND TDD`](./docs/FRONTEND_TDD.md)
+[`RED TEAM 5`](./docs/RED_TEAM_ROUND_5.md) ·
+[`RED TEAM 6`](./docs/RED_TEAM_ROUND_6.md) ·
+[`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
+[`MVP PRD`](./docs/PRD_MVP.md) · [`MVP ADRs`](./docs/ADRS_001_006.md)
 
 Standalone illustrated pages, same visual system, EN/ES toggle in the page
 itself: [`Architecture`](./docs/velo-architecture.html) ·
@@ -362,44 +429,61 @@ Full rules and examples are in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Español
 
-Hoy un perito forense tiene dos opciones, y las dos son malas: **publicar la
-evidencia cruda** para que otros puedan verificar el veredicto —exponiendo a la
-víctima ante todos los que no necesitaban verla— o **no publicar nada** y pedirle
-al tribunal que confíe en su palabra.
+📄 **[README en español](./README.es.md)** — versión completa, con las limitaciones
+conocidas y el estado real de cada capa.
 
-VELO no elige ninguna. El perito corre un motor determinista en su propia
-máquina, sella el resultado, y publica **solo un commitment y una prueba de
-conocimiento cero**. La prueba establece dos cosas a la vez: que el veredicto
-publicado corresponde al análisis sellado, y que se cumplió un criterio de
-admisibilidad formalizado, inspirado en el estándar Daubert — *al menos dos
-fuentes, declaradas independientes por el analista y distintas por raíz de
-cadena de proveniencia, para un veredicto `MALICE`*.
+---
 
-> VELO prueba que un veredicto específico fue producido por un proceso
-> específico, bajo restricciones especificadas, y que la atestación resultante
-> no puede alterarse después. No reemplaza el juicio forense; lo hace
-> auditable. (Ver "Qué prueba la prueba y qué no" en
-> [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) para saber exactamente
-> dónde está ese límite.)
+## Known limitations
 
-Esa regla no es una nota de política ni una convención de code review. Es una
-restricción dentro del circuito: **una atestación que la viole no puede
-producirse.**
+This section exists because a system built not to overclaim has to start by not
+overclaiming about itself. None of the below is an open bug: they are **boundaries
+of what a zero-knowledge proof can establish**, documented in full across the four
+red team rounds. The Spanish README carries the same list.
 
-Lo interesante no es que el sistema diga que sí, sino cómo se niega. `npm run
-simulate` demuestra las dos negativas en vivo: evidencia que alcanzaría para
-`MALICE` pero proviene de una sola adquisición degrada a `SUSPICION`; y la
-*misma* evidencia byte a byte, sin cadena de custodia, da `ABSTAIN`. Evidencia
-idéntica, resultado opuesto: la admisibilidad es una propiedad del proceso, no
-de qué tan incriminatoria se ve la evidencia.
+**What the circuit cannot see** *(G1, G3)* — The circuit proves relationships
+*between* the witnesses it is handed: that the verdict is bound to the fingerprint,
+that the count clears the gate. What it cannot see is whether those witnesses
+describe **a real engine run on real evidence**. That binding lives only in the
+caller (`src/witness/witnesses.ts`), which is precisely the part a ZK proof does not
+cover. Concretely: `corroborationCount` is a number the prover supplies. The circuit
+checks it is `>= 2`, not that the two sources are *actually* independent — that is
+computed off-chain from distinct provenance roots, and is **analyst-declared**, not
+cryptographically proven. Closing it needs a witness-provenance mechanism (engine
+signature, accredited-expert credential, or environment attestation). This is not a
+VELO-specific weakness — it is what "zero-knowledge proof" means for *any* system
+attesting to real-world facts rather than pure computation.
 
-**Estado honesto:** todo lo del lado del perito funciona y está testeado (34
-tests), y el contrato Compact **compila** — los dos circuitos, con claves de
-prueba y verificación generadas (`bash scripts/compile-contract.sh`). Lo que
-todavía no existe es la integración cliente: nada se desplegó a una red y
-`attest_case` sigue siendo un stub que devuelve un error explícito en vez de
-simular. La divulgación selectiva y la credencial ZK del perito tampoco están
-construidas.
+**What leaks even though the evidence does not** *(G4, G5)* — The commitment, the
+verdict and a timestamp do leave, by design. Anyone watching the chain learns an
+investigation existed, roughly when, and its outcome category. And attestations from
+the same wallet are linkable to each other by address — revealing an expert's case
+count, verdict distribution and cadence, though never case content. The anonymous
+accredited-expert credential would mitigate that; it is not built.
+
+**What depends on something else existing first** *(G7, G8)* — No rule-version
+binding: the `>= 2` threshold is fixed in the circuit, and older attestations carry
+no marker of which rule checked them. Only matters once a second contract version
+ships. No revocation model for an expert whose accreditation lapses — meaningless to
+design before the credential it would revoke.
+
+**What the server does not validate** *(F15)* — When an LLM agent builds the
+`seal_case` call, free-text evidence enters its context. One prompt-injection
+attempt was **run and failed** — the agent recognised and refused it — but that
+defense came from the model's judgment, **not from the server**. VELO does not verify
+that `devilAdvocate` is anchored to the actual evidence. A different framing, or a
+different model, could go the other way.
+
+**What is not built** — The browser-signed path: attesting today goes through the
+CLI with a seed-derived wallet on the analyst's own machine, not the analyst's 1AM
+wallet signing from the UI. Selective disclosure, the ZK expert credential and the
+blind second opinion are designed ([`IDENTITY`](./docs/IDENTITY.md),
+[`ROADMAP`](./docs/ROADMAP.md)) and unimplemented.
+
+**And what it explicitly does not solve** — VELO does **not** stop an expert who
+lies from the start. It removes post-hoc tampering and unverifiable claims of
+experience. It does not remove a corrupt expert; that remains a human and judicial
+responsibility, exactly as with any forensic report today.
 
 ---
 

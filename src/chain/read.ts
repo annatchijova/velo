@@ -23,7 +23,34 @@ import { getEnv } from "../core/env.js";
  */
 
 export type Verdict = "NOISE" | "SUSPICION" | "MALICE" | "ABSTAIN";
+
+// Hand-mirrors `enum Verdict { NOISE, SUSPICION, MALICE, ABSTAIN }` in
+// contracts/velo.compact — the generated bindings decode the ledger's
+// verdict as a bare numeric index, with no shared source of truth for the
+// label order between the circuit and this file.
 const VERDICT_BY_INDEX: Verdict[] = ["NOISE", "SUSPICION", "MALICE", "ABSTAIN"];
+
+/**
+ * Decode a ledger verdict index into its label.
+ *
+ * Throws rather than defaulting on an out-of-range index. A future contract
+ * redeploy that reorders or extends the Compact enum without this array
+ * being updated in lockstep is exactly the kind of drift this project
+ * cannot silently absorb: a wrong index silently read as "NOISE" would
+ * downgrade a real MALICE verdict to the most benign label with no
+ * indication anything was wrong — the one failure mode a tool whose entire
+ * purpose is trustworthy verdict display must never produce quietly.
+ */
+export function verdictFromIndex(index: number): Verdict {
+  const verdict = VERDICT_BY_INDEX[index];
+  if (verdict === undefined) {
+    throw new ChainReadError(
+      `Unknown verdict index ${index} from the ledger (expected 0-${VERDICT_BY_INDEX.length - 1}). ` +
+        "The deployed contract's Verdict enum may no longer match this reader's VERDICT_BY_INDEX.",
+    );
+  }
+  return verdict;
+}
 
 export interface OnChainAttestation {
   /** The commitment, hex — the ledger's Map key. */
@@ -96,7 +123,12 @@ async function loadBindings(): Promise<VeloBindings> {
       `Compiled contract bindings not found at ${path}. Build them with \`bash scripts/compile-contract.sh\` (needs an AVX2 CPU), or check out a revision where contracts/managed is committed.`,
     );
   }
-  bindingsCache = (await import(pathToFileURL(path).href)) as unknown as VeloBindings;
+  // webpackIgnore keeps this a NATIVE runtime import. Without it, bundlers
+  // (Next.js/webpack on Vercel) rewrite the fully-dynamic import() into their
+  // own chunk loader, which cannot resolve an absolute file:// path at request
+  // time and fails with "Cannot find module 'file:///...'". The path is only
+  // known at runtime (repoRoot() walk-up), so it must never be bundled.
+  bindingsCache = (await import(/* webpackIgnore: true */ pathToFileURL(path).href)) as unknown as VeloBindings;
   return bindingsCache;
 }
 
@@ -195,7 +227,7 @@ export async function readOnChainLedger(options?: {
   for (const [key, verdictIndex] of led.caseVerdicts) {
     attestations.push({
       commitment: Buffer.from(key).toString("hex"),
-      verdict: VERDICT_BY_INDEX[verdictIndex] ?? "NOISE",
+      verdict: verdictFromIndex(verdictIndex),
     });
   }
 

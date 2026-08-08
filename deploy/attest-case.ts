@@ -174,17 +174,51 @@ async function main(): Promise<void> {
   console.log(`salt            : ${storedState?.salts?.[bundle.caseId] ? "reused from private state" : "generated now"} (${salt.length} bytes, never printed)`);
 
   console.log("Submitting attest() — this generates a ZK proof, which takes a while...\n");
-  const result = await submitCallTx(providers as never, {
-    compiledContract,
-    circuitId: "attest",
-    contractAddress: address,
-    args: [verdict],
-    privateStateId: PRIVATE_STATE_ID,
-  } as never);
+  try {
+    const result = await submitCallTx(providers as never, {
+      compiledContract,
+      circuitId: "attest",
+      contractAddress: address,
+      args: [verdict],
+      privateStateId: PRIVATE_STATE_ID,
+    } as never);
 
-  console.log("\nAttested on-chain.");
-  console.log(JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v), 2).slice(0, 2000));
+    console.log("\nAttested on-chain.");
+    console.log(JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v), 2).slice(0, 2000));
+  } catch (err) {
+    // "this attestation already exists" is the contract's own replay guard
+    // (red team G2) doing its job, not a failure of this run. The salt is
+    // reused per case, so the same sealed analysis always produces the same
+    // commitment — and the circuit refuses to record it twice or inflate
+    // attestationCount. Reporting that as an error would train an operator
+    // to ignore a message that is actually the system working.
+    if (isAlreadyAttested(err)) {
+      console.log("\nAlready attested — nothing to do.");
+      console.log(
+        "The contract refused to record this commitment twice. That is the replay guard\n" +
+          "(assert(!caseVerdicts.member(commitment)) in contracts/velo.compact, red team G2):\n" +
+          "the same sealed analysis reuses its salt, so it always produces the same commitment,\n" +
+          "and attestationCount cannot be inflated by re-running this.",
+      );
+    } else {
+      throw err;
+    }
+  }
+
   console.log(`\nVerify it independently:  npm run build && node scripts/verify-chain-read.mjs`);
+}
+
+/** The circuit's own assert message, surfaced through several wrapper layers. */
+function isAlreadyAttested(err: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = err;
+  while (current && !seen.has(current)) {
+    seen.add(current);
+    const message = current instanceof Error ? current.message : String(current);
+    if (/this attestation already exists/i.test(message)) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
 }
 
 withSeedRedaction(main)

@@ -129,6 +129,59 @@ test("two artifacts from the SAME provenance root count as one source (red team 
   assert.equal(result.corroborationCount, 1, "same acquisition root => one independent source");
 });
 
+test("provenance roots differing only by letter case count as one source (red team F20)", () => {
+  // Before the fix, `sourceOf` case-folded the `source` fallback but not the
+  // provenance root, so "DISK-IMG-01" and "disk-img-01" — the same physical
+  // acquisition — counted as two independent sources, inflating corroboration
+  // and flipping the Daubert gate from SUSPICION to MALICE. That verdict is
+  // what gets hashed into the on-chain commitment, so the miscount is not
+  // cosmetic.
+  const caseVariantRoots: Artifact[] = [
+    {
+      id: "cv-one",
+      type: "file",
+      timestamp: "2026-08-07T14:20:00Z",
+      source: "n/a",
+      process: "n/a",
+      path: "/mnt/evidence/one",
+      entropyMilliBits: 4000,
+      markers: ["surgical_deletion"],
+      description: "From disk image, root cased one way.",
+      provenanceChain: ["DISK-IMG-01"],
+    },
+    {
+      id: "cv-two",
+      type: "file",
+      timestamp: "2026-08-07T14:21:00Z",
+      source: "n/a",
+      process: "n/a",
+      path: "/mnt/evidence/two",
+      entropyMilliBits: 4100,
+      markers: ["narrative_poisoning"],
+      description: "Same disk image, root cased the other way.",
+      provenanceChain: ["disk-img-01"],
+    },
+  ];
+
+  const result = score({
+    detectorResults: runAllDetectors(caseVariantRoots),
+    artifacts: caseVariantRoots,
+    devilAdvocate: "maybe the admin did it",
+    custodyValid: true,
+  });
+
+  assert.equal(
+    result.corroborationCount,
+    1,
+    "provenance roots that differ only by case are one physical source, not two",
+  );
+  assert.deepEqual(
+    result.corroboratingSources,
+    ["provenance:disk-img-01"],
+    "the normalized (case-folded) root is what is recorded",
+  );
+});
+
 test("MALICE requires a devil's-advocate counter-argument", () => {
   const artifacts = maliceArtifacts();
   const detectorResults = runAllDetectors(artifacts);

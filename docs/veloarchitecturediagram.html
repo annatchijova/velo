@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VELO — Architecture: the boundary</title>
+<style>
+:root{
+  --ink-900:#0b1220;--ink-700:#1e2a44;--ink-500:#5b6b84;--ink-400:#8494a8;
+  --cyan:#22d3ee;--indigo:#6366f1;--deep:#4f46e5;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink-900);
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(34,211,238,.10), transparent 62%),
+    radial-gradient(860px 460px at 100% 0%, rgba(99,102,241,.09), transparent 58%),
+    linear-gradient(180deg,#f9fafc 0%,#f6f8fb 100%);
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1320px;margin:0 auto;padding:30px 24px 60px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:clamp(24px,3.4vw,36px);letter-spacing:-.032em;line-height:1.08;margin:0}
+.sub{margin:8px 0 0;color:var(--ink-500);font-size:15.5px;max-width:70ch}
+.langtoggle{display:flex;gap:2px;background:rgba(11,18,32,.05);border:1px solid rgba(11,18,32,.10);border-radius:999px;padding:3px}
+.langtoggle button{font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--ink-500);background:none;border:none;padding:7px 15px;border-radius:999px;cursor:pointer;min-height:34px}
+.langtoggle button[aria-pressed="true"]{background:var(--ink-900);color:#fff}
+.board{margin-top:22px;background:#fff;border:1px solid rgba(11,18,32,.08);border-radius:22px;padding:10px;box-shadow:0 2px 6px rgba(11,18,32,.05),0 18px 44px rgba(11,18,32,.09);overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:900px}
+.legend{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.lg{background:#fff;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:18px 20px}
+.lg h3{margin:0 0 6px;font-size:14.5px;letter-spacing:-.01em}
+.lg p{margin:0;font-size:13.5px;color:var(--ink-500);line-height:1.55}
+.lg code{font-family:var(--mono);font-size:.9em;background:rgba(99,102,241,.08);padding:1px 5px;border-radius:5px;color:var(--deep)}
+.bar{width:26px;height:4px;border-radius:2px;display:inline-block;margin-right:8px;vertical-align:3px}
+footer{margin-top:26px;font-size:12.5px;color:var(--ink-400)}
+:focus-visible{outline:2px solid var(--indigo);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1 data-es="VELO — la arquitectura es un límite">VELO — the architecture is a boundary</h1>
+      <p class="sub" data-es="Un lado prueba. El otro lado se guarda. Lo que cruza está marcado explícitamente por el autor del contrato, y el compilador lo impone.">One side proves. The other side stays sealed. What crosses is marked explicitly by the contract author, and the compiler enforces it.</p>
+    </div>
+    <div class="langtoggle" role="group" aria-label="Language">
+      <button id="btn-en" aria-pressed="true" onclick="setLang('en')">EN</button>
+      <button id="btn-es" aria-pressed="false" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <div class="board">
+  <svg viewBox="0 0 1260 830" role="img" aria-labelledby="dtitle">
+    <title id="dtitle" data-es="Diagrama de arquitectura de VELO: máquina privada del perito, circuito ZK y ledger público de Midnight">VELO architecture diagram: the examiner's private machine, the ZK circuit, and Midnight's public ledger</title>
+    <defs>
+      <linearGradient id="gbrand" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#6366f1"/>
+      </linearGradient>
+      <linearGradient id="gdark" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#101a33"/><stop offset="1" stop-color="#0b1220"/>
+      </linearGradient>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#6366f1"/>
+      </marker>
+      <marker id="arc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#22d3ee"/>
+      </marker>
+      <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#8494a8"/>
+      </marker>
+      <style>
+        .pt{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+        .ph{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+        .bt{font-size:14.5px;font-weight:700;letter-spacing:-.005em;fill:#0b1220}
+        .bs{font-size:12px;fill:#5b6b84}
+        .mn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+        .lbl{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;fill:#8494a8}
+      </style>
+    </defs>
+
+    <!-- ===================== PRIVATE PANEL ===================== -->
+    <rect x="26" y="56" width="404" height="700" rx="20" fill="#0b1220" opacity=".035"/>
+    <rect x="26" y="56" width="404" height="700" rx="20" fill="none" stroke="#0b1220" stroke-opacity=".14"/>
+    <text class="pt ph" x="50" y="88" fill="#4f46e5" data-es="Privado · la máquina del perito">Private · the examiner's machine</text>
+    <text class="pt bs" x="50" y="108" data-es="Nada de esto sale nunca de este equipo">None of this ever leaves this machine</text>
+
+    <!-- box 1 -->
+    <rect x="50" y="126" width="356" height="66" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="152" data-es="Evidencia">Evidence</text>
+    <text class="pt bs" x="70" y="172" data-es="Artefactos, marcadores, timestamps, cadena de procedencia">Artifacts, markers, timestamps, provenance chain</text>
+    <line x1="228" y1="192" x2="228" y2="214" stroke="#6366f1" stroke-width="1.8" marker-end="url(#ar)"/>
+
+    <!-- box 2 -->
+    <rect x="50" y="218" width="356" height="80" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="244" data-es="Motor determinista">Deterministic engine</text>
+    <text class="pt bs" x="70" y="264" data-es="5 detectores · pesos 1/4, 1/4, 3/10, 1/5, 1/5">5 detectors · weights 1/4, 1/4, 3/10, 1/5, 1/5</text>
+    <text class="pt bs" x="70" y="282" data-es="Racionales exactos sobre bigint — ningún float">Exact rationals over bigint — no floats at all</text>
+    <line x1="228" y1="298" x2="228" y2="320" stroke="#6366f1" stroke-width="1.8" marker-end="url(#ar)"/>
+
+    <!-- box 3 -->
+    <rect x="50" y="324" width="356" height="80" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="350" data-es="Veredicto + gate de admisibilidad">Verdict + admissibility gate</text>
+    <text class="pt mn" x="70" y="370" fill="#5b6b84">NOISE · SUSPICION · MALICE · ABSTAIN</text>
+    <text class="pt bs" x="70" y="390" data-es="Sin custodia → ABSTAIN, antes de mirar detectores">No custody → ABSTAIN, before any detector is read</text>
+    <line x1="228" y1="404" x2="228" y2="426" stroke="#6366f1" stroke-width="1.8" marker-end="url(#ar)"/>
+
+    <!-- box 4 -->
+    <rect x="50" y="430" width="356" height="80" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="456" data-es="Sellado canónico v2">Canonical sealing v2</text>
+    <text class="pt bs" x="70" y="476" data-es="Type tags · claves por code point · sin floats">Type tags · code-point key order · no floats</text>
+    <text class="pt bs" x="70" y="494" data-es="Los números fuera de rango tiran error, no se coercionan">Out-of-range numbers throw, they are not coerced</text>
+    <line x1="228" y1="510" x2="228" y2="532" stroke="#6366f1" stroke-width="1.8" marker-end="url(#ar)"/>
+
+    <!-- box 5 -->
+    <rect x="50" y="536" width="356" height="86" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="562" data-es="Dos hashes, a propósito">Two hashes, on purpose</text>
+    <text class="pt mn" x="70" y="582" fill="#5b6b84">analysisFingerprint</text>
+    <text class="pt bs" x="212" y="582" data-es="— sin timestamp: replay estable">— no timestamp: replay-stable</text>
+    <text class="pt mn" x="70" y="602" fill="#5b6b84">bundleHash</text>
+    <text class="pt bs" x="164" y="602" data-es="— este evento de sellado en particular">— this specific sealing event</text>
+
+    <!-- custody chain -->
+    <rect x="50" y="638" width="356" height="96" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="70" y="664" data-es="Cadena de custodia">Chain of custody</text>
+    <g>
+      <rect x="70" y="678" width="52" height="30" rx="8" fill="#0b1220" opacity=".06"/>
+      <text class="pt mn" x="80" y="698" fill="#1e2a44">gen</text>
+      <line x1="122" y1="693" x2="140" y2="693" stroke="#8494a8" stroke-width="1.5" marker-end="url(#arg)"/>
+      <rect x="142" y="678" width="52" height="30" rx="8" fill="#0b1220" opacity=".06"/>
+      <text class="pt mn" x="154" y="698" fill="#1e2a44">e₀</text>
+      <line x1="194" y1="693" x2="212" y2="693" stroke="#8494a8" stroke-width="1.5" marker-end="url(#arg)"/>
+      <rect x="214" y="678" width="52" height="30" rx="8" fill="#0b1220" opacity=".06"/>
+      <text class="pt mn" x="226" y="698" fill="#1e2a44">e₁</text>
+      <line x1="266" y1="693" x2="284" y2="693" stroke="#8494a8" stroke-width="1.5" marker-end="url(#arg)"/>
+      <rect x="286" y="678" width="60" height="30" rx="8" fill="url(#gbrand)"/>
+      <text class="pt mn" x="298" y="698" fill="#fff" font-weight="700">tip</text>
+    </g>
+    <text class="pt bs" x="70" y="726" data-es="Génesis atado al caseId · vocabulario cerrado ISO 27037">Genesis bound to caseId · closed ISO 27037 vocabulary</text>
+
+    <!-- ===================== BOUNDARY ===================== -->
+    <line x1="452" y1="56" x2="452" y2="756" stroke="#6366f1" stroke-width="2" stroke-dasharray="7 7" opacity=".55"/>
+    <rect x="404" y="378" width="96" height="30" rx="15" fill="#4f46e5"/>
+    <text class="pt mn" x="452" y="398" fill="#fff" text-anchor="middle" font-weight="700">disclose()</text>
+    <text class="pt lbl" x="452" y="250" text-anchor="middle" transform="rotate(-90 452 250)" data-es="Lo impone el compilador">Compiler-enforced</text>
+
+    <!-- ===================== CIRCUIT ===================== -->
+    <rect x="498" y="176" width="300" height="418" rx="20" fill="url(#gdark)"/>
+    <text class="pt ph" x="522" y="210" fill="#22d3ee" data-es="Circuito ZK">ZK circuit</text>
+    <text class="pt mn" x="522" y="230" fill="#8494a8">contracts/velo.compact</text>
+
+    <rect x="522" y="248" width="252" height="96" rx="12" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".14"/>
+    <text class="pt bs" x="540" y="270" fill="#a5b4fc" data-es="4 witnesses privados">4 private witnesses</text>
+    <text class="pt mn" x="540" y="290" fill="#dbeafe">bundleFingerprint</text>
+    <text class="pt mn" x="540" y="308" fill="#dbeafe">custodyTip · bundleSalt</text>
+    <text class="pt mn" x="540" y="326" fill="#dbeafe">corroborationCountWitness</text>
+
+    <rect x="522" y="356" width="252" height="112" rx="12" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".38"/>
+    <text class="pt bs" x="540" y="378" fill="#67e8f9" data-es="Restricciones — no son notas de política">Constraints — not policy notes</text>
+    <text class="pt mn" x="540" y="399" fill="#e0f2fe">assert MALICE ⇒ corrob ≥ 2</text>
+    <text class="pt mn" x="540" y="418" fill="#e0f2fe">assert !alreadyAttested</text>
+    <text class="pt bs" x="540" y="442" fill="#94a3b8" data-es="Una sola fuente no da tx rechazada:">One source does not give a rejected tx:</text>
+    <text class="pt bs" x="540" y="458" fill="#94a3b8" data-es="directamente no hay prueba.">there is simply no proof.</text>
+
+    <rect x="522" y="480" width="252" height="88" rx="12" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".14"/>
+    <text class="pt bs" x="540" y="502" fill="#a5b4fc" data-es="Salida — 6 elementos hasheados">Output — 6 hashed elements</text>
+    <text class="pt mn" x="540" y="522" fill="#dbeafe">domain · fingerprint · tip</text>
+    <text class="pt mn" x="540" y="540" fill="#dbeafe">verdict · corroboration · salt</text>
+    <text class="pt bs" x="540" y="560" fill="#fbbf24" data-es="El veredicto está adentro del hash">The verdict is inside the hash</text>
+
+    <!-- arrows into circuit -->
+    <path d="M406 570 C 452 570, 470 420, 498 350" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arc)"/>
+    <path d="M406 690 C 460 690, 472 470, 498 380" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arc)"/>
+
+    <!-- ===================== PUBLIC PANEL ===================== -->
+    <rect x="838" y="176" width="396" height="418" rx="20" fill="#6366f1" opacity=".05"/>
+    <rect x="838" y="176" width="396" height="418" rx="20" fill="none" stroke="#6366f1" stroke-opacity=".28"/>
+    <text class="pt ph" x="862" y="210" fill="#4f46e5" data-es="Público · ledger de Midnight">Public · the Midnight ledger</text>
+    <text class="pt bs" x="862" y="230" data-es="Red preview · cualquiera lo lee · inmutable">preview network · anyone can read it · immutable</text>
+
+    <rect x="862" y="248" width="348" height="92" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="882" y="274" data-es="commitment">commitment</text>
+    <text class="pt bs" x="882" y="294" data-es="persistentHash de 6 elementos — no revela ninguno">persistentHash over 6 elements — reveals none of them</text>
+    <text class="pt bs" x="882" y="314" data-es="Ancla la fingerprint y el tip de custodia">Anchors the fingerprint and the custody tip</text>
+    <text class="pt bs" x="882" y="330" data-es="Una cadena local truncada ya no coincide">A truncated local chain no longer matches</text>
+
+    <rect x="862" y="352" width="348" height="72" rx="13" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bt" x="882" y="378" data-es="Veredicto declarado + attestationCount">Declared verdict + attestationCount</text>
+    <text class="pt bs" x="882" y="398" data-es="No se puede inflar re-atestando lo mismo">Cannot be inflated by re-attesting the same tuple</text>
+    <text class="pt bs" x="882" y="414" data-es="Ronda 2, hallazgo G2 — arreglado">Round 2, finding G2 — fixed</text>
+
+    <rect x="862" y="436" width="348" height="76" rx="13" fill="#0b1220" fill-opacity=".04" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt bs" x="882" y="460" data-es="Contrato desplegado — Midnight preview">Deployed contract — Midnight preview</text>
+    <text class="pt mn" x="882" y="482" fill="#1e2a44">46cac58c4eb0e034b4211d754bfe67f7</text>
+    <text class="pt mn" x="882" y="500" fill="#1e2a44">e8e1aa08d448ebd089437ed573023d9d</text>
+
+    <text class="pt bs" x="862" y="546" data-es="Lo que viaja: el commitment y la prueba. Nada más.">What travels: the commitment and the proof. Nothing else.</text>
+    <text class="pt bs" x="862" y="566" data-es="La evidencia cruda se queda en la custodia de la institución.">Raw evidence stays in the holding institution's custody.</text>
+
+    <!-- proof arrow -->
+    <path d="M798 385 L 834 385" fill="none" stroke="#6366f1" stroke-width="2.4" marker-end="url(#ar)"/>
+    <rect x="792" y="348" width="52" height="24" rx="12" fill="#fff" stroke="#6366f1" stroke-opacity=".35"/>
+    <text class="pt lbl" x="818" y="364" text-anchor="middle" fill="#4f46e5" data-es="prueba">proof</text>
+
+    <!-- ===================== VERIFY BAND ===================== -->
+    <rect x="498" y="626" width="736" height="130" rx="18" fill="#fff" stroke="#0b1220" stroke-opacity=".10"/>
+    <text class="pt ph" x="522" y="658" fill="#4f46e5" data-es="Verificación — sin confiar en nosotros">Verification — without trusting us</text>
+
+    <rect x="522" y="674" width="220" height="62" rx="12" fill="#0b1220" fill-opacity=".04"/>
+    <text class="pt bt" x="540" y="698" data-es="Verificador offline">Offline verifier</text>
+    <text class="pt bs" x="540" y="718" data-es="Cero dependencias de npm">Zero npm dependencies</text>
+
+    <rect x="758" y="674" width="220" height="62" rx="12" fill="#0b1220" fill-opacity=".04"/>
+    <text class="pt bt" x="776" y="698" data-es="Re-chequea el gate Daubert">Re-checks the Daubert gate</text>
+    <text class="pt bs" x="776" y="718" data-es="No confía en el bundle">It does not trust the bundle</text>
+
+    <rect x="994" y="674" width="220" height="62" rx="12" fill="#0b1220" fill-opacity=".04"/>
+    <text class="pt bt" x="1012" y="698" data-es="Rechaza claves duplicadas">Rejects duplicate keys</text>
+    <text class="pt bs" x="1012" y="718" data-es="Mismos bytes, mismo veredicto">Same bytes, same verdict</text>
+  </svg>
+  </div>
+
+  <div class="legend">
+    <div class="lg">
+      <h3><span class="bar" style="background:#0b1220;opacity:.25"></span><span data-es="El lado privado">The private side</span></h3>
+      <p data-es-html="Todo el análisis ocurre en el equipo del perito. La evidencia cruda no toca la red — ni cifrada, porque el cifrado de hoy no es privacidad para siempre y un juez puede ordenar destruir lo que una red permanente no puede borrar.">All analysis happens on the examiner's machine. Raw evidence never touches the network — not even encrypted, because encryption today is not privacy forever and a court can order destroyed what a permanent network cannot delete.</p>
+    </div>
+    <div class="lg">
+      <h3><span class="bar" style="background:linear-gradient(90deg,#22d3ee,#6366f1)"></span><span data-es="El límite">The boundary</span></h3>
+      <p data-es-html="<code>disclose()</code> no es una convención de equipo: es un error de compilación si falta. Los cuatro witnesses privados entran al circuito y ninguno sale — lo único que se publica es un hash sobre los seis elementos.">
+      <code>disclose()</code> is not a team convention: it is a compile error if missing. The four private witnesses enter the circuit and none of them leaves — all that is published is a hash over the six elements.</p>
+    </div>
+    <div class="lg">
+      <h3><span class="bar" style="background:#6366f1"></span><span data-es="El lado público">The public side</span></h3>
+      <p data-es-html="El commitment es el ancla. Una cadena de custodia local a la que le borraron entradas ya no coincide con el valor publicado, y el atacante no puede reescribir el ledger. <b>El tip es el punto de anclaje; el ledger es el ancla.</b>">The commitment is the anchor. A local custody chain with entries deleted no longer matches the published value, and an attacker cannot rewrite the ledger. <b>The tip is the anchor point; the ledger is the anchor.</b></p>
+    </div>
+    <div class="lg">
+      <h3><span class="bar" style="background:#b45309"></span><span data-es="Lo que el diagrama no promete">What the diagram does not promise</span></h3>
+      <p data-es-html="El circuito prueba una relación <i>entre los valores de witness que recibe</i>, no que un motor haya corrido sobre evidencia real. Ese hueco se llama G1, lo nombramos nosotros en la ronda 2, y se cierra con una credencial de perito acreditado.">The circuit proves a relationship <i>between the witness values it receives</i>, not that an engine ever ran on real evidence. That gap is called G1, we named it ourselves in round 2, and it closes with an accredited-examiner credential.</p>
+    </div>
+  </div>
+
+  <footer data-es="VELO · Midnight Hack Buenos Aires · v0.1.0 · 2026-08-08">VELO · Midnight Hack Buenos Aires · v0.1.0 · 2026-08-08</footer>
+</div>
+
+<script>
+(function(){
+  var nodes = [];
+  document.querySelectorAll('[data-es],[data-es-html]').forEach(function(el){
+    nodes.push({el:el, esHtml:el.getAttribute('data-es-html'), es:el.getAttribute('data-es'), enHtml:el.innerHTML});
+  });
+  window.__veloNodes = nodes;
+})();
+function setLang(lang){
+  var isEs = lang === 'es';
+  window.__veloNodes.forEach(function(n){
+    if(isEs){
+      if(n.esHtml != null) n.el.innerHTML = n.esHtml;
+      else if(n.es != null) n.el.textContent = n.es;
+    } else { n.el.innerHTML = n.enHtml; }
+  });
+  document.documentElement.lang = lang;
+  document.getElementById('btn-en').setAttribute('aria-pressed', String(!isEs));
+  document.getElementById('btn-es').setAttribute('aria-pressed', String(isEs));
+}
+</script>
+</body>
+</html>

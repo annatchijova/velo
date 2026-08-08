@@ -71,7 +71,14 @@ export interface ScoreInput {
  */
 function sourceOf(artifact: Artifact): string {
   const root = artifact.provenanceChain[0];
-  if (root && root.trim().length > 0) return `provenance:${root.trim()}`;
+  // Normalize identically to the `source` fallback below: trim + case-fold.
+  // Without the case-fold, two artifacts from one physical source whose
+  // declared provenance roots differ only in letter case (e.g. "DISK-IMG-01"
+  // vs "disk-img-01") counted as two independent sources, inflating the
+  // corroboration count and carrying a SUSPICION over the Daubert gate to
+  // MALICE — the verdict that gets hashed into the on-chain commitment. The
+  // asymmetry (source case-folded, provenance root not) was red team F20.
+  if (root && root.trim().length > 0) return `provenance:${root.trim().toLowerCase()}`;
   if (artifact.source && artifact.source.trim().length > 0) return `source:${artifact.source.trim().toLowerCase()}`;
   return `artifact:${artifact.id}`;
 }
