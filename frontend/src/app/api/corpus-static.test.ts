@@ -3,7 +3,7 @@ import { loadAllCases } from "@/lib/corpus";
 
 /**
  * ADR-002 (docs/ADRS_001_006.md): the corpus is served statically at build
- * time so the Vercel serverless runtime never needs the repository
+ * time so the deployed runtime (the Cloud Run container) never needs the repository
  * filesystem at request time. These tests pin the route-config exports that
  * make that true — removing any of them would silently re-break deployment.
  *
