@@ -1,0 +1,11 @@
+node_modules
+frontend/node_modules
+dist
+frontend/.next
+.git
+.next
+local-cases
+midnight-level-db-deploy
+*.log
+docs/*.pptx
+visual
