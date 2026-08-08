@@ -66,6 +66,8 @@ Every digital forensics workflow in production picks one. VELO picks neither.
 
 ## How
 
+![VELO architecture — on the examiner's private machine, evidence flows through the deterministic engine, the admissibility gate (NOISE / SUSPICION / MALICE / ABSTAIN), canonical sealing and the custody chain; a ZK circuit (contracts/velo.compact) enforces the Daubert gate (MALICE requires corroboration >= 2) and the no-replay assertion; only a commitment, the declared verdict and a proof cross the compiler-enforced disclose() boundary to the public Midnight ledger, verifiable offline](./visual/arquitectura.png)
+
 The expert runs a deterministic engine on their own machine, seals the result,
 and publishes **only a commitment and a zero-knowledge proof**. The proof
 establishes two things at once: that the published verdict really corresponds

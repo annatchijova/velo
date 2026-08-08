@@ -61,6 +61,8 @@ ninguna.
 
 ## Cómo
 
+![Arquitectura de VELO — en la máquina privada del perito, la evidencia pasa por el motor determinista, el gate de admisibilidad (NOISE / SUSPICION / MALICE / ABSTAIN), el sellado canónico y la cadena de custodia; un circuito ZK (contracts/velo.compact) fuerza el gate de Daubert (MALICE exige corroboración >= 2) y el assert de no-replay; solo cruzan el commitment, el veredicto declarado y una prueba por el borde disclose() (compiler-enforced) al ledger público de Midnight, verificable offline](./visual/arquitectura.png)
+
 El perito corre un motor determinista en su propia máquina, sella el resultado, y
 publica **solo un commitment y una prueba de conocimiento cero**. La prueba
 establece dos cosas a la vez: que el veredicto publicado corresponde al análisis
@@ -234,6 +236,18 @@ con cualquier peritaje hoy.
 ---
 
 ## Documentación
+
+```
+src/engine/       detectores, scoring, aritmética racional exacta (sin floats en la ruta de decisión)
+src/seal/         canonicalización, custodia hash-encadenada, sellado de bundle, verificador standalone
+src/witness/      las entradas privadas del circuito, lado TypeScript
+src/mcp/          servidor MCP — la interfaz de wallet
+contracts/        velo.compact — el gate ZK
+cases/            14 casos sintéticos, cero PII
+peritos-syntetic/ 6 perfiles sintéticos de perito
+docs/             arquitectura, glosario, casos, FAQ, caso de negocio, identidad, roadmap, reportes de red team
+visual/           fondos del deck + diagramas SVG standalone
+```
 
 Toda bilingüe (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`GLOSSARY`](./docs/GLOSSARY.md) · [`CASES`](./docs/CASES.md) ·
