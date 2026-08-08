@@ -177,24 +177,31 @@ routes that run the same engine server-side through the `velo` package. Local
 development:
 
 ```bash
-# from the repo root — workspaces install both packages, and the root build
-# produces the dist/ the frontend imports
-npm install
-npm run build
-
-# then, from frontend/
-npm run dev       # http://localhost:3000
+cd frontend && npm run dev     # http://127.0.0.1:3000
 ```
+
+The `dev` script passes `--hostname 127.0.0.1` explicitly. Next.js binds to
+`0.0.0.0` by default — verified in its own CLI definition, which documents
+`-H, --hostname` as `(default: 0.0.0.0)` — so without that flag the dev
+server is reachable from every machine on the network. A machine holding
+someone else's evidence must not open a port to its network, and that has
+to be stated in the script rather than assumed from a default that says the
+opposite.
+
+`npm start` is deliberately left on the default. It is the container entry
+point (see `frontend/Dockerfile`), and inside a container binding to
+`0.0.0.0` is correct — the isolation boundary is the container, not the
+interface. Do not "fix" it to match `dev`.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/seal` | Run the engine and seal a case |
-| `POST` | `/api/verify` | Internal-consistency + custody check of a bundle |
-| `POST` | `/api/attest` | Placeholder seam — returns `local_pending_contract`; real attestation runs through the local CLI ([CHAIN](./docs/CHAIN.md)) |
-| `GET` | `/api/cases` | List the synthetic corpus |
-| `GET` | `/api/cases/:caseId` | One corpus case |
-| `GET` | `/api/peritos` | Synthetic expert-witness profiles |
-| `GET` | `/api/chain` | Real on-chain ledger read — no wallet, no keys, no fees |
+| `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
+| `GET` | `/api/cases/:id` | Public summary of one case |
+| `POST` | `/api/verify` | Internal-consistency check. Takes `{ bundle, tamper? }`; `tamper` re-runs the check against a deliberately corrupted copy, so the UI can demonstrate detection rather than claim it |
+| `GET` | `/api/chain` | What the Midnight ledger says right now. Reading needs no wallet, proving keys, or proof server, so it keeps working on a machine that cannot produce a proof |
+| `GET` | `/api/peritos` | The synthetic expert-witness corpus |
+| `GET` | `/api/attest` | `501` — the contract is deployed, but this endpoint does not call it yet |
 
 `POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
 and returns the sealed summary plus `reasoning`, `custodyValid`,
