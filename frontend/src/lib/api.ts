@@ -114,21 +114,7 @@ export async function verifyBundle(bundle: unknown, tamper?: string): Promise<Ve
   return res.json();
 }
 
-export async function attestCase(
-  bundle: unknown,
-  walletLabel: string,
-): Promise<AttestResult> {
-  const res = await fetch("/api/attest", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bundle, walletLabel }),
-  });
-  if (!res.ok) throw new Error("Attestation failed");
-  return res.json();
-}
-
 import type {
-  AttestResponse,
   EngineRun,
   SealResponse,
   VerifyResponse,
@@ -137,4 +123,3 @@ import type {
 type EngineRunResult = EngineRun;
 type SealResult = SealResponse;
 type VerifyResult = VerifyResponse;
-type AttestResult = AttestResponse;

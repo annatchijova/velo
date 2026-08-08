@@ -10,6 +10,7 @@ const dict = {
     "nav.cases": "Cases",
     "nav.peritos": "Examiners",
     "nav.sealed": "Sealed ledger",
+    "nav.verify": "Verify",
     "nav.login": "Connect",
     "nav.logout": "Disconnect",
     "nav.demo": "Demo mode",
@@ -135,6 +136,16 @@ const dict = {
     "action.runEngine": "run the deterministic engine",
     "action.connectFirst": "connect wallet first",
     "action.tryBreak": "try to break it",
+    "action.attestLocalOnly": "local only",
+    "action.attestHowExpert":
+      "Attestation is proved and submitted from your own machine — the wallet seed, the proof server and the evidence never touch this site. From the repo root, run:",
+    "action.attestHowEnv":
+      "Required env: MIDNIGHT_NETWORK_ID, MIDNIGHT_STORAGE_PASSWORD, MIDNIGHT_WALLET_MNEMONIC. Add VELO_API_URL and VELO_API_KEY to link the attestation back to this deployment's ledger.",
+    "action.attestHowReplay":
+      "The contract's replay guard refuses a second attestation of the same analysis — re-running is safe.",
+    "action.attestHowView": "Afterwards, check the result on the verification panel:",
+    "action.attestHowDemo":
+      "Attestation requires a registered expert wallet and the local proving CLI. Demo mode can seal and verify, but not attest.",
     "action.verifyPristine": "Verify pristine",
     "action.score": "score",
     "action.corroboration": "corroboration",
@@ -213,6 +224,40 @@ const dict = {
     "sealed.notConfiguredBody":
       "This environment runs without a database, so seals stay in the browser (demo behavior). The ledger appears once a database adapter is configured.",
     "sealed.loadFailed": "Could not load the sealed ledger.",
+
+    // Verify panel
+    "verify.title": "Verify a sealed case",
+    "verify.subtitle":
+      "Query by sealed case id or by commitment. Internal consistency and custody are recomputed; the on-chain state is read from the deployed contract and labelled separately.",
+    "verify.placeholder": "Sealed case id or 64-hex commitment",
+    "verify.action": "Verify",
+    "verify.hint": "Reads are public and require no account.",
+    "verify.failed": "Verification failed. Try again.",
+    "verify.notFound": "Nothing matches that id or commitment on this deployment.",
+    "verify.onChain": "On-chain attestation",
+    "verify.chainVerified": "Chain-verified",
+    "verify.expertReported": "Expert-reported",
+    "verify.status": "Status",
+    "verify.attested": "Attested",
+    "verify.notAttested": "Not attested",
+    "verify.unavailable": "Chain status unavailable",
+    "verify.ledgerVerdict": "Ledger verdict",
+    "verify.commitment": "Commitment",
+    "verify.chainVerifiedNote":
+      "This commitment is recorded on the deployed contract's ledger with the verdict shown. The ledger proves the attestation exists and follows the rules; it does not prove the underlying analysis is correct.",
+    "verify.expertReportedNote":
+      "This attestation is recorded by the expert but not confirmed on-chain (or the chain is unreachable). Treat it as a claim, not a verified fact.",
+    "verify.integrity": "Internal consistency & custody",
+    "verify.consistent": "The bundle is internally consistent (hashes and custody chain recompute).",
+    "verify.inconsistent": "The bundle failed internal consistency checks.",
+    "verify.custody": "Custody chain",
+    "verify.custodyValid": "valid",
+    "verify.custodyInvalid": "invalid",
+    "verify.sealedCase": "Sealed case",
+    "verify.caseId": "Case",
+    "verify.verdict": "Verdict",
+    "verify.sealedBy": "Sealed by",
+    "verify.sealedAt": "Sealed at",
   },
   es: {
     "nav.cases": "Casos",
@@ -221,6 +266,7 @@ const dict = {
     "nav.logout": "Desconectar",
     "nav.demo": "Modo demo",
     "nav.sealed": "Ledger de sellados",
+    "nav.verify": "Verificar",
 
     "landing.badge": "Midnight · Conocimiento cero",
     "landing.title1": "El veredicto se ve.",
@@ -335,6 +381,16 @@ const dict = {
     "action.runEngine": "corre el motor determinista",
     "action.connectFirst": "conectá la wallet primero",
     "action.tryBreak": "intentá romperlo",
+    "action.attestLocalOnly": "solo local",
+    "action.attestHowExpert":
+      "La atestación se prueba y se envía desde tu propia máquina — la seed de la wallet, el proof server y la evidencia nunca tocan este sitio. Desde la raíz del repo, corré:",
+    "action.attestHowEnv":
+      "Env requerido: MIDNIGHT_NETWORK_ID, MIDNIGHT_STORAGE_PASSWORD, MIDNIGHT_WALLET_MNEMONIC. Agregá VELO_API_URL y VELO_API_KEY para vincular la atestación al ledger de este despliegue.",
+    "action.attestHowReplay":
+      "El replay guard del contrato rechaza una segunda atestación del mismo análisis — re-ejecutar es seguro.",
+    "action.attestHowView": "Después, verificá el resultado en el panel de verificación:",
+    "action.attestHowDemo":
+      "La atestación requiere una wallet de perito registrada y el CLI de proving local. El modo demo puede sellar y verificar, pero no atestar.",
     "action.verifyPristine": "Verificar sin alterar",
     "action.score": "score",
     "action.corroboration": "corroboración",
@@ -409,6 +465,40 @@ const dict = {
     "sealed.notConfiguredBody":
       "Este entorno corre sin base de datos, así que los sellos quedan en el navegador (comportamiento demo). El ledger aparece cuando se configure un adaptador de base de datos.",
     "sealed.loadFailed": "No se pudo cargar el ledger de sellados.",
+
+    // Panel de verificación
+    "verify.title": "Verificar un caso sellado",
+    "verify.subtitle":
+      "Consulta por id de caso sellado o por commitment. La consistencia interna y la custodia se recalculan; el estado on-chain se lee del contrato desplegado y se etiqueta por separado.",
+    "verify.placeholder": "Id de caso sellado o commitment de 64 hex",
+    "verify.action": "Verificar",
+    "verify.hint": "Las lecturas son públicas y no requieren cuenta.",
+    "verify.failed": "La verificación falló. Probá de nuevo.",
+    "verify.notFound": "Nada coincide con ese id o commitment en este despliegue.",
+    "verify.onChain": "Atestación on-chain",
+    "verify.chainVerified": "Verificado en cadena",
+    "verify.expertReported": "Reportado por el perito",
+    "verify.status": "Estado",
+    "verify.attested": "Atestado",
+    "verify.notAttested": "No atestado",
+    "verify.unavailable": "Estado de cadena no disponible",
+    "verify.ledgerVerdict": "Veredicto en el ledger",
+    "verify.commitment": "Commitment",
+    "verify.chainVerifiedNote":
+      "Este commitment está registrado en el ledger del contrato desplegado con el veredicto mostrado. El ledger prueba que la atestación existe y sigue las reglas; no prueba que el análisis subyacente sea correcto.",
+    "verify.expertReportedNote":
+      "Esta atestación fue registrada por el perito pero no está confirmada on-chain (o la cadena no es alcanzable). Tratala como una afirmación, no como un hecho verificado.",
+    "verify.integrity": "Consistencia interna y custodia",
+    "verify.consistent": "El bundle es internamente consistente (hashes y cadena de custodia recalculados).",
+    "verify.inconsistent": "El bundle falló las verificaciones de consistencia interna.",
+    "verify.custody": "Cadena de custodia",
+    "verify.custodyValid": "válida",
+    "verify.custodyInvalid": "inválida",
+    "verify.sealedCase": "Caso sellado",
+    "verify.caseId": "Caso",
+    "verify.verdict": "Veredicto",
+    "verify.sealedBy": "Sellado por",
+    "verify.sealedAt": "Sellado el",
   },
 } as const;
 

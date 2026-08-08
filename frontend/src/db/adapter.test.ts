@@ -16,7 +16,9 @@ import {
 
 const ADAPTER_KEYS = [
   "getExpert",
+  "getExpertByApiKeyHash",
   "getSealedBundle",
+  "getSealedBundleByCommitment",
   "getSealedBundleByHash",
   "insertExpert",
   "insertSealedBundle",
