@@ -101,6 +101,19 @@ all.** (What the circuit cannot see is *where* the source count came from —
 see "What the proof does and does not establish" below and
 `docs/RED_TEAM_ROUND_2.md`.)
 
+We confirmed this adversarially against the deployed contract. Forcing a
+`MALICE` verdict with a single corroborating source — submitted straight at the
+circuit, past the engine and every application-level check — is refused by the
+circuit's own assert:
+
+```
+failed assert: MALICE requires at least 2 independent corroborating sources — the Daubert gate
+```
+
+No proof is produced, so nothing reaches the ledger. The guarantee is
+cryptographic, not a promise in our code (`deploy/attest-forced-malice.ts`;
+see `docs/TECHNICAL_STATUS.md` §2.2).
+
 ```mermaid
 flowchart TB
     subgraph local["THE EXPERT'S MACHINE — raw evidence never leaves"]

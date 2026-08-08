@@ -92,6 +92,19 @@ Esa regla no es una nota de política ni una convención de code review. Es una
 **restricción dentro del circuito**: una atestación que la viole no puede
 producirse.
 
+Lo confirmamos de forma adversarial contra el contrato deployado. Forzar un
+veredicto `MALICE` con una sola fuente corroborante — enviado directo al
+circuito, salteándose el motor y todos los chequeos de aplicación — es rechazado
+por el assert del propio circuito:
+
+```
+failed assert: MALICE requires at least 2 independent corroborating sources — the Daubert gate
+```
+
+No se produce ninguna prueba, así que nada llega al ledger. La garantía es
+criptográfica, no una promesa de nuestro código (`deploy/attest-forced-malice.ts`;
+ver `docs/TECHNICAL_STATUS.md` §2.2).
+
 La evidencia cruda nunca cruza el límite. Lo que cruza es un commitment, el
 veredicto declarado, un timestamp y una prueba sobre ellos.
 
