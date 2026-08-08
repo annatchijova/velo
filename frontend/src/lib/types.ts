@@ -229,13 +229,3 @@ export interface CaseSummary {
   analysisFingerprint: string;
   corroborationCount: number;
 }
-
-export interface AttestResponse {
-  commitment: string;
-  bundleHash: string;
-  analysisFingerprint: string;
-  status: "local_pending_contract" | "attested" | "error";
-  networkId: string;
-  attestedAt: string;
-  note: string;
-}

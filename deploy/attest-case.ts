@@ -39,6 +39,8 @@ import {
 } from "@effectstream/midnight-contracts";
 import * as Velo from "../contracts/managed/velo/contract/index.js";
 import { loadBundle } from "../src/mcp/store.js";
+import { readOnChainLedger } from "../src/chain/read.js";
+import { newCommitments, postAttestationRecord } from "../src/chain/post-attestation.js";
 import { emptyPrivateState, getOrCreateSalt, makeWitnesses, type VeloPrivateState } from "../src/witness/witnesses.js";
 import { midnightNetworkConfig } from "./network-config.js";
 import { safeNetworkConfigForLogging, withSeedRedaction } from "./redact-seed.js";
@@ -173,6 +175,21 @@ async function main(): Promise<void> {
   await providers.privateStateProvider.set(PRIVATE_STATE_ID, privateState as never);
   console.log(`salt            : ${storedState?.salts?.[bundle.caseId] ? "reused from private state" : "generated now"} (${salt.length} bytes, never printed)`);
 
+  // Best-effort ledger snapshot BEFORE submitting: the commitment is computed
+  // inside the circuit (persistentHash is not reproducible from TypeScript),
+  // so the way to identify our own commitment afterwards is to diff the
+  // ledger. If this read fails, attestation proceeds — only the optional web
+  // record is affected.
+  let commitmentsBefore: string[] = [];
+  try {
+    const before = await readOnChainLedger();
+    commitmentsBefore = before.attestations.map((a) => a.commitment);
+  } catch (err) {
+    console.log(
+      `(Ledger read before attesting failed: ${err instanceof Error ? err.message : String(err)} — the optional web record will be skipped.)`,
+    );
+  }
+
   console.log("Submitting attest() — this generates a ZK proof, which takes a while...\n");
   try {
     const result = await submitCallTx(providers as never, {
@@ -185,6 +202,11 @@ async function main(): Promise<void> {
 
     console.log("\nAttested on-chain.");
     console.log(summarizeCallResult(result));
+
+    // AC-J3.2 (ADR-006): link the attestation to the deployed app's sealed
+    // ledger when VELO_API_URL/VELO_API_KEY are configured. Best-effort: the
+    // on-chain attestation already stands, so nothing here may fail the run.
+    await maybeLinkWebRecord(result, bundle.bundleHash, commitmentsBefore);
   } catch (err) {
     // "this attestation already exists" is the contract's own replay guard
     // (red team G2) doing its job, not a failure of this run. The salt is
@@ -258,6 +280,56 @@ function isAlreadyAttested(err: unknown): boolean {
     current = (current as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/**
+ * Optional web linkage (AC-J3.2): post {bundleHash, txHash, commitment} to a
+ * deployed VELO app. The commitment is identified by diffing the ledger,
+ * since it cannot be recomputed outside the circuit. Silent when not
+ * configured; a soft notice otherwise. Never throws.
+ */
+async function maybeLinkWebRecord(
+  result: unknown,
+  bundleHash: string,
+  commitmentsBefore: string[],
+): Promise<void> {
+  const apiUrl = process.env.VELO_API_URL;
+  const apiKey = process.env.VELO_API_KEY;
+  if (!apiUrl && !apiKey) return;
+
+  try {
+    const after = await readOnChainLedger();
+    const fresh = newCommitments(commitmentsBefore, after.attestations);
+    if (fresh.length !== 1) {
+      console.log(
+        `\nWeb record skipped: expected exactly one new commitment on the ledger, found ${fresh.length}.`,
+      );
+      return;
+    }
+    const outcome = await postAttestationRecord({
+      apiUrl,
+      apiKey,
+      bundleHash,
+      txHash: extractTxHash(result),
+      commitment: fresh[0],
+    });
+    console.log(
+      outcome.posted
+        ? "\nLinked to the deployed app's sealed ledger."
+        : `\nWeb record not posted: ${outcome.reason}`,
+    );
+  } catch (err) {
+    console.log(
+      `\nWeb record skipped (the on-chain attestation stands): ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
+
+function extractTxHash(result: unknown): string {
+  const r = result as { public?: Record<string, unknown>; txId?: unknown };
+  const pub = r?.public ?? {};
+  const candidate = pub["txHash"] ?? pub["txId"] ?? r?.txId;
+  return candidate === undefined || candidate === null ? "" : String(candidate);
 }
 
 withSeedRedaction(main)

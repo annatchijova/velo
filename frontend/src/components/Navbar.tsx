@@ -40,6 +40,7 @@ export function Navbar() {
           <nav className="flex items-center gap-1" aria-label="Primary">
             {link("/cases", t("nav.cases"))}
             {link("/sealed", t("nav.sealed"))}
+            {link("/verify", t("nav.verify"))}
             {link("/peritos", t("nav.peritos"))}
           </nav>
 

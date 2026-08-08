@@ -9,29 +9,28 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
-- **MVP Phase 3 — persistence + wallet identity (AC-J2.*).** Sealed cases now
-  persist behind a database adapter (`frontend/src/db/`): one Drizzle schema,
-  two drivers — Neon (`@neondatabase/serverless`) and Cloud SQL (`pg`) —
-  selected at deploy time via `DB_ADAPTER` (decision recorded in
-  `docs/ADRS_001_006.md`, ADR-001 status). With no database configured the
-  app keeps its demo behavior honestly (`persisted: false` + reason).
-  - Wallet connect now establishes a server session: `POST /api/auth/session`
-    issues an HS256 JWT httpOnly cookie (`jose`, `AUTH_SECRET`); identity is
-    the wallet address, no passwords (ADR-004). Unknown wallets get a session
-    with role `none` — persistence is the action that gets refused (AC-J2.6).
-    First login of a registered expert issues the CLI API key once, stored
-    hashed (ADR-006).
-  - Public sealed ledger: `GET /api/sealed` (filters + pagination, limit
-    capped at 100), `GET /api/sealed/:id` (full stored bundle), and the
-    `/sealed` page with verdict filters and attestation badges (EN/ES).
-  - `POST /api/seal` persists for registered experts and reports
-    `persisted`/`sealedId`/`persistenceReason`; the UI toasts the difference.
-  - Tooling: `drizzle.config.ts`, committed migration `0000_init.sql`,
-    `db:generate`/`db:migrate`/`db:seed` scripts; the seed runs the
-    deterministic engine over all 14 corpus cases under a synthetic expert.
-  - E2e (new `frontend/e2e/`, desktop + mobile viewports): page loads,
-    ledger degradation paths, and the full wallet session flow with a mocked
-    connector; CI runs Playwright (chromium).
+- **MVP Phase 4 — attestation linkage + verification panel (AC-J3.*, AC-J4.*).**
+  - `POST /api/attestations` (frontend): the local CLI links an on-chain
+    attestation to a persisted sealed case. Authenticated by the expert API
+    key (only its SHA-256 hash stored, ADR-006); the route additionally
+    verifies the bundle belongs to that expert. The link is the
+    expert-REPORTED side of the trust model; on-chain facts stay independently
+    readable (ADR-003).
+  - `GET /api/verification` + public `/verify` page: query by sealed-case id
+    or commitment. Internal consistency + custody are recomputed (never
+    trusted); the on-chain state is read from the deployed contract and shown
+    with strictly separate labels — **chain-verified** vs **expert-reported**
+    — and degrades to "unavailable" when the indexer is unreachable, never to
+    a false "not attested" (AC-J4.3). Nav link (EN/ES).
+  - CLI (`deploy/attest-case.ts`): after a successful on-chain attestation,
+    optionally posts `{bundleHash, txHash, commitment}` to a deployed app when
+    `VELO_API_URL` + `VELO_API_KEY` are set. The commitment is identified by
+    diffing the ledger before/after (Compact's `persistentHash` is
+    circuit-internal and cannot be recomputed in TypeScript). Strictly
+    best-effort: a web failure never fails the attestation. New
+    `src/chain/post-attestation.ts` with 7 node:test cases (env gating, exact
+    payload + bearer header, soft failures on refusal/network error, ledger
+    diffing).
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
   1–5 never covered: the attestation/deploy tooling, the witness module, the
   frontend beyond the F14 routes, and the coverage-gap engine change. One
