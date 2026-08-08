@@ -27,6 +27,7 @@ export async function runEngine(caseFile: CaseFile): Promise<EngineRunResult> {
       artifacts: caseFile.artifacts,
       devilAdvocate: caseFile.devil_advocate,
       custodyEvents: caseFile.custodyEvents ?? [],
+      coverageGaps: caseFile.coverageGaps ?? [],
       scenario: "engine-only",
     }),
   });
@@ -43,6 +44,7 @@ export async function sealCase(caseFile: CaseFile): Promise<SealResult> {
       artifacts: caseFile.artifacts,
       devilAdvocate: caseFile.devil_advocate,
       custodyEvents: caseFile.custodyEvents ?? [],
+      coverageGaps: caseFile.coverageGaps ?? [],
       scenario: "seal",
     }),
   });

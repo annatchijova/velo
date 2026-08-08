@@ -179,6 +179,14 @@ const dict = {
     "detail.engineReproduces": "engine reproduces it",
     "detail.mismatch": "mismatch",
     "detail.custodyInvalid": "Custody chain invalid.",
+    "detail.coverage": "What was not examined",
+    "detail.coverageNote":
+      "These sources should have been examined and were not. A negative finding is not supportable over evidence that was never available, so the engine abstains instead of reporting NOISE. This does not weaken a positive finding: an unrelated log rotating does not erase evidence of what is there.",
+    "detail.coverageFull":
+      "No gaps declared. The analyst is asserting that every source expected for this case was examined — which is what makes a NOISE verdict here mean \"nothing was found\" rather than \"nothing was looked at\".",
+    "detail.reasoning": "Engine reasoning",
+    "detail.reasoningSealed":
+      "Shown verbatim, in English, in both languages: this exact sentence is hashed into the analysis fingerprint, so a translation would not be what was sealed.",
     "detail.event": "event",
     "detail.events": "events",
 
@@ -352,6 +360,14 @@ const dict = {
     "detail.engineReproduces": "el motor lo reproduce",
     "detail.mismatch": "no coincide",
     "detail.custodyInvalid": "Cadena de custodia inválida.",
+    "detail.coverage": "Qué no se examinó",
+    "detail.coverageNote":
+      "Estas fuentes debían examinarse y no se examinaron. Un hallazgo negativo no se sostiene sobre evidencia que nunca estuvo disponible, así que el motor se abstiene en vez de informar RUIDO. Esto no debilita un hallazgo positivo: que un log no relacionado haya rotado no borra la evidencia de lo que sí está.",
+    "detail.coverageFull":
+      "No se declararon huecos. El perito afirma que se examinó toda fuente esperable para este caso — que es lo que hace que acá RUIDO signifique \"no se encontró nada\" y no \"no se miró nada\".",
+    "detail.reasoning": "Razonamiento del motor",
+    "detail.reasoningSealed":
+      "Se muestra textual, en inglés, en ambos idiomas: esta oración exacta se hashea dentro del fingerprint del análisis, así que una traducción no sería lo que se selló.",
     "detail.event": "evento",
     "detail.events": "eventos",
 

@@ -51,6 +51,25 @@ export interface CustodyEvent {
   detail_es?: string;
 }
 
+/**
+ * A source that should have been examined and was not.
+ *
+ * Declared by the analyst, never inferred — the engine cannot know what
+ * was never collected. That makes it the same kind of human assertion as
+ * a custody event, which is why it is named in camelCase alongside
+ * `custodyEvents` rather than in the corpus's snake_case metadata style.
+ *
+ * Mirrors `CoverageGap` in velo/src/engine/evidence.ts.
+ */
+export interface CoverageGap {
+  /** The source that was expected. */
+  expected: string;
+  expected_es?: string;
+  /** Why it was not available — rotated, never imaged, destroyed before acquisition. */
+  reason: string;
+  reason_es?: string;
+}
+
 export interface PeirceChain {
   firstness: string;
   secondness: string;
@@ -68,6 +87,8 @@ export interface CaseFile {
   devil_advocate: string;
   devil_advocate_es?: string;
   custodyEvents: CustodyEvent[];
+  /** Optional. A case that declares none is asserting full coverage. */
+  coverageGaps?: CoverageGap[];
   artifacts: Artifact[];
   expected_fractures: string[];
   peirce_chain: PeirceChain;
@@ -118,6 +139,8 @@ export interface ScoreResult {
   detectorCategoriesFired: number;
   detectorsFired: string[];
   corroboratingSources: string[];
+  /** Echoed back so the UI can show what was NOT examined next to the verdict. */
+  coverageGaps: CoverageGap[];
   devilAdvocate: string;
   reasoning: string;
 }
@@ -129,6 +152,7 @@ export interface SealedBundle {
   score: string;
   corroborationCount: number;
   detectorsFired: string[];
+  coverageGaps: CoverageGap[];
   devilAdvocate: string;
   reasoning: string;
   evidenceManifest: { caseId: string; artifacts: Artifact[] };
