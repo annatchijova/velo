@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VELO — Technical Status</title>
+<style>
+:root{
+  --bg:#f6f8fb; --surface:#fff;
+  --ink-900:#0b1220; --ink-700:#1e2a44; --ink-500:#5b6b84; --ink-400:#8494a8;
+  --cyan:#22d3ee; --indigo:#6366f1; --deep:#4f46e5;
+  --ok:#0f9d76; --warn:#b45309; --open:#9333ea; --crit:#be123c;
+  --line:rgba(11,18,32,.08);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink-900);
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(34,211,238,.10), transparent 62%),
+    radial-gradient(860px 460px at 100% 0%, rgba(99,102,241,.09), transparent 58%),
+    linear-gradient(180deg,#f9fafc 0%,#f6f8fb 100%);
+  -webkit-font-smoothing:antialiased;line-height:1.6;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ---------- header ---------- */
+header{
+  background:
+    radial-gradient(900px 560px at 18% -10%, rgba(99,102,241,.28), transparent 60%),
+    radial-gradient(700px 480px at 100% 20%, rgba(34,211,238,.20), transparent 55%),
+    linear-gradient(160deg,#0b1220 0%,#101a33 55%,#1a1145 100%);
+  color:#fff;padding:0 0 54px;position:relative;overflow:hidden;
+}
+header::after{content:"";position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,rgba(34,211,238,.55),rgba(99,102,241,.55),transparent)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:34px;height:34px;flex:none}
+.wordmark{font-size:21px;font-weight:800;letter-spacing:.16em}
+.langtoggle{display:flex;gap:2px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px}
+.langtoggle button{
+  font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.72);
+  background:none;border:none;padding:7px 15px;border-radius:999px;cursor:pointer;min-height:34px;transition:.18s;
+}
+.langtoggle button[aria-pressed="true"]{background:#fff;color:#0b1220}
+.langtoggle button:hover{color:#fff}
+.langtoggle button[aria-pressed="true"]:hover{color:#0b1220}
+
+h1{font-size:clamp(34px,5.4vw,60px);line-height:1.02;letter-spacing:-.035em;margin:44px 0 0;max-width:16ch;text-wrap:balance}
+.tag{margin:18px 0 0;font-size:clamp(15px,2vw,19px);color:rgba(255,255,255,.66);font-style:italic;max-width:46ch}
+.metaline{margin:26px 0 0;display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px}
+.chip{border:1px solid rgba(255,255,255,.20);background:rgba(255,255,255,.07);border-radius:999px;padding:6px 13px;color:rgba(255,255,255,.86);font-weight:600}
+.chip.live{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.12);color:#a5f3fc}
+.chip.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#22d3ee;margin-right:8px;vertical-align:1px;box-shadow:0 0 0 3px rgba(34,211,238,.25)}
+
+/* ---------- stat rail ---------- */
+.rail{margin:-38px auto 0;position:relative;z-index:2}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;box-shadow:0 1px 2px rgba(11,18,32,.04),0 8px 24px rgba(11,18,32,.06)}
+.stat .n{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1;
+  background:linear-gradient(92deg,var(--cyan),var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .n.small{font-size:19px}
+.stat .k{margin-top:9px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.stat .s{margin-top:5px;font-size:12.5px;color:var(--ink-400);line-height:1.45}
+
+/* ---------- sections ---------- */
+section{padding:56px 0 0}
+.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--indigo);margin:0 0 10px}
+h2{font-size:clamp(24px,3.2vw,34px);letter-spacing:-.03em;line-height:1.1;margin:0 0 12px;text-wrap:balance}
+h3{font-size:17px;letter-spacing:-.01em;margin:0 0 8px}
+.lede{font-size:16.5px;color:var(--ink-700);max-width:74ch;margin:0 0 26px}
+p{margin:0 0 14px}
+.muted{color:var(--ink-500)}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 1px 2px rgba(11,18,32,.04),0 8px 24px rgba(11,18,32,.05)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+
+/* status list */
+.slist{list-style:none;margin:0;padding:0}
+.slist li{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+.slist li:last-child{border-bottom:none}
+.dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:8px}
+.dot.y{background:var(--ok);box-shadow:0 0 0 3px rgba(15,157,118,.16)}
+.dot.n{background:var(--warn);box-shadow:0 0 0 3px rgba(180,83,9,.14)}
+.slist b{font-weight:650}
+
+/* code */
+pre{background:#0b1220;color:#dbeafe;border-radius:13px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:0 0 16px;border:1px solid rgba(255,255,255,.06)}
+pre .c{color:#64748b}
+pre .k{color:#22d3ee}
+pre .s{color:#fbbf24}
+code{font-family:var(--mono);font-size:.9em;background:rgba(99,102,241,.08);padding:2px 6px;border-radius:6px;color:var(--deep)}
+pre code{background:none;padding:0;color:inherit}
+
+/* tables */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:13.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-500);padding:0 12px 10px;border-bottom:1px solid var(--line);font-weight:800;white-space:nowrap}
+td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.id{font-family:var(--mono);font-weight:700;white-space:nowrap;color:var(--ink-900)}
+.pill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.p-fix{background:rgba(15,157,118,.12);color:#0b7a5c}
+.p-mit{background:rgba(180,83,9,.12);color:#92400e}
+.p-open{background:rgba(147,51,234,.12);color:#7126bd}
+.p-fals{background:rgba(91,107,132,.14);color:#42536b}
+.p-crit{background:rgba(190,18,60,.12);color:#a1103e}
+
+/* callouts */
+.note{border-left:3px solid var(--indigo);background:rgba(99,102,241,.05);border-radius:0 12px 12px 0;padding:16px 20px;margin:0 0 16px}
+.note.warm{border-left-color:var(--warn);background:rgba(180,83,9,.055)}
+.note.hard{border-left-color:var(--crit);background:rgba(190,18,60,.05)}
+.note p:last-child{margin-bottom:0}
+.kicker{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--indigo);margin:0 0 6px}
+.note.warm .kicker{color:var(--warn)}
+.note.hard .kicker{color:var(--crit)}
+
+/* numbered proof list */
+.proof{counter-reset:p;list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.proof li{counter-increment:p;position:relative;padding:20px 22px 20px 66px;background:#fff;border:1px solid var(--line);border-radius:16px;font-size:14.5px;box-shadow:0 1px 2px rgba(11,18,32,.03)}
+.proof li::before{content:counter(p);position:absolute;left:22px;top:19px;width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(92deg,var(--cyan),var(--indigo));color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center}
+.proof strong{display:block;margin-bottom:5px;font-size:15px;letter-spacing:-.01em}
+
+/* hash box */
+.hash{font-family:var(--mono);font-size:12.5px;word-break:break-all;background:rgba(11,18,32,.03);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink-700)}
+
+/* roadmap */
+.rm{display:grid;gap:0;position:relative;padding-left:26px}
+.rm::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--cyan),var(--indigo),rgba(99,102,241,.15))}
+.rm > div{position:relative;padding:0 0 22px 8px}
+.rm > div::before{content:"";position:absolute;left:-26px;top:6px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--indigo)}
+.rm > div.later::before{border-color:rgba(99,102,241,.35)}
+.rm h4{margin:0 0 4px;font-size:15px;letter-spacing:-.01em}
+.rm p{margin:0;font-size:14px;color:var(--ink-500)}
+
+footer{margin-top:64px;border-top:1px solid var(--line);padding:28px 0 46px;font-size:13px;color:var(--ink-400)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+:focus-visible{outline:2px solid var(--indigo);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+@media (max-width:640px){
+  .wrap{padding:0 18px}
+  .proof li{padding:18px 18px 18px 60px}
+  section{padding:44px 0 0}
+}
+@media print{
+  header{background:#0b1220!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .langtoggle{display:none}
+  .card,.proof li{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="40" y2="40">
+            <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#6366f1"/>
+          </linearGradient></defs>
+          <path d="M6 8 L20 33 L34 8" stroke="url(#g)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="15" r="4.6" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/>
+          <circle cx="20" cy="15" r="1.5" fill="#22d3ee"/>
+        </svg>
+        <span class="wordmark">VELO</span>
+      </div>
+      <div class="langtoggle" role="group" aria-label="Language">
+        <button id="btn-en" aria-pressed="true" onclick="setLang('en')">EN</button>
+        <button id="btn-es" aria-pressed="false" onclick="setLang('es')">ES</button>
+      </div>
+    </div>
+
+    <h1 data-es="Estado técnico">Technical status</h1>
+    <p class="tag" data-es="El veredicto se ve, la víctima no.">The verdict is visible. The victim is not.</p>
+
+    <div class="metaline">
+      <span class="chip live" data-es="Contrato vivo en Midnight preview">Contract live on Midnight preview</span>
+      <span class="chip">v0.1.0</span>
+      <span class="chip" data-es="Estado al 2026-08-08">Status as of 2026-08-08</span>
+      <span class="chip">Midnight Hack Buenos Aires</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap rail">
+  <div class="stats">
+    <div class="stat">
+      <div class="n">6</div>
+      <div class="k" data-es="Elementos atados">Elements bound</div>
+      <div class="s" data-es="En el commitment on-chain, incluyendo el veredicto mismo">In the on-chain commitment, including the verdict itself</div>
+    </div>
+    <div class="stat">
+      <div class="n">5</div>
+      <div class="k" data-es="Detectores">Detectors</div>
+      <div class="s" data-es="Pesos racionales exactos, sin floats en el camino de decisión">Exact rational weights, no floats on the decision path</div>
+    </div>
+    <div class="stat">
+      <div class="n">4</div>
+      <div class="k" data-es="Rondas de red team">Red team rounds</div>
+      <div class="s" data-es="Contra nuestro propio sistema, fechadas y publicadas">Against our own system, dated and published</div>
+    </div>
+    <div class="stat">
+      <div class="n">27 <span style="font-size:19px">/ 21</span></div>
+      <div class="k" data-es="Hallazgos / arreglados">Findings / fixed</div>
+      <div class="s" data-es="21 arreglados, 1 mitigado, 4 limitaciones vigentes, 1 ataque falsado">21 fixed, 1 mitigated, 4 standing limitations, 1 falsified</div>
+    </div>
+    <div class="stat">
+      <div class="n">11</div>
+      <div class="k" data-es="Ataques bloqueados">Attacks defeated</div>
+      <div class="s" data-es="Ejecutados de verdad, no teorizados">Actually executed, not theorized</div>
+    </div>
+    <div class="stat">
+      <div class="n">0</div>
+      <div class="k" data-es="Floats en la decisión">Floats in the decision</div>
+      <div class="s" data-es="Aritmética racional exacta sobre bigint, de punta a punta">Exact rational arithmetic over bigint, end to end</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ THESIS ============ -->
+<section>
+  <div class="wrap">
+    <div class="note">
+      <p class="kicker" data-es="La tesis">The thesis</p>
+      <p data-es-html="VELO no es un demo que dibuja un veredicto. Es un sistema con <b>propiedades demostrables</b> — determinismo, evidencia de manipulación, y una regla de admisibilidad legal impuesta como restricción criptográfica en vez de como promesa — con un contrato desplegado en la red <code>preview</code> real de Midnight. Las propiedades son el producto. La UI es cómo se las mira."
+      >VELO is not a demo that renders a verdict. It is a system with <b>provable properties</b> — determinism, tamper evidence, and a legal admissibility rule enforced as a cryptographic constraint rather than a promise — with a contract deployed to Midnight's live <code>preview</code> network. The properties are the product. The UI is how you look at them.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT EXISTS ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Estado de entrega">Delivery state</p>
+    <h2 data-es="Qué existe y está corriendo">What exists, and is running</h2>
+    <p class="lede" data-es="Todo lo verde de abajo fue corrido y se leyó su salida. Lo ámbar está declarado como pendiente en vez de simulado.">Everything green below was run and its output read. The amber item is declared pending rather than simulated.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <ul class="slist">
+          <li><span class="dot y"></span><span data-es-html="<b>Contrato ZK en Compact, compilado</b> — compact 0.5.1 / compactc 0.31.1, exit 0, claves reales de prover y verifier para ambos circuitos"><b>Compact ZK contract, compiled</b> — compact 0.5.1 / compactc 0.31.1, exit 0, real prover and verifier keys for both circuits</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Desplegado en una red viva</b> — Midnight <code>preview</code>, con fees pagadas en DUST real"><b>Deployed to a live network</b> — Midnight <code>preview</code>, fees paid in real DUST</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Motor forense determinista</b> — 5 detectores, aritmética racional exacta"><b>Deterministic forensic engine</b> — 5 detectors, exact rational arithmetic</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Sellado local y custodia hash-encadenada</b> — canónico v2, bundle de dos hashes, vocabulario ISO/IEC 27037"><b>Local sealing and hash-chained custody</b> — canonical v2, two-hash bundle, ISO/IEC 27037 vocabulary</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Verificador offline sin dependencias</b> — solo <code>node:crypto</code> y <code>node:fs</code>, corre sin npm"><b>Dependency-free offline verifier</b> — only <code>node:crypto</code> and <code>node:fs</code>, runs without npm</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="slist">
+          <li><span class="dot y"></span><span data-es-html="<b>Servidor MCP</b> — superficie de tools con forma de wallet: el activo es un caso sellado, no un token"><b>MCP server</b> — wallet-shaped tool surface: the asset is a sealed case, not a token</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Frontend local-first</b> — Next.js 15 / React 19, Lace y 1AM vía DApp Connector v4, sellar → atestar → verificar, demo adversarial de manipulación"><b>Local-first frontend</b> — Next.js 15 / React 19, Lace and 1AM via DApp Connector v4, seal → attest → verify, adversarial tamper demo</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Corpus sintético sin PII</b> — 13 casos cubriendo los cuatro veredictos, 6 perfiles de perito"><b>Synthetic corpus, zero PII</b> — 13 cases across all four verdicts, 6 examiner profiles</span></li>
+          <li><span class="dot y"></span><span data-es-html="<b>Auditoría adversarial propia</b> — 4 rondas, 27 hallazgos, 11 vectores bloqueados"><b>Adversarial audit of ourselves</b> — 4 rounds, 27 findings, 11 vectors defeated</span></li>
+          <li><span class="dot n"></span><span data-es-html="<b>Prueba end-to-end contra el contrato desplegado</b> — todavía no. Claves generadas; <code>attest_case</code> devuelve <code>local_pending_contract</code> en vez de simular una interacción de cadena."><b>End-to-end proof against the deployed contract</b> — not yet. Keys generated; <code>attest_case</code> returns <code>local_pending_contract</code> rather than simulating a chain interaction.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3 data-es="Dirección del contrato desplegado — Midnight preview">Deployed contract address — Midnight preview</h3>
+      <div class="hash">46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRACK A ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Vía A · Profundidad de plataforma">Track A · Platform depth</p>
+    <h2 data-es="Qué ata realmente el circuito">What the circuit actually binds</h2>
+    <p class="lede" data-es="La forma más común de que un sistema de atestación ZK esté hueco es que el commitment cubra el entorno de la afirmación pero no la afirmación misma.">The most common way a ZK attestation system is hollow is that the commitment covers the surroundings of the claim but not the claim itself.</p>
+
+    <div class="grid2">
+      <div>
+        <pre><code><span class="c">// contracts/velo.compact — the shipped circuit</span>
+commitment = <span class="k">persistentHash</span>&lt;Vector&lt;6, Bytes&lt;32&gt;&gt;&gt;([
+  pad(32, <span class="s">"velo:attestation:v1"</span>),  <span class="c">// domain</span>
+  bundle_fingerprint,             <span class="c">// the analysis</span>
+  custody_tip,                    <span class="c">// chain of custody</span>
+  verdict            as Field as Bytes&lt;32&gt;,
+  corroborationCount as Field as Bytes&lt;32&gt;,
+  salt                            <span class="c">// 32 CSPRNG bytes</span>
+]);
+
+<span class="c">// the admissibility rule, as a circuit constraint</span>
+<span class="k">assert</span>(verdict != MALICE || corroborationCount &gt;= 2);
+
+<span class="c">// replay guard — round 2, finding G2</span>
+<span class="k">assert</span>(!caseVerdicts.member(disclose(commitment)),
+       <span class="s">"this attestation already exists"</span>);</code></pre>
+        <p class="muted" style="font-size:12.5px;margin:-6px 0 0" data-es-html="La forma del <code>commitment</code> y la guarda de replay están citadas textualmente del addendum F3 y de la ronda 2. La línea del gate Daubert está escrita en la forma que toma, no como un pegado literal.">The <code>commitment</code> shape and the replay guard are quoted verbatim from the F3 addendum and round 2. The Daubert gate line is written in the form it takes, not as a literal paste.</p>
+      </div>
+      <div>
+        <div class="note hard">
+          <p class="kicker" data-es="Lo encontramos nosotros">We found this ourselves</p>
+          <p data-es-html="Una versión anterior hasheaba solo <code>[fingerprint, tip, salt]</code>, dejando el veredicto como argumento público libre. Era <b>vacua exactamente donde importa</b>: un análisis sellado como <code>NOISE</code> podía atestarse on-chain como <code>MALICE</code>. Hallazgo F3, ronda 1. Hoy el veredicto está adentro de lo que dice probar.">An earlier version hashed only <code>[fingerprint, tip, salt]</code>, leaving the verdict a free public argument. It was <b>vacuous in exactly the way that matters</b>: an analysis sealed as <code>NOISE</code> could have been attested on-chain as <code>MALICE</code>. Finding F3, round 1. The verdict is now inside the thing it claims to prove.</p>
+        </div>
+        <div class="note">
+          <p class="kicker" data-es="Regla, no promesa">A rule, not a promise</p>
+          <p data-es-html="Intentar atestar <code>MALICE</code> con una sola fuente no produce una transacción rechazada. <b>Directamente no produce ninguna prueba.</b> No hay camino de código, override de admin ni flag que dé una atestación válida — la restricción es parte de lo que <i>prueba válida</i> significa acá.">Attempting to attest <code>MALICE</code> from a single source does not produce a rejected transaction. <b>It fails to produce a proof at all.</b> There is no code path, admin override or flag that yields a valid attestation — the constraint is part of what <i>valid proof</i> means here.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h3 data-es="El límite de dual-ledger lo impone el compilador">The dual-ledger boundary is compiler-enforced</h3>
+        <div class="tscroll">
+          <table style="min-width:auto">
+            <tr><th data-es="Público — on-chain, para siempre">Public — on-chain, forever</th><th data-es="Privado — nunca sale de la máquina">Private — never leaves the machine</th></tr>
+            <tr>
+              <td><code>commitment</code>, <span data-es="veredicto declarado">declared verdict</span>, <code>attestation_count</code>, <code>case_commitment</code></td>
+              <td><code>bundle_fingerprint</code>, <code>custody_tip</code>, <span data-es="detalle del veredicto">verdict detail</span>, <code>corroboration_count</code>, <code>secret_salt</code></td>
+            </tr>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:14px;font-size:14px" data-es-html="Nada cruza esa línea salvo que el autor lo marque con <code>disclose()</code>. No es una convención que seguimos: es un error de compilación si no lo hacemos.">Nothing crosses that line unless the author marks it with <code>disclose()</code>. This is not a convention we follow — it is a compile error if we don't.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="Tres cosas que elegimos no hacer">Three things we chose not to do</h3>
+        <ul class="slist">
+          <li><span class="dot n"></span><span data-es-html="<b>No computamos el commitment en TypeScript.</b> <code>persistentHash</code> no es SHA-256 y las codificaciones de dominio y de cast no están documentadas. Reimplementarlas a ojo daría un número que parece correcto y está mal."><b>We do not compute the commitment in TypeScript.</b> <code>persistentHash</code> is not SHA-256, and the domain and cast encodings are undocumented. Reimplementing from guesswork gives a number that looks right and is wrong.</span></li>
+          <li><span class="dot n"></span><span data-es-html="<b>No guardamos evidencia en IPFS ni Arweave.</b> El cifrado de hoy no es privacidad para siempre, y un juez puede ordenar destruir evidencia que una red p2p permanente no puede borrar."><b>We do not store evidence on IPFS or Arweave.</b> Encryption today is not privacy forever, and a court can order evidence destroyed while a permanent p2p network cannot delete it.</span></li>
+          <li><span class="dot n"></span><span data-es-html="<b>No usamos biometría.</b> La biometría prueba que hay una persona. Un juez pregunta si esa persona está <i>autorizada</i> — eso es una credencial, no una cara."><b>We do not use biometrics.</b> Biometrics proves a person exists. A judge asks whether that person is <i>authorized</i> — that is a credential check, not a face.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRACK B ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Vía B · Rigor de ingeniería">Track B · Engineering rigor</p>
+    <h2 data-es="Las propiedades, y cómo se sostienen">The properties, and how they are held</h2>
+    <p class="lede" data-es="Un umbral de veredicto comparado con punto flotante es un veredicto que puede dar distinto en máquinas distintas. Así que no hay floats en ninguna parte del camino de decisión.">A verdict threshold compared with floating point is a verdict that can differ between machines. So there are no floats anywhere on the decision path.</p>
+
+    <div class="grid2">
+      <div>
+        <pre><code><span class="c">// src/engine/scorer.ts — verbatim</span>
+const MALICE_THRESHOLD = new <span class="k">Fraction</span>(33, 100);
+const NOISE_CEILING    = new <span class="k">Fraction</span>(8, 100);
+const MIN_CORROBORATION_FOR_MALICE = 2;
+
+<span class="c">// detector weights: 1/4, 1/4, 3/10, 1/5, 1/5  -> max 6/5</span>
+<span class="c">// largest single weight 3/10 &lt; 33/100 threshold</span>
+<span class="c">// => MALICE structurally needs 2+ detector categories</span>
+<span class="c">//    AND 2+ independent sources. Not enforced by an if.</span>
+
+<span class="c">// comparison cross-multiplies, never divides:</span>
+<span class="c">// no rounding step exists between evidence and verdict</span></code></pre>
+        <pre style="margin-bottom:0"><code><span class="c">// src/seal/custody.ts</span>
+genesis_hash = sha256(<span class="s">"VELO_GENESIS:"</span> + caseId)
+entry_hash   = sha256(canonicalize({
+  seq, eventType, timestamp, detail, prevHash
+}))</code></pre>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <h3 data-es="Fail-closed por default, en cuatro lugares independientes">Fail-closed by default, in four independent places</h3>
+          <ul class="slist">
+            <li><span class="dot y"></span><span data-es-html="<b>Sin custodia no hay veredicto.</b> <code>score()</code> corta a <code>ABSTAIN</code> antes de consultar cualquier detector. <code>custodyValid</code> es derivado, nunca afirmado por el llamador."><b>No custody, no verdict.</b> <code>score()</code> short-circuits to <code>ABSTAIN</code> before any detector is consulted. <code>custodyValid</code> is derived, never asserted by a caller.</span></li>
+            <li><span class="dot y"></span><span data-es-html="<b>La malicia sin escrutinio se degrada.</b> Umbral y corroboración cumplidos pero abogado del diablo vacío → baja a <code>SUSPICION</code>."><b>Unscrutinized malice is downgraded.</b> Threshold and corroboration met but an empty devil's-advocate field → degrades to <code>SUSPICION</code>.</span></li>
+            <li><span class="dot y"></span><span data-es-html="<b>Los secretos faltantes tiran error.</b> <code>MIDNIGHT_STORAGE_PASSWORD</code> no tiene default — lo tenía, en un repo público, hasta el hallazgo F17."><b>Missing secrets throw.</b> <code>MIDNIGHT_STORAGE_PASSWORD</code> has no default — it had one, in a public repo, until finding F17.</span></li>
+            <li><span class="dot y"></span><span data-es-html="<b>La entrada malformada devuelve una oración, no un stack trace.</b> El verificador nunca llega a <code>valid: true</code> por accidente."><b>Malformed input yields a sentence, not a stack trace.</b> The verifier never reaches <code>valid: true</code> by accident.</span></li>
+          </ul>
+        </div>
+
+        <div class="note">
+          <p class="kicker" data-es="Canonicalización — la parte menos vistosa">Canonicalization — the least glamorous part</p>
+          <p data-es-html="Si un perito de la contraparte reimplementa el verificador en Python y computa un hash distinto para un bundle intacto, concluye que la evidencia fue alterada. <b>El bug es nuestro; la consecuencia es de la víctima.</b> Por eso las claves se ordenan por code point Unicode y no por code unit UTF-16 (F9), los números no finitos, no enteros y por encima de 2⁵³−1 tiran error en vez de coercionarse (F11), y las claves JSON duplicadas se rechazan de plano (F10).">If an opposing expert reimplements the verifier in Python and computes a different hash for an intact bundle, they conclude the evidence was altered. <b>The bug is ours; the consequence is the victim's.</b> Which is why keys sort by Unicode code point rather than UTF-16 code unit (F9), why non-finite, non-integer and past-2⁵³−1 numbers throw instead of coercing (F11), and why duplicate JSON keys are rejected outright (F10).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-top:16px">
+      <div class="card">
+        <h3 data-es="Dos hashes, a propósito">Two hashes, on purpose</h3>
+        <p style="font-size:14px" class="muted" data-es-html="<code>analysisFingerprint</code> excluye el timestamp y la custodia, así que un replay del mismo análisis lo reproduce exactamente. <code>bundleHash</code> los incluye y es único de este sellado. Colapsarlos en uno hace imposible demostrar que lo volviste a correr y dio lo mismo."><code>analysisFingerprint</code> excludes the timestamp and custody, so a replay of the same analysis reproduces it exactly. <code>bundleHash</code> includes both and is unique to this sealing. Collapsing them makes "prove you re-ran it and got the same answer" impossible.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="Dos canonicalizadores, fijados uno contra el otro">Two canonicalizers, pinned to each other</h3>
+        <p style="font-size:14px" class="muted" data-es-html="El verificador offline duplica la lógica a propósito, para tener cero dependencias. La duplicación garantiza deriva — los dos <i>ya</i> habían divergido cuando lo encontramos (F8). El arreglo no fue borrar uno: fue una suite de conformidad con <b>20 vectores compartidos</b>, para que la deriva rompa un test en vez de aparecer en un tribunal.">The offline verifier duplicates the logic deliberately, to have zero dependencies. Duplication guarantees drift — the two had <i>already</i> diverged when we found it (F8). The fix was not to delete one: it was a conformance suite of <b>20 shared vectors</b>, so drift fails a test instead of surfacing in court.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="El modelo está fuera del camino de decisión">The model is out of the decision path</h3>
+        <p style="font-size:14px" class="muted" data-es="Ningún LLM puntúa, clasifica ni decide nada. El scorer es aritmética determinista y el veredicto queda sellado antes de cualquier narración. Un sistema cuya salida es evidencia no puede tener un componente probabilístico entre la entrada y el veredicto.">No LLM scores, classifies or decides anything. The scorer is deterministic arithmetic and the verdict is sealed before any narration happens. A system whose output is evidence cannot have a probabilistic component between the input and the verdict.</p>
+      </div>
+    </div>
+
+    <div class="note warm" style="margin-top:16px">
+      <p class="kicker" data-es="Una limitación para la que escribimos un test">A limitation we wrote a test to prove</p>
+      <p data-es-html="Una cadena de hashes a la que se le borraron las últimas N entradas sigue siendo internamente consistente: el truncamiento no se detecta mirando la cadena sola. <code>pipeline.test.ts</code> contiene un test que afirma <code>valid === true</code> sobre una cadena truncada, <b>a propósito</b>, para que el hueco se vea en la suite en vez de quedar implícito en un doc. La defensa real es que el <code>custody_tip</code> está adentro del commitment on-chain. <b>El tip es el punto de anclaje; el ledger es el ancla.</b>">A hash chain with its last N entries deleted is still internally consistent — truncation cannot be caught by inspecting the chain alone. <code>pipeline.test.ts</code> contains a test asserting <code>valid === true</code> on a truncated chain, <b>on purpose</b>, so the gap is visible in the suite rather than implied in a doc. The real defense is that <code>custody_tip</code> sits inside the on-chain commitment. <b>The tip is the anchor point; the ledger is the anchor.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RED TEAM ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Auditoría adversarial">Adversarial audit</p>
+    <h2 data-es="Cuatro rondas contra nuestro propio sistema">Four rounds against our own system</h2>
+    <p class="lede" data-es="Cuatro rondas: 28 entradas, 27 hallazgos. 21 arreglados, 1 mitigado, 4 documentados como limitaciones vigentes, 1 ataque falsado y conservado en el registro.">Four rounds: 28 entries, 27 findings. 21 fixed, 1 mitigated, 4 documented as standing limitations, 1 attack falsified and kept in the record.</p>
+
+    <div class="card">
+      <div class="tscroll">
+        <table>
+          <thead><tr>
+            <th data-es="Ronda">Round</th>
+            <th data-es="Alcance">Scope</th>
+            <th data-es="Hallazgos">Findings</th>
+            <th data-es="Resultado">Result</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="id">1</td><td data-es="Barrido completo de código — motor, sellado, MCP, store">Full code sweep — engine, sealing, MCP, store</td><td class="id">F1–F13</td><td><span class="pill p-fix" data-es="13 arreglados">13 fixed</span></td></tr>
+            <tr><td class="id">2</td><td data-es="Promesa vs. garantía — ¿los docs afirman lo que la prueba establece?">Promise vs. guarantee — do the docs claim what the proof establishes?</td><td class="id">G1–G10</td><td><span class="pill p-fix" data-es="5 arreglados">5 fixed</span> <span class="pill p-open" data-es="4 limitaciones">4 limitations</span></td></tr>
+            <tr><td class="id">3</td><td data-es="Superficie web / loopback">Web / loopback surface</td><td class="id">F14–F15</td><td><span class="pill p-fix" data-es="1 arreglado">1 fixed</span> <span class="pill p-fals" data-es="1 falsado">1 falsified</span></td></tr>
+            <tr><td class="id">4</td><td data-es="Tooling de deploy y la wallet que maneja valor real">Deploy tooling and the wallet holding real value</td><td class="id">F16–F18</td><td><span class="pill p-fix" data-es="2 arreglados">2 fixed</span> <span class="pill p-mit" data-es="1 mitigado">1 mitigated</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3 data-es="Hallazgos concretos, porque los específicos son el argumento">Selected findings, because the specific ones are the argument</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr>
+            <th>ID</th><th data-es="Hallazgo">Finding</th><th data-es="Estado">Status</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="id">F1</td><td data-es-html="<b>Crítico.</b> Path traversal de lectura y escritura vía <code>caseId</code>, explotado de punta a punta sobre el protocolo MCP real — no teorizado."><b>Critical.</b> Read/write path traversal via <code>caseId</code>, exploited end-to-end over the real MCP protocol — not theorized.</td><td><span class="pill p-fix" data-es="Arreglado">Fixed</span></td></tr>
+            <tr><td class="id">F2</td><td data-es-html="<b>Alto.</b> El gate de corroboración contaba <i>categorías de detector</i> en vez de <i>fuentes independientes</i>. Un solo artefacto llegaba a <code>MALICE</code> con «corroboración 4»."><b>High.</b> The corroboration gate counted <i>detector categories</i> instead of <i>independent sources</i>. A single artifact reached <code>MALICE</code> with "corroboration 4".</td><td><span class="pill p-fix" data-es="Arreglado">Fixed</span></td></tr>
+            <tr><td class="id">F5</td><td data-es-html="<b>Alto.</b> Corrimos el corpus del demo por su propio motor: <b>8 de 13 casos</b> discrepaban con su veredicto documentado. El corpus que se entrega es el que sobrevivió a que lo corrieran."><b>High.</b> We ran the demo corpus through its own engine: <b>8 of 13 cases</b> disagreed with their documented verdict. The corpus that ships is the one that survived being run.</td><td><span class="pill p-fix" data-es="Arreglado">Fixed</span></td></tr>
+            <tr><td class="id">F14</td><td data-es-html="<b>Crítico al encontrarlo.</b> CSRF en la API de loopback, demostrado en Chromium real: un formulario cross-origin <b>sobrescribió un veredicto <code>MALICE</code> sellado y lo dejó en <code>ABSTAIN</code>, corroboración 0.</b>"><b>Critical as found.</b> CSRF on the loopback API, demonstrated in real Chromium: a cross-origin form <b>overwrote a sealed <code>MALICE</code> verdict with <code>ABSTAIN</code>, corroboration 0.</b></td><td><span class="pill p-fix" data-es="Arreglado — 415">Fixed — 415</span></td></tr>
+            <tr><td class="id">F15</td><td data-es-html="Prompt injection contra un agente que manejaba <code>seal_case</code>. El agente resistió y marcó el texto inyectado como no confiable. <b>Registrado como FALSADO, no como CERRADO</b> — un agente, un modelo, una corrida."><code>seal_case</code> prompt injection against a driving agent. The agent resisted and flagged the injected text as untrusted. <b>Recorded as FALSIFIED, not CLOSED</b> — one agent, one model, one run.</td><td><span class="pill p-fals" data-es="Falsado">Falsified</span></td></tr>
+            <tr><td class="id">F16</td><td data-es-html="<b>Crítico.</b> La dependencia de deploy imprime el seed de la wallet en texto plano en cada corrida. Mitigado con un wrapper — el primero <b>falló</b> en el deploy real. Ver abajo."><b>Critical.</b> The deploy dependency prints the wallet seed in plaintext on every run. Mitigated with a wrapper — the first one <b>failed</b> on the real deploy. See below.</td><td><span class="pill p-mit" data-es="Mitigado">Mitigated</span></td></tr>
+            <tr><td class="id">F17</td><td data-es-html="<b>Alto.</b> Contraseña hardcodeada en un repo público protegiendo un store local de claves de firma. Removida: hoy falla cerrado si el secreto no está."><b>High.</b> Hardcoded password in a public repo protecting a local signing-key store. Removed: it now fails closed if the secret is absent.</td><td><span class="pill p-fix" data-es="Arreglado">Fixed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" style="margin-top:16px;font-size:14px" data-es-html="<b>11 vectores de ataque distintos fueron ejecutados y bloqueados</b>, entre ellos path traversal en seis codificaciones, reordenamiento de la cadena, inserción en el medio, injerto en otro caso, truncamiento sin rehash, y un barrido de monotonicidad sobre los 19×19 pares de marcadores que dio <b>cero violaciones</b>."><b>11 separate attack vectors were executed and defeated</b>, including path traversal across six encodings, chain reordering, mid-chain insertion, grafting onto another case, truncation without rehash, and a 19×19 marker-pair monotonicity sweep that produced <b>zero violations</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CANNOT FAKE ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="El filtro">The filter</p>
+    <h2 data-es="Las cinco cosas que no se pueden fingir en diez horas">The five things you cannot fake in ten hours</h2>
+    <p class="lede" data-es="Los demos acumulan features. Los sistemas de ingeniería acumulan resultados negativos. Los nuestros están en el repositorio, fechados.">Demos accumulate features. Engineered systems accumulate negative results. Ours are in the repository, dated.</p>
+
+    <ol class="proof">
+      <li data-es-html="<strong>Un test escrito para probar que existe una limitación.</strong> <code>pipeline.test.ts</code> afirma que el truncamiento de custodia pasa la verificación local. Nadie escribe ese test para quedar bien. Existe para que el hueco no se cierre en silencio."><strong>A test written to prove a limitation exists.</strong> <code>pipeline.test.ts</code> asserts that custody truncation passes local verification. Nobody writes that test to look good. It exists so the gap cannot quietly close over.</li>
+      <li data-es-html="<strong>Una mitigación que falló, documentada como fallida.</strong> El primer wrapper de redacción del seed pasó 10/10 bajo Node, quedó registrado como MITIGATED, y el seed se imprimió entero en el primer deploy real — porque el deploy corre bajo Bun, que implementa <code>console</code> nativamente y se saltea <code>process.stdout.write</code>. Reescribimos el doc para que dijera «falló en la primera corrida real» <i>antes</i> de reescribir el código."><strong>A mitigation that failed, documented as having failed.</strong> The first seed-redaction wrapper passed 10/10 under Node, was recorded as MITIGATED, and the seed printed in full on the first real deploy — because the deploy runs under Bun, which implements <code>console</code> natively and bypasses <code>process.stdout.write</code>. We rewrote the doc to say "failed on first real run" <i>before</i> we rewrote the code.</li>
+      <li data-es-html="<strong>Un test que pasó mientras lo que testeaba estaba visiblemente roto.</strong> Bajo Bun, el script imprimió el seed tres veces entero y justo abajo afirmó <code>PASS — el seed nunca llega al stream</code>. Capturaba reemplazando <code>process.stdout.write</code>, el mecanismo exacto que Bun se saltea: el array quedó vacío y <code>!&quot;&quot;.includes(seed)</code> es <code>true</code>. <b>Un check que no observa nada aprueba todo.</b> Hoy el script lanza un subproceso y busca en los bytes que realmente salieron — 10/10 en Bun y en Node."><strong>A test that passed while the thing it tested was visibly broken.</strong> Under Bun, the script printed the seed three times in full and directly beneath asserted <code>PASS — the seed never reaches the stream</code>. It captured by replacing <code>process.stdout.write</code>, the exact mechanism Bun bypasses: the array stayed empty and <code>!"".includes(seed)</code> is <code>true</code>. <b>A check that observes nothing passes everything.</b> The script now spawns a child process and greps the bytes that actually came out — 10/10 under both Bun and Node.</li>
+      <li data-es-html="<strong>Un ataque falsado conservado en el registro.</strong> La prompt injection de F15 no funcionó. Escribimos que no funcionó, y que eso no cierra la pregunta."><strong>A falsified attack kept in the record.</strong> F15's prompt injection did not work. We wrote down that it did not work, and that this does not close the question.</li>
+      <li data-es-html="<strong>Un corpus chequeado contra su propio motor.</strong> F5 encontró 8 de 13 casos de demo discrepando con su veredicto documentado — incluido uno que <i>bajamos</i> de <code>MALICE</code> a <code>SUSPICION</code> porque el gate real no lo dejaba pasar."><strong>A corpus checked against its own engine.</strong> F5 found 8 of 13 demo cases diverging from their documented verdict — including one we <i>downgraded</i> from <code>MALICE</code> to <code>SUSPICION</code> because the real gate would not let it through.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATFORM WALLS ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Aprendizajes de plataforma">Platform learnings</p>
+    <h2 data-es="Tres paredes de Midnight, documentadas">Three Midnight walls, documented</h2>
+    <p class="lede" data-es="Están escritas porque «entendimos la plataforma al primer intento» no es algo que un proyecto de hackathon pueda afirmar con honestidad.">They are written down because "we understood the platform on the first try" is not a claim a hackathon project gets to make honestly.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 data-es="L1 — NIGHT no es DUST">L1 — NIGHT is not DUST</h3>
+        <p style="font-size:14.5px" data-es-html="<code>Insufficient Funds: could not balance dust</code> con la wallet fondeada. Las fees se pagan en DUST, y el DUST no es un token del faucet: lo <i>genera</i> el NIGHT explícitamente registrado. La dependencia tiene la función, su propio comentario dice que es obligatoria, y <code>deployMidnightContract</code> nunca la llama. Lo encontramos bajando el tarball publicado real de npm y siguiendo el camino de llamadas."><code>Insufficient Funds: could not balance dust</code> on a funded wallet. Fees are paid in DUST, and DUST is not a faucet token: it is <i>generated</i> by explicitly registered NIGHT. The dependency has the function, its own comment says it is required, and <code>deployMidnightContract</code> never calls it. We found it by downloading the real published tarball from npm and tracing the call path.</p>
+        <div class="hash" data-es="dust: 0 → 1127246784999999999 tras una transacción de registro">dust: 0 → 1127246784999999999 after one registration transaction</div>
+      </div>
+      <div class="card">
+        <h3 data-es="L3 — Custom error 170 no es sobre tu contrato">L3 — Custom error 170 is not about your contract</h3>
+        <p style="font-size:14.5px" data-es-html="La respuesta publicada para ese error es un bump de versión. Era cierto para quien la escribió y falso para nosotros. El 170 es <code>InvalidDustSpendProof</code>: el nodo rechazó la prueba de la <i>fee</i>, no la del deploy. Todo ya coincidía con la matriz de compatibilidad; la causa real era falta de frescura del estado de dust. <b>No cambiamos nada entre la corrida fallida y la exitosa tres minutos después.</b>">The published answer for that error is a version bump. True for its author, false for us. 170 is <code>InvalidDustSpendProof</code>: the node rejected the <i>fee</i> proof, not the deploy proof. Everything already matched the compatibility matrix; the real cause was stale dust state. <b>Nothing changed between the failed run and the successful one three minutes later.</b></p>
+        <div class="hash" data-es="dust sync: true → false → false → true en los últimos 30 s de la corrida fallida">dust sync: true → false → false → true in the failing run's final 30 s</div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:16px">
+      <p class="kicker" data-es="La lección generalizable">The generalizable lesson</p>
+      <p data-es-html="Un mensaje de error nombra un <b>síntoma en el vocabulario de la capa que lo tiró</b>, no la causa — y la primera explicación publicada de un error no es necesariamente la que se aplica a vos. Cuando el mensaje apunta a un lado y el arreglo obvio no funciona, hay que dejar de insistir con el arreglo obvio y leer el código que produjo el mensaje.">An error message names a <b>symptom in the vocabulary of the layer that threw it</b>, not the cause — and the first published explanation of an error is not necessarily the one that applies to you. When a message points somewhere and the obvious fix does not work, stop escalating the obvious fix and go read the code that produced the message.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT IT DOES NOT ESTABLISH ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Límites declarados">Declared limits</p>
+    <h2 data-es="Qué no establece esto">What this does not establish</h2>
+    <p class="lede" data-es="Dicho llanamente, porque una herramienta forense que exagera su propia garantía es el modo de falla que existe para prevenir.">Stated plainly, because a forensic tool that overstates its own guarantee is the failure mode it exists to prevent.</p>
+
+    <div class="note hard">
+      <p class="kicker" data-es="En una frase">In one sentence</p>
+      <p data-es="VELO prueba que un veredicto específico fue producido por un proceso específico, bajo restricciones especificadas, y que la atestación resultante no puede alterarse después. No reemplaza el juicio forense; lo hace auditable.">VELO proves that a specific verdict was produced by a specific process, under specified constraints, and that the resulting attestation cannot be altered afterward. It does not replace forensic judgment; it makes forensic judgment auditable.</p>
+    </div>
+
+    <div class="card">
+      <div class="tscroll">
+        <table>
+          <thead><tr>
+            <th>ID</th><th data-es="Qué significa">What it means</th><th data-es="Camino">Path</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="id">G1</td><td data-es-html="<b>Procedencia del witness.</b> Un circuito ZK prueba una relación <i>entre los valores que se le dan</i>, no que esos valores describan algo que ocurrió. Un prover que evita el código normal y provee bytes a mano puede producir una prueba válida sobre evidencia que nunca se analizó."><b>Witness provenance.</b> A ZK circuit proves a relationship <i>between the values it is given</i>, not that those values describe anything that happened. A prover who bypasses the normal calling code and hand-supplies bytes can produce a valid proof for evidence that was never analyzed.</td><td data-es="Credencial de perito acreditado, firma del motor en circuito, o attestation del entorno">Accredited-examiner credential, in-circuit engine signature, or environment attestation</td></tr>
+            <tr><td class="id">G3</td><td data-es-html="<b>La independencia se declara, no se prueba.</b> El circuito chequea <code>&gt;= 2</code>; no chequea que las fuentes sean independientes. Dos archivos del mismo disco físico pueden dar 2. <b>Sobrevive incluso si G1 se resuelve.</b>"><b>Independence is declared, not proven.</b> The circuit checks <code>&gt;= 2</code>; it does not check the sources are independent. Two files from the same physical disk can yield 2. <b>This survives even if G1 is solved.</b></td><td data-es="Raíces de fuente como witnesses, desigualdad de a pares en circuito">Source roots as witnesses, pairwise inequality in-circuit</td></tr>
+            <tr><td class="id">G5</td><td data-es-html="<b>Vinculación entre casos.</b> Las atestaciones desde la misma wallet son vinculables por dirección — exponen la cantidad de casos de un perito, su distribución de veredictos y su cadencia."><b>Cross-case linkability.</b> Attestations from the same wallet are linkable by address — exposing an examiner's case count, verdict distribution and cadence.</td><td data-es="Interino: rotación por caso. Real: credencial de membresía ZK">Interim: per-case rotation. Real: ZK membership credential</td></tr>
+            <tr><td class="id">G7</td><td data-es-html="<b>Sin binding de versión de regla.</b> El umbral <code>&gt;= 2</code> está hardcodeado. Si pasa a 3, las atestaciones ya publicadas no llevan marca de qué regla las chequeó."><b>No rule-version binding.</b> The <code>&gt;= 2</code> threshold is hardcoded. If it becomes 3, existing attestations carry no marker of which rule checked them.</td><td data-es="Meter ruleVersion en el commitment">Fold ruleVersion into the commitment</td></tr>
+            <tr><td class="id">G10</td><td data-es-html="<b>El abogado del diablo no es verificable.</b> El gate chequea que el campo no esté vacío. <code>&quot;x&quot;</code> pasa. <b>Deliberadamente no arreglado</b> — una heurística es gameable y un grader LLM volvería a meter un modelo en el camino de decisión."><b>Devil's advocate is unverifiable.</b> The gate checks the field is non-empty. <code>"x"</code> passes. <b>Deliberately not fixed</b> — a heuristic is gameable, and an LLM grader would put a model back in the decision path.</td><td data-es="Un resultado estructurado cuya forma sí se pueda chequear">A structured result whose shape is checkable</td></tr>
+            <tr><td class="id">F15</td><td data-es-html="<b>Las escrituras de agentes no se validan del lado del servidor.</b> Toda la resistencia en la única corrida testeada vino del criterio del modelo — no es una propiedad testeable contra regresiones."><b>Agent-driven writes are unvalidated server-side.</b> All resistance in the one tested run came from the calling model's judgment — not a regression-testable property.</td><td><span class="pill p-open" data-es="Abierto">Open</span></td></tr>
+            <tr><td class="id" data-es="Circuito">Circuit</td><td data-es-html="<b>Comportamiento end-to-end.</b> Las claves están generadas y el contrato desplegado, pero <b>no</b> se ejercitó una prueba contra un vector de test vivo."><b>End-to-end behaviour.</b> Keys are generated and the contract is deployed, but a proof has <b>not</b> been exercised against a live test vector.</td><td data-es="Próximo hito">Next milestone</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note hard" style="margin-top:16px">
+      <p data-es-html="Aparte de todo lo anterior: VELO no establece que el análisis original del perito se haya hecho honestamente. Eso sigue siendo responsabilidad humana y judicial, igual que con cualquier peritaje hoy. <b>VELO elimina la manipulación posterior de un veredicto sellado. No elimina a un perito corrupto en el momento del análisis.</b>">Separately from all of the above: VELO does not establish that the examiner's original analysis was performed honestly. That remains a human and judicial responsibility, exactly as with any forensic report today. <b>VELO removes post-hoc tampering with a sealed verdict. It does not remove a corrupt examiner at the moment of analysis.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Qué sigue">What ships next</p>
+    <h2 data-es="El camino, en orden">The path, in order</h2>
+
+    <div class="grid2">
+      <div class="rm">
+        <div>
+          <h4 data-es="1 · Cerrar el loop que ya está abierto">1 · Close the loop already open</h4>
+          <p data-es-html="Ejercitar una prueba real contra el contrato desplegado con un vector de test vivo, y reemplazar el <code>local_pending_contract</code> de <code>attest_case</code> por la interacción de cadena real. Convierte «claves generadas» en «prueba aceptada».">Exercise a real proof against the deployed contract with a live test vector, and replace <code>attest_case</code>'s <code>local_pending_contract</code> with the real chain interaction. Converts "keys generated" into "proof accepted".</p>
+        </div>
+        <div>
+          <h4 data-es="2 · Higiene de corpus y de regla">2 · Corpus and rule hygiene</h4>
+          <p data-es-html="Reconciliar <code>CASES.md</code> con los 13 fixtures que se entregan, sacar la generación anterior a F5, y meter <code>ruleVersion</code> en el commitment (G7) — mucho más barato ahora que después de que existan atestaciones.">Reconcile <code>CASES.md</code> with the 13 shipped fixtures, remove the pre-F5 generation, and fold <code>ruleVersion</code> into the commitment (G7) — far cheaper now than after attestations exist.</p>
+        </div>
+        <div>
+          <h4 data-es="3 · Divulgación selectiva">3 · Selective disclosure</h4>
+          <p data-es="Un juez con autorización pide la evidencia; el perito aprueba o rechaza explícitamente; el consentimiento queda on-chain y la entrega sigue off-chain y cifrada. Nada se divulga automáticamente. Más adelante, reparto por umbral K-de-N.">A judge with standing requests the evidence; the examiner grants or denies explicitly; consent is recorded on-chain and the transfer stays off-chain and encrypted. Nothing is disclosed automatically. Later, K-of-N threshold sharing.</p>
+        </div>
+      </div>
+      <div class="rm">
+        <div class="later">
+          <h4 data-es="4 · Credencial anónima del perito">4 · Anonymous examiner credential</h4>
+          <p data-es-html="Una prueba de membresía de Merkle adentro de la prueba ZK. Es el mismo mecanismo que cierra la mitad de autorización de <b>G1</b>, la vinculabilidad de <b>G5</b> y la revocación de <b>G8</b> — por eso es una pieza estructural y no tres.">A Merkle membership proof inside the ZK proof. It is the same mechanism that closes <b>G1</b>'s authorization half, <b>G5</b>'s linkability and <b>G8</b>'s revocation — which is why it is one structural piece and not three.</p>
+        </div>
+        <div class="later">
+          <h4 data-es="5 · Segunda opinión ciega">5 · Blind second opinion</h4>
+          <p data-es-html="Un segundo perito atesta el mismo <code>case_commitment</code> de forma independiente; el contrato registra coincidencia o contradicción sin que ninguno vea el análisis del otro.">A second examiner attests the same <code>case_commitment</code> independently; the contract records agreement or contradiction without either seeing the other's analysis.</p>
+        </div>
+        <div class="later">
+          <h4 data-es="6 · Antes de cualquier uso real">6 · Before any real-world use</h4>
+          <p data-es="Binding de raíces de fuente en circuito (G3), una auditoría adversarial independiente — la nuestra es rigurosa y sigue siendo auto-auditoría —, un motor de nivel productivo, un verificador offline publicado por terceros y una prueba de determinismo bit a bit antes de mainnet.">In-circuit source-root binding (G3), an independent adversarial audit — ours is rigorous and still self-audit — a production-grade engine, an independently published offline verifier, and a bit-for-bit determinism proof ahead of mainnet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUESTIONS ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Para el jurado">For the jury</p>
+    <h2 data-es="Cuatro preguntas, contestadas de frente">Four questions, answered head-on</h2>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 data-es="«Tiene diez horas de vida. ¿Cómo va a ser serio?»">"It's ten hours old. How can it be serious?"</h3>
+        <p style="font-size:14.5px" class="muted" data-es="La edad no es la medida; la medida es qué queda atado. El contrato está desplegado, el commitment cubre seis elementos incluyendo el veredicto mismo, la regla de admisibilidad es una restricción de circuito, y el sistema fue atacado cuatro veces por sus propios autores con 27 hallazgos escritos y 21 arreglados. Miren lo que registramos como roto: esa es la parte que lleva tiempo y no se puede pedir prestada.">Age is not the measure; what is bound is the measure. The contract is deployed, the commitment covers six elements including the verdict itself, the admissibility rule is a circuit constraint, and the system has been attacked four times by its own authors with 27 findings written down and 21 fixed. Look at what we recorded as broken — that is the part that takes time and cannot be borrowed.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="«¿Qué les impide atestar lo que se les cante?»">"What stops you from just attesting whatever you want?"</h3>
+        <p style="font-size:14.5px" class="muted" data-es-html="Para <code>MALICE</code> con una sola fuente: el circuito. No hay prueba que enviar. Para la versión más profunda — qué impide proveer bytes de witness a mano — nada todavía, y lo nombramos nosotros como G1 en la ronda 2 en vez de esperar a que lo nombraran ustedes.">For <code>MALICE</code> from one source: the circuit. There is no proof to submit. For the deeper version — what stops a prover hand-supplying witness bytes — nothing yet, and we named it G1 ourselves in round 2 rather than waiting for you to.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="«¿Por qué no publicar la evidencia, o ponerla en IPFS?»">"Why not just publish the evidence, or put it on IPFS?"</h3>
+        <p style="font-size:14.5px" class="muted" data-es="Porque el cifrado de hoy no es privacidad para siempre, y porque un juez puede ordenar destruir evidencia mientras que una red p2p permanente no la puede borrar. Viaja el commitment; la evidencia se queda en la infraestructura de custodia de la institución que la resguarda.">Because encryption today is not privacy forever, and because a court can order evidence destroyed while a permanent p2p network cannot delete it. The commitment travels; the evidence stays in the custody infrastructure of the institution holding it.</p>
+      </div>
+      <div class="card">
+        <h3 data-es="«¿Cuál es la parte más débil?»">"What's the weakest part?"</h3>
+        <p style="font-size:14.5px" class="muted" data-es-html="Que el circuito prueba una relación entre los valores de witness que recibe, no que un motor haya corrido sobre evidencia real (G1) — y que la independencia de las fuentes se declara en vez de probarse (G3), lo cual sobrevive incluso si G1 se resuelve. Los dos están en <code>ARCHITECTURE.md</code>, en la sección «Qué prueba la prueba y qué no». Esa sección la escribimos antes de que nadie preguntara.">That the circuit proves a relationship among the witness values it is handed, not that an engine ever ran on real evidence (G1) — and that source independence is declared rather than proven (G3), which survives even if G1 is solved. Both are in <code>ARCHITECTURE.md</code>, under "What the proof does and does not establish". We wrote that section before anyone asked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NUMBERS ============ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow" data-es="Procedencia">Provenance</p>
+    <h2 data-es="Números, con su fuente">Numbers, with their source</h2>
+    <p class="lede" data-es="Cada cifra resuelve a un artefacto del repositorio. Donde un número es derivado y no literal, lo decimos.">Every figure resolves to an artifact in the repository. Where a number is derived rather than literal, we say so.</p>
+
+    <div class="card">
+      <div class="tscroll">
+        <table>
+          <thead><tr><th data-es="Métrica">Metric</th><th data-es="Valor">Value</th><th data-es="Fuente">Source</th></tr></thead>
+          <tbody>
+            <tr><td data-es="Elementos atados en el commitment">Elements bound into the commitment</td><td class="id">6</td><td><code>contracts/velo.compact</code></td></tr>
+            <tr><td data-es="Umbral de malicia / techo de ruido">Malice threshold / noise ceiling</td><td class="id">33/100 · 8/100</td><td><code>src/engine/scorer.ts</code></td></tr>
+            <tr><td data-es="Fuentes independientes mínimas para MALICE">Minimum independent sources for MALICE</td><td class="id">2</td><td data-es="Restricción del circuito + scorer">Circuit constraint + scorer</td></tr>
+            <tr><td data-es="Versión del formato canónico">Canonical format version</td><td class="id">v2</td><td><code>src/seal/canonical.ts</code></td></tr>
+            <tr><td data-es="Vocabulario de custodia">Custody vocabulary</td><td class="id" data-es="6 tipos cerrados">6 closed types</td><td data-es="ISO/IEC 27037:2012 + SEALED, ANALYZED">ISO/IEC 27037:2012 + SEALED, ANALYZED</td></tr>
+            <tr><td data-es="Casos sintéticos / perfiles de perito">Synthetic cases / examiner profiles</td><td class="id">13 / 6</td><td><code>cases/</code>, <code>peritos-syntetic/</code></td></tr>
+            <tr><td data-es="Hallazgos levantados / arreglados">Findings raised / fixed</td><td class="id">27 / 21</td><td><code>RED_TEAM_ROUND_1–4.md</code></td></tr>
+            <tr><td data-es="Vectores de conformidad que fijan los dos canonicalizadores">Conformance vectors pinning the two canonicalizers</td><td class="id">20</td><td><code>tests/conformance.test.ts</code></td></tr>
+            <tr><td data-es="Barrido de monotonicidad de pares de marcadores">Marker-pair monotonicity sweep</td><td class="id" data-es="19×19 · 0 violaciones">19×19 · 0 violations</td><td data-es="Ronda 1, experimento E14e">Round 1, experiment E14e</td></tr>
+            <tr><td data-es="Advisories de npm limpiadas por el bump de parche de Next">npm advisories cleared by the Next patch bump</td><td class="id">~30</td><td><code>DEPENDENCY_SECURITY.md</code></td></tr>
+            <tr><td data-es="Advisories diferidas conscientemente">Advisories consciously deferred</td><td class="id">2</td><td data-es="Ídem, con razonamiento fechado">Same, with dated reasoning</td></tr>
+            <tr><td data-es="Suite raíz en la última corrida registrada">Root suite at last recorded run</td><td class="id" data-es="38/38 en verde">38/38 green</td><td data-es="Verificación posterior al fix de la ronda 3">Round 3 post-fix verification</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warm" style="margin-top:18px;margin-bottom:0">
+        <p class="kicker" data-es="Salvedades que no redondeamos para arriba">Caveats we did not round up</p>
+        <p style="font-size:14px" data-es-html="El conteo de tests es <b>54 bloques declarados, unos 83 casos en runtime</b>; la segunda cifra es en parte derivada, porque el test de corpus declara un solo <code>test()</code> dentro de un loop sobre 13 fixtures. Reportamos las dos en vez de elegir la que queda mejor. Y la afirmación «construido en menos de un ciclo de hackathon» se verifica en el historial de git, no acá: este documento afirma el <b>estado</b>, no el cronómetro.">The test count is <b>54 declared blocks, roughly 83 runtime cases</b>; the second figure is partly derived, because the corpus test declares one <code>test()</code> inside a loop over 13 fixtures. We report both rather than picking the flattering one. And "built in under a hackathon cycle" is verifiable in git history, not here: this document asserts the <b>state</b>, not the stopwatch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span data-es="VELO · Midnight Hack Buenos Aires · v0.1.0 · 2026-08-08">VELO · Midnight Hack Buenos Aires · v0.1.0 · 2026-08-08</span>
+    <span data-es="Cada ID de hallazgo resuelve a una sección fechada del registro de auditoría del repositorio.">Every finding ID resolves to a dated section in the repository's own audit record.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var nodes = [];
+  document.querySelectorAll('[data-es],[data-es-html]').forEach(function(el){
+    nodes.push({
+      el: el,
+      esHtml: el.getAttribute('data-es-html'),
+      es: el.getAttribute('data-es'),
+      enHtml: el.innerHTML
+    });
+  });
+  window.__veloNodes = nodes;
+})();
+
+function setLang(lang){
+  var isEs = lang === 'es';
+  window.__veloNodes.forEach(function(n){
+    if(isEs){
+      if(n.esHtml !== null && n.esHtml !== undefined) n.el.innerHTML = n.esHtml;
+      else if(n.es !== null && n.es !== undefined) n.el.textContent = n.es;
+    } else {
+      n.el.innerHTML = n.enHtml;
+    }
+  });
+  document.documentElement.lang = lang;
+  document.title = isEs ? 'VELO — Estado técnico' : 'VELO — Technical Status';
+  document.getElementById('btn-en').setAttribute('aria-pressed', String(!isEs));
+  document.getElementById('btn-es').setAttribute('aria-pressed', String(isEs));
+}
+</script>
+</body>
+</html>
