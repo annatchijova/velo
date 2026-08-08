@@ -96,7 +96,12 @@ async function loadBindings(): Promise<VeloBindings> {
       `Compiled contract bindings not found at ${path}. Build them with \`bash scripts/compile-contract.sh\` (needs an AVX2 CPU), or check out a revision where contracts/managed is committed.`,
     );
   }
-  bindingsCache = (await import(pathToFileURL(path).href)) as unknown as VeloBindings;
+  // webpackIgnore keeps this a NATIVE runtime import. Without it, bundlers
+  // (Next.js/webpack on Vercel) rewrite the fully-dynamic import() into their
+  // own chunk loader, which cannot resolve an absolute file:// path at request
+  // time and fails with "Cannot find module 'file:///...'". The path is only
+  // known at runtime (repoRoot() walk-up), so it must never be bundled.
+  bindingsCache = (await import(/* webpackIgnore: true */ pathToFileURL(path).href)) as unknown as VeloBindings;
   return bindingsCache;
 }
 

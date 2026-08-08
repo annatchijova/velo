@@ -173,6 +173,25 @@ The browser API routes and the MCP server call the same functions in
 `src/core/operations.ts`. Neither reimplements the other — red team F8 was two
 copies of one function that had already drifted apart before anyone noticed.
 
+### Deploying to Vercel
+
+The Next.js frontend deploys to Vercel as a monorepo project: **Root
+Directory `frontend/`**, framework Next.js, Node 20+. Two settings in
+`frontend/vercel.json` are load-bearing:
+
+- `installCommand: "cd .. && npm ci"` — installs from the workspace root
+  lockfile, so the `velo` engine package resolves.
+- `buildCommand: "npm run build:deploy"` — compiles the root package (`tsc`)
+  before `next build`, because the frontend imports `velo/*` → `dist/src/*`.
+
+The corpus routes (`/api/cases`, `/api/cases/:id`, `/api/peritos`) are
+**static at build time** (`force-static` + `generateStaticParams`), so the
+serverless runtime never reads the repo filesystem for them. Chain reads
+(`GET /api/chain`) run serverless via the committed contract bindings
+(`contracts/managed/`) — no wallet, keys, or fees on Vercel. Attestation
+**writes never run on Vercel**; they stay on the expert's machine
+(`deploy/attest-case.ts`, see [CHAIN](./docs/CHAIN.md)).
+
 ### As an MCP server
 
 The same engine is exposed over MCP, so an agent can drive the flow

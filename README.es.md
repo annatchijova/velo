@@ -79,6 +79,25 @@ El ciclo completo contra Midnight `preview` está en
 **[`docs/CHAIN.md`](./docs/CHAIN.md)**: sellar local → atestar on-chain → leer
 desde el ledger.
 
+### Despliegue en Vercel
+
+El frontend Next.js se despliega en Vercel como proyecto monorepo: **Root
+Directory `frontend/`**, framework Next.js, Node 20+. Dos configuraciones en
+`frontend/vercel.json` son estructurales:
+
+- `installCommand: "cd .. && npm ci"` — instala desde el lockfile de la raíz
+  del workspace, para que el paquete `velo` (el motor) resuelva.
+- `buildCommand: "npm run build:deploy"` — compila el paquete raíz (`tsc`)
+  antes de `next build`, porque el frontend importa `velo/*` → `dist/src/*`.
+
+Las rutas del corpus (`/api/cases`, `/api/cases/:id`, `/api/peritos`) son
+**estáticas en el build** (`force-static` + `generateStaticParams`), así el
+runtime serverless nunca lee el filesystem del repo para servirlas. Las
+lecturas de cadena (`GET /api/chain`) corren serverless con los bindings del
+contrato commiteados (`contracts/managed/`) — sin wallet, sin claves, sin
+costo. Las **escrituras** de atestación nunca corren en Vercel; quedan en la
+máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
+
 ## Estado — qué es real y qué no
 
 | Capa | Estado |
