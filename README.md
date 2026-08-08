@@ -275,17 +275,21 @@ the failure mode this whole system exists to prevent.
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
 | Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
-| Writing (`attest`) from the app | **Not wired** — `attest_case` / `POST /api/attest` still compute a local commitment and do not call the deployed contract |
+| Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. One attestation is live on preview. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
+| Writing from the browser UI | **Not wired** — `POST /api/attest` still computes a local commitment; the 1AM-signed path does not exist yet |
 | Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
-The honest bottom line: the expert's side of the boundary runs and is tested,
-the circuit compiles into real proving keys, and the contract is deployed and
-live on `preview`. What does **not** yet exist is the last hop — `attest_case`
-and `POST /api/attest` still compute a commitment locally and return
-`local_pending_contract`; neither calls the deployed contract's `attest`
-circuit. A deployed contract nobody calls is a deployed contract, not a working
-attestation, and this table says so rather than letting "deployed" imply
-"working end to end".
+The honest bottom line: the loop closes. A case is sealed locally, attested
+on-chain with a real ZK proof, and read back from the ledger by anyone — all
+three steps run against Midnight `preview`, not a simulation.
+
+What does **not** yet exist is the browser-signed path: `POST /api/attest`
+still computes a commitment locally rather than having the analyst's own 1AM
+wallet sign the transaction. Attesting today goes through
+`deploy/attest-case.ts`, which signs with a seed-derived wallet on the
+analyst's own machine. Architecturally that is the CLI equivalent of the same
+thing, but it is not the same as the wallet-connected UI the demo shows, and
+this table would rather say so than let one imply the other.
 
 ## Repository
 

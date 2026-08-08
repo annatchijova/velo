@@ -491,3 +491,75 @@ puede leerse como éxito.
 bajo Node. Lo que no cambia: sigue siendo una mitigación alrededor de un
 default de terceros, no un arreglo del defecto upstream, y la wallet de deploy
 debería seguir siendo descartable.
+
+---
+
+## L4 — The first real attestation, and a guard that proved itself
+
+**Date:** 2026-08-07 · **Outcome:** the loop closed.
+
+### What happened
+
+`bun run deploy/attest-case.ts VELO-DEMO-001` generated a ZK proof and
+submitted a real `attest()` call to the contract on Midnight `preview`. Read
+back independently from the ledger:
+
+```
+attestationCount : 1
+   632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b  ->  MALICE
+```
+
+Sealed locally, attested on-chain, read back by anyone. No simulation in any
+of the three steps.
+
+### The part worth recording: a re-run looked like a failure and was not
+
+Running it a second time produced a stack trace ending in:
+
+```
+CompactError: failed assert: this attestation already exists
+      at _attest_0 (contracts/managed/velo/contract/index.js:320)
+```
+
+That is **VELO's own circuit**, refusing to record the same commitment twice —
+the fix for red team finding G2, written days earlier on the reasoning that a
+public `attestationCount` inflated by replays is a number a judge can trivially
+discredit. Until this moment it had never executed outside a compiler.
+
+It fired because the salt behaved exactly as designed: stored per case in
+private state, reused on the second run, so the same sealed analysis produced
+the same commitment — and the contract rejected the duplicate.
+
+Three things were confirmed at once by an error message:
+
+1. The G2 replay guard works against the real network, not just in review.
+2. Salt persistence works: same case, same salt, same commitment. Had the salt
+   been regenerated, the second run would have produced a *different*
+   commitment and silently recorded a second attestation of one analysis —
+   which is precisely the defect G2 exists to prevent.
+3. The first attestation genuinely landed. The guard could not have fired
+   otherwise.
+
+### The lesson
+
+**A failed command is not always a failed system.** The instinct on seeing a
+stack trace is to fix something; here the correct response was to read what the
+assert actually said, recognise it as this project's own invariant, and check
+the ledger — which showed the write had succeeded. Debugging the "failure"
+would have meant weakening a guard that was doing its job.
+
+This is L3's lesson pointed inward. L3 was about an error message from someone
+else's layer naming a symptom in its own vocabulary. Here the message was ours,
+said exactly what it meant, and still read as a failure because it arrived
+through a stack trace. The script now reports it as the non-event it is.
+
+### Status
+
+`deploy/attest-case.ts` distinguishes "already attested" from a real failure
+and exits cleanly. Confirmed on-chain and readable via
+`node scripts/verify-chain-read.mjs`, `GET /api/chain`, and the MCP tools
+`chain_status` / `lookup_commitment`.
+
+Still not built: the browser-signed path. Attesting goes through the CLI with a
+seed-derived wallet on the analyst's own machine, not the analyst's 1AM wallet
+signing from the UI.
