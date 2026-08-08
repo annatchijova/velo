@@ -37,3 +37,6 @@ npm-debug.log*
 # .claude/skills/ IS committed on purpose (part of the submission).
 .claude/settings.local.json
 midnight-level-db-deploy/
+
+# Capture that dumps the per-case salts in cleartext — see 2358444.
+visual/no-publicar/

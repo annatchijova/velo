@@ -89,6 +89,42 @@ test("an un-attested commitment returns null — absence is an answer, not a fai
   assert.equal(result, null);
 });
 
+test("malformed contract state hex is refused, not silently decoded as zero bytes", async () => {
+  // Round 6 (F25): `hex.match(/../g)` + `Number.parseInt` turned a non-hex
+  // pair into NaN, which `Uint8Array.from` coerced to 0x00, and dropped an
+  // odd trailing nibble. A ledger decoded from bytes the chain never
+  // returned is worse than a read failure, because it reads as an answer.
+  // The write path (`hexToBytes32`) has always rejected these; this is the
+  // read path catching up.
+  const cases: Array<[string, string]> = [
+    ["zz".repeat(16), "non-hex characters"],
+    [`${REAL_STATE_HEX}zz`, "non-hex tail on otherwise valid state"],
+    [REAL_STATE_HEX.slice(0, -1), "odd length (dangling nibble)"],
+    ["0x" + REAL_STATE_HEX, "0x prefix is not hex"],
+    ["   ", "whitespace only"],
+  ];
+  for (const [bad, why] of cases) {
+    await assert.rejects(
+      () => readOnChainLedger({ fetchImpl: fakeIndexer(bad) }),
+      (err: unknown) => err instanceof ChainReadError && /Contract state hex is (malformed|empty)/.test((err as Error).message),
+      `${why}: must be refused at the decode boundary`,
+    );
+  }
+});
+
+test("a valid state still decodes after the F25 strictness (no false positives)", async () => {
+  // The guard is only worth having if it does not reject the real thing.
+  // Note what this fixture is: a snapshot of the contract as *deployed*,
+  // before the first attestation landed — so the assertion is that the
+  // decode completes and yields a well-formed ledger, not that it carries
+  // verdicts. Rejecting valid input is the failure mode being guarded
+  // against here; the happy-path test above pins the values.
+  const led = await readOnChainLedger({ fetchImpl: fakeIndexer(REAL_STATE_HEX) });
+  assert.equal(typeof led.attestationCount, "bigint");
+  assert.ok(Array.isArray(led.attestations));
+  assert.match(led.contractAddress, /^[0-9a-f]{64}$/);
+});
+
 test("verdictFromIndex decodes every index the Compact enum defines", () => {
   assert.equal(verdictFromIndex(0), "NOISE");
   assert.equal(verdictFromIndex(1), "SUSPICION");

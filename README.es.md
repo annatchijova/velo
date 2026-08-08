@@ -163,7 +163,7 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |
 | Contrato Compact | **Compila** — `compactc 0.31.1`, ambos circuitos, claves reales |
 | Contrato desplegado | **Vivo en `preview`** — [`46cac58c…3d9d`](./docs/CHAIN.md) |
-| Atestación on-chain | **Funciona** vía CLI (`deploy/attest-case.ts`). Una atestación real registrada |
+| Atestación on-chain | **Funciona** vía CLI (`deploy/attest-case.ts`). **Dos atestaciones reales registradas**, ambas `MALICE` |
 | Lectura del ledger | **Funciona** — `GET /api/chain`, MCP `chain_status` |
 | Firma desde el navegador | **No construida** — ver Limitaciones |
 | Red team | **6 rondas** — reportes completos RT1–RT6 abajo |
