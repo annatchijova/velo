@@ -184,7 +184,7 @@ async function main(): Promise<void> {
     } as never);
 
     console.log("\nAttested on-chain.");
-    console.log(JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v), 2).slice(0, 2000));
+    console.log(summarizeCallResult(result));
   } catch (err) {
     // "this attestation already exists" is the contract's own replay guard
     // (red team G2) doing its job, not a failure of this run. The salt is
@@ -206,6 +206,45 @@ async function main(): Promise<void> {
   }
 
   console.log(`\nVerify it independently:  npm run build && node scripts/verify-chain-read.mjs`);
+}
+
+/**
+ * Print what a reader needs from the call result, and nothing that must stay
+ * private.
+ *
+ * This used to dump the whole result object as JSON. That object carries
+ * `private.nextPrivateState`, which is the salt store — so a run printed
+ * every per-case salt to stdout, on the line right after this script had
+ * claimed "(32 bytes, never printed)". Caught by reading a real run's output
+ * rather than trusting the claim, which is the same lesson as F16 and L2.
+ *
+ * Why the salt matters enough to be worth this: the commitment is public on
+ * the ledger, and the salt is what stops anyone from brute-forcing its
+ * preimage. `verdict` has four possible values and `corroborationCount` is
+ * bounded at 17 — a trivially small space. Hand someone the salt and they can
+ * confirm the corroboration count for a published commitment, which the
+ * circuit deliberately keeps private because how many sources corroborate is
+ * itself information about the case.
+ */
+function summarizeCallResult(result: unknown): string {
+  const r = result as {
+    public?: { txId?: unknown; txHash?: unknown; blockHeight?: unknown; status?: unknown };
+    txId?: unknown;
+  };
+  const pub = r?.public ?? {};
+  const shown: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(pub)) {
+    // Only scalars: nested objects here are where private state hides.
+    if (value === null || ["string", "number", "boolean", "bigint"].includes(typeof value)) {
+      shown[key] = typeof value === "bigint" ? value.toString() : value;
+    }
+  }
+  if (r?.txId !== undefined && shown["txId"] === undefined) shown["txId"] = String(r.txId);
+
+  const lines = Object.entries(shown).map(([k, v]) => `  ${k.padEnd(14)}: ${String(v)}`);
+  return lines.length > 0
+    ? lines.join("\n")
+    : "  (submitted; the SDK returned no public scalar fields to show)";
 }
 
 /** The circuit's own assert message, surfaced through several wrapper layers. */
