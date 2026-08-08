@@ -126,6 +126,13 @@ declared verdict, a timestamp, and a proof about them — that is enough for
 anyone watching the chain to learn that an investigation existed, roughly when,
 and its outcome category, even without seeing the case itself.
 
+**Without zero-knowledge, there is no VELO.** Take the proof out and the two bad
+options come straight back: publish the evidence and expose the victim, or
+publish nothing and ask the court to trust you. The ZK proof is the only thing
+that lets the verdict be public while the evidence stays sealed — it is not a
+feature bolted onto the product, it *is* the product.
+([Why ZK is load-bearing](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html).)
+
 ## The part that makes it real: the system refuses
 
 Anyone can build something that says yes. The interesting behaviour is what

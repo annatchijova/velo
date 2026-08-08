@@ -81,6 +81,13 @@ producirse.
 La evidencia cruda nunca cruza el límite. Lo que cruza es un commitment, el
 veredicto declarado, un timestamp y una prueba sobre ellos.
 
+**Sin zero-knowledge, no hay VELO.** Sacá la prueba y las dos malas opciones
+vuelven de una: publicar la evidencia y exponer a la víctima, o no publicar nada
+y pedirle al tribunal que confíe. La prueba ZK es lo único que permite que el
+veredicto sea público mientras la evidencia queda sellada — no es un feature
+agregado al producto, *es* el producto.
+([Por qué el ZK es esencial](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html).)
+
 ## Lo que lo hace real: el sistema se niega
 
 Cualquiera puede construir algo que diga que sí. Lo interesante es **cómo se
