@@ -8,6 +8,7 @@ import {
   contractAddress,
   lookupCommitment,
   readOnChainLedger,
+  verdictFromIndex,
 } from "../src/chain/read.js";
 
 /**
@@ -86,4 +87,25 @@ test("lookupCommitment rejects anything that is not a 32-byte hex commitment", a
 test("an un-attested commitment returns null — absence is an answer, not a failure", async () => {
   const result = await lookupCommitment("ab".repeat(32), { fetchImpl: fakeIndexer(REAL_STATE_HEX) });
   assert.equal(result, null);
+});
+
+test("verdictFromIndex decodes every index the Compact enum defines", () => {
+  assert.equal(verdictFromIndex(0), "NOISE");
+  assert.equal(verdictFromIndex(1), "SUSPICION");
+  assert.equal(verdictFromIndex(2), "MALICE");
+  assert.equal(verdictFromIndex(3), "ABSTAIN");
+});
+
+test("verdictFromIndex throws instead of silently defaulting on drift", () => {
+  // Round 5: this used to be `VERDICT_BY_INDEX[i] ?? "NOISE"` — an
+  // out-of-range index (a future contract enum reorder/extension the
+  // frontend's hand-mirrored array was not updated for) silently downgraded
+  // to the most benign label instead of surfacing as an error.
+  for (const bad of [4, 5, -1, 100]) {
+    assert.throws(
+      () => verdictFromIndex(bad),
+      (err: unknown) => err instanceof ChainReadError && /Unknown verdict index/.test((err as Error).message),
+      `index ${bad} must be refused, not silently read as NOISE`,
+    );
+  }
 });
