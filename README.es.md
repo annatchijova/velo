@@ -146,7 +146,7 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 | Atestación on-chain | **Funciona** vía CLI (`deploy/attest-case.ts`). Una atestación real registrada |
 | Lectura del ledger | **Funciona** — `GET /api/chain`, MCP `chain_status` |
 | Firma desde el navegador | **No construida** — ver Limitaciones |
-| 4 rondas de red team | **28 hallazgos**, todos los defectos de código arreglados |
+| Red team | **6 rondas** — reportes completos RT1–RT6 abajo |
 
 ---
 
@@ -245,6 +245,8 @@ Toda bilingüe (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
 [`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
+[`RED TEAM 5`](./docs/RED_TEAM_ROUND_5.md) ·
+[`RED TEAM 6`](./docs/RED_TEAM_ROUND_6.md) ·
 [`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
 [`PRD MVP`](./docs/PRD_MVP.md) · [`ADRs MVP`](./docs/ADRS_001_006.md)
 
