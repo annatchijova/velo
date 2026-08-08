@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VELO — Pitch</title>
+<style>
+:root{
+  --cy:#22d3ee; --in:#6366f1; --deep:#4f46e5;
+  --ink:#0b1220; --md:#9aa8bf; --ml:#5b6b84;
+  --rose:#fb7185; --amber:#fbbf24; --slate:#94a3b8;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#05070d;overflow:hidden;font-family:var(--sans);
+  -webkit-font-smoothing:antialiased}
+#fit{position:fixed;inset:0;display:grid;place-items:center}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center center;
+  border-radius:14px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+  padding:112px 82px 64px;color:#fff}
+.slide.on{display:flex}
+.slide.dark{background:
+  radial-gradient(850px 500px at 12% -12%, rgba(99,102,241,.38), transparent 62%),
+  radial-gradient(750px 480px at 100% 8%, rgba(34,211,238,.24), transparent 58%),
+  radial-gradient(600px 400px at 55% 115%, rgba(79,70,229,.22), transparent 60%),
+  linear-gradient(155deg,#0b1220 0%,#101a33 52%,#1a1145 100%)}
+.slide.light{color:var(--ink);background:
+  radial-gradient(850px 480px at 10% -14%, rgba(34,211,238,.20), transparent 62%),
+  radial-gradient(750px 450px at 100% 4%, rgba(99,102,241,.17), transparent 58%),
+  linear-gradient(180deg,#fbfcfe 0%,#f2f5fa 100%)}
+
+/* chrome */
+.mark{position:absolute;top:30px;left:62px;display:flex;align-items:center;gap:10px}
+.mark svg{width:26px;height:26px}
+.mark span{font-size:16px;font-weight:800;letter-spacing:.22em}
+.num{position:absolute;right:74px;bottom:30px;font-size:14.7px;color:#8496b0;letter-spacing:.08em}
+.light .num{color:#64748b}
+
+/* type */
+.kick{font-size:15.3px;font-weight:800;letter-spacing:.22em;color:var(--cy);margin-bottom:16px}
+.light .kick{color:var(--deep)}
+h1{font-size:58.7px;font-weight:800;letter-spacing:-.03em;line-height:1.04;text-wrap:balance}
+h2{font-size:48px;font-weight:800;letter-spacing:-.028em;line-height:1.08;text-wrap:balance}
+.lead{font-size:24px;color:#bfcbdd;line-height:1.5}
+.light .lead{color:var(--ml)}
+.punch{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-top:44px}
+.mono{font-family:var(--mono)}
+
+/* cards */
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;padding:24px 28px}
+.light .card{background:#fff;border-color:rgba(30,42,68,.12);box-shadow:0 2px 8px rgba(30,42,68,.06)}
+.row{display:flex;gap:26px}
+.row>*{flex:1}
+.grow{margin-top:44px}
+.pill{display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.10);
+  border-radius:999px;padding:11px 18px;font-size:16.7px;font-weight:700;text-align:center}
+
+/* ---- individual slides ---- */
+#s1{justify-content:center}
+.s1grid{display:grid;grid-template-columns:1.05fr 1fr;gap:60px;align-items:center}
+.s1 .logo{width:112px;height:112px;margin-bottom:26px}
+.velo{font-size:117.3px;font-weight:800;letter-spacing:.06em;line-height:1;margin:6px 0 18px}
+.s1 .tag{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1.14}
+
+.filecard{position:relative}
+.bar{height:15px;border-radius:8px;background:rgba(255,255,255,.28);margin-bottom:13px}
+.bar.b{background:rgba(255,255,255,.20)}
+
+.steps{display:flex;align-items:stretch;gap:0}
+.steps .card{flex:1}
+.arrow{display:grid;place-items:center;width:56px;flex:none;font-size:32px;color:var(--in);font-weight:700}
+.stepn{font-size:34.7px;font-weight:800;color:var(--cy);line-height:1}
+.stept{font-size:25.3px;font-weight:800;margin:10px 0 8px}
+.stepb{font-size:17.3px;color:#a9b7cd;line-height:1.42}
+
+.verdictrow{display:flex;align-items:stretch;gap:0}
+.vlabel{font-size:12.7px;font-weight:800;letter-spacing:.16em;color:#8497b4;margin-bottom:8px}
+.vfrom{font-size:50.7px;font-weight:800;color:var(--rose);text-decoration:line-through;
+  text-decoration-thickness:3px}
+.vto{font-size:58.7px;font-weight:800}
+.vcard{display:flex;flex-direction:column;justify-content:flex-start}
+
+.codecard{background:rgba(6,11,22,.72);border-color:rgba(34,211,238,.32)}
+.codecard .lbl{font-family:var(--mono);font-size:14.7px;color:#7286a6;margin-bottom:10px}
+.codecard .code{font-family:var(--mono);font-size:25.3px;font-weight:700;color:var(--cy)}
+.addr{font-family:var(--mono);font-size:23.3px;letter-spacing:.01em;word-break:break-all}
+
+.statn{font-size:122.7px;font-weight:800;color:var(--cy);line-height:.9}
+.statl{font-size:14.7px;font-weight:800;letter-spacing:.14em;color:#8497b4;line-height:1.35;margin-top:12px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.qcard{font-size:22.7px;font-weight:800;line-height:1.15;display:flex;align-items:center}
+.honest{background:rgba(255,255,255,.045);border:1px solid rgba(251,191,36,.30);
+  border-radius:14px;padding:16px 22px;font-size:17.3px;font-style:italic;color:#c3cee0;line-height:1.42}
+
+.big{font-size:69.3px;font-weight:800;letter-spacing:-.032em;line-height:1.1;color:var(--deep)}
+.small{font-size:40px;line-height:1.16;color:var(--ml)}
+.tagbig{font-size:77.3px;font-weight:800;letter-spacing:-.032em;line-height:1.1}
+
+/* HUD */
+#hud{position:fixed;right:16px;bottom:14px;display:flex;align-items:center;gap:10px;z-index:10}
+#hud button, #hud .box{font:inherit;font-size:12px;font-weight:700;color:#c3d0e2;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;padding:8px 14px;cursor:pointer;min-height:36px}
+#hud button[aria-pressed="true"]{background:#fff;color:#0b1220;border-color:#fff}
+#hud .box{cursor:default}
+#hint{position:fixed;left:16px;bottom:14px;font-size:11.5px;color:#4b5a75;z-index:10}
+:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="fit"><div id="stage">
+
+<svg style="position:absolute;width:0;height:0" aria-hidden="true"><defs>
+  <linearGradient id="vg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#6366f1"/>
+  </linearGradient>
+</defs></svg>
+
+<!-- 1 · TITLE -->
+<section class="slide dark on s1" id="s1">
+  <div class="s1grid">
+    <div>
+      <svg class="logo" viewBox="0 0 40 40" fill="none">
+        <path d="M5 7 L20 34 L35 7" stroke="url(#vg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="14.5" r="4.8" stroke="#fff" stroke-opacity=".62" stroke-width="1.7"/>
+        <circle cx="20" cy="14.5" r="1.6" fill="#22d3ee"/>
+      </svg>
+      <div class="kick" style="margin-bottom:0">MIDNIGHT HACK BUENOS AIRES</div>
+      <div class="velo">VELO</div>
+      <div class="lead" data-es="Atestación forense de conocimiento cero sobre Midnight">Zero-knowledge forensic attestation on Midnight</div>
+      <div style="margin-top:26px"><span class="pill" style="border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.14);color:#a5f3fc"
+        data-es="Contrato vivo en Midnight preview">Contract live on Midnight preview</span></div>
+    </div>
+    <div>
+      <div class="tag" data-es-html="El veredicto se ve.<br>La víctima no.">The verdict is visible.<br>The victim is not.</div>
+      <div style="margin-top:32px;font-size:16px;color:#7286a6">2026 · v0.1.0</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · THE SITUATION -->
+<section class="slide dark">
+  <div class="kick" data-es="LA SITUACIÓN">THE SITUATION</div>
+  <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:44px;align-items:start">
+    <div>
+      <h1 data-es-html="Una perito forense<br>abre un caso.">A forensic expert<br>opens a case.</h1>
+      <div class="lead" style="margin-top:30px">
+        <p data-es="Material de abuso. Una filtración. Un fraude." style="margin-bottom:14px">Abuse material. A leak. Fraud.</p>
+        <p data-es="Hace su análisis y llega a un hallazgo." style="margin-bottom:14px">She runs her analysis and reaches a finding.</p>
+        <p data-es="Ahora tiene que demostrar ese hallazgo ante un tribunal.">Now she has to prove that finding to a court.</p>
+      </div>
+    </div>
+    <div class="card filecard" style="display:flex;flex-direction:column">
+      <div class="kick" style="margin-bottom:20px" data-es="EXPEDIENTE">CASE FILE</div>
+      <div class="bar" style="width:92%"></div><div class="bar b" style="width:81%"></div>
+      <div class="bar" style="width:97%"></div><div class="bar b" style="width:66%"></div>
+      <div class="bar" style="width:87%"></div><div class="bar b" style="width:75%"></div>
+      <div style="margin-top:32px;font-size:17.3px;font-style:italic;color:#94a6c0;line-height:1.4"
+        data-es-html="Todo lo que hay adentro es privado,<br>y la mayor parte tiene que seguir siéndolo.">Everything inside is private,<br>and most of it has to stay that way.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · THE TRADE-OFF -->
+<section class="slide dark">
+  <div class="kick" data-es="Y SE ENCUENTRA CON UNA DISYUNTIVA TERRIBLE">AND SHE FACES A TERRIBLE TRADE-OFF</div>
+  <div class="row grow" style="align-items:stretch">
+    <div class="card">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1" data-es="Exponer la evidencia cruda">Disclose the raw evidence</div>
+      <div style="margin-top:18px;font-size:20px;color:#aebcd2;line-height:1.5"
+        data-es="Para que todos puedan verificar su trabajo: mensajes privados, fotografías e información que nunca necesitó quedar expuesta.">So everyone can verify her work — including private messages, photographs, and information that never needed to be exposed in the first place.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1" data-es="Mantener todo sellado">Keep the evidence private</div>
+      <div style="margin-top:18px;font-size:20px;color:#aebcd2;line-height:1.5"
+        data-es="Y pedirle a todos que confíen en su proceso. El tribunal recibe una conclusión que no puede chequear, de una persona a la que tiene que creerle.">And ask everyone to trust her process. The court gets a conclusion it cannot check, from a person it has to take at their word.</div>
+    </div>
+  </div>
+  <div class="punch" style="font-size:56px;color:var(--cy)" data-es="VELO no elige ninguna de las dos.">VELO chooses neither.</div>
+</section>
+
+<!-- 4 · THE REFRAME -->
+<section class="slide light">
+  <div class="kick" data-es="ESTO NO ES SOLAMENTE UN PROBLEMA FORENSE">THIS ISN'T ONLY A FORENSICS PROBLEM</div>
+  <h2 style="font-size:44px;line-height:1.16"
+    data-es-html="¿Cómo probás que una regla se cumplió<br>sin revelar los datos privados<br>que esa misma regla busca proteger?">How do you prove that a rule was followed<br>without disclosing the private data<br>that the rule was designed to protect?</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:23px;margin-top:44px">
+    <div class="card" style="padding:16px;display:grid;place-items:center;text-align:center;font-size:16.7px;font-weight:700;line-height:1.25;min-height:98px" data-es="Historias clínicas">Medical records</div>
+    <div class="card" style="padding:16px;display:grid;place-items:center;text-align:center;font-size:16.7px;font-weight:700;line-height:1.25;min-height:98px" data-es="Denuncias de whistleblowers">Whistleblower reports</div>
+    <div class="card" style="padding:16px;display:grid;place-items:center;text-align:center;font-size:16.7px;font-weight:700;line-height:1.25;min-height:98px" data-es="Compliance">Compliance</div>
+    <div class="card" style="padding:16px;display:grid;place-items:center;text-align:center;font-size:16.7px;font-weight:700;line-height:1.25;min-height:98px" data-es="Cualquier proceso con datos sensibles">Any workflow where the data is sensitive</div>
+  </div>
+  <div style="margin-top:26px;font-size:20px;font-style:italic;color:var(--ml);line-height:1.45"
+    data-es="Elegimos forense porque es la versión más extrema de ese problema — y porque es un dominio que conocemos profundamente.">We chose forensics because it is the sharpest version of that problem — and because it is a domain we understand deeply.</div>
+</section>
+
+<!-- 5 · THE MECHANISM -->
+<section class="slide dark">
+  <div class="kick" data-es="EL MECANISMO">THE MECHANISM</div>
+  <h2 data-es="La evidencia nunca se mueve.">The evidence never moves.</h2>
+  <div class="steps grow">
+    <div class="card">
+      <div class="stepn">01</div>
+      <div class="stept" data-es="Análisis local">Local analysis</div>
+      <div class="stepb" data-es="Un motor determinista corre en la máquina de la perito. La evidencia cruda nunca sale de ahí.">A deterministic engine runs on the expert's own machine. The raw evidence never leaves it.</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card">
+      <div class="stepn">02</div>
+      <div class="stept" data-es="Sellado">Sealed</div>
+      <div class="stepb" data-es="El análisis queda sellado en un commitment, atado a un registro de custodia hash-encadenado.">The analysis is sealed into a commitment, bound to a hash-chained record of custody.</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card">
+      <div class="stepn">03</div>
+      <div class="stept">Midnight</div>
+      <div class="stepb" data-es="A la red llegan un commitment y una prueba de conocimiento cero.">A commitment and a zero-knowledge proof reach the network.</div>
+    </div>
+  </div>
+  <div class="punch" style="font-size:29.3px;color:#e2e8f5"
+    data-es="A la red llegan un commitment y una prueba. Nunca la evidencia.">What reaches the network is a commitment and a proof. Never the evidence.</div>
+</section>
+
+<!-- 6 · THE PIVOT -->
+<section class="slide light" style="justify-content:center">
+  <div class="small" data-es-html="VELO no solamente demuestra<br>cuando las reglas se cumplen.">VELO doesn't just prove<br>when the rules are satisfied.</div>
+  <div class="big" style="margin-top:36px" data-es-html="Se niega a demostrar<br>cuando no se cumplen.">It refuses to prove<br>when they're not.</div>
+</section>
+
+<!-- 7 · REFUSAL ONE -->
+<section class="slide dark">
+  <div class="kick" data-es="NEGATIVA UNO — CORROBORACIÓN">REFUSAL ONE — CORROBORATION</div>
+  <div class="lead" data-es-html="Misma evidencia. Un score suficientemente alto para producir MALICE.<br>Pero hay una sola fuente independiente.">Same evidence. A score high enough to produce MALICE.<br>But there is only one independent source.</div>
+  <div class="verdictrow grow">
+    <div class="card vcard" style="width:413px;flex:none">
+      <div class="vlabel" data-es="LO QUE DIRÍA EL SCORE SOLO">WHAT THE SCORE ALONE WOULD SAY</div>
+      <div class="vfrom">MALICE</div>
+    </div>
+    <div class="arrow" style="width:96px;font-size:40px">→</div>
+    <div class="card vcard" style="flex:1;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.42)">
+      <div class="vlabel" style="color:#c6d2e4" data-es="LO QUE VELO ATESTA">WHAT VELO ATTESTS</div>
+      <div class="vto" style="color:var(--amber)">SUSPICION</div>
+    </div>
+  </div>
+  <div class="punch" data-es="No es una advertencia. Es una negativa a producir la prueba.">Not a warning. A refusal to produce the proof.</div>
+</section>
+
+<!-- 8 · REFUSAL TWO -->
+<section class="slide dark">
+  <div class="kick" data-es="NEGATIVA DOS — PROCEDENCIA">REFUSAL TWO — PROVENANCE</div>
+  <div class="lead" data-es-html="La misma evidencia. El mismo score.<br>Esta vez no existe una cadena de custodia válida.">The same evidence. The same score.<br>This time, there is no valid chain of custody.</div>
+  <div class="verdictrow grow">
+    <div class="card vcard" style="width:413px;flex:none">
+      <div class="vlabel" data-es="LO QUE DIRÍA EL SCORE SOLO">WHAT THE SCORE ALONE WOULD SAY</div>
+      <div class="vfrom">MALICE</div>
+    </div>
+    <div class="arrow" style="width:96px;font-size:40px">→</div>
+    <div class="card vcard" style="flex:1;background:rgba(148,163,184,.14);border-color:rgba(148,163,184,.42)">
+      <div class="vlabel" style="color:#c6d2e4" data-es="LO QUE VELO ATESTA">WHAT VELO ATTESTS</div>
+      <div class="vto" style="color:var(--slate)">ABSTAIN</div>
+    </div>
+  </div>
+  <div class="punch" style="font-size:30.7px;line-height:1.24"
+    data-es="El sistema no dice “tengan cuidado”. Se niega a hacer la afirmación más fuerte, porque no se cumplieron los requisitos de procedencia.">The system does not say “be careful.” It refuses to make the stronger claim, because the provenance requirements were not satisfied.</div>
+</section>
+
+<!-- 9 · IN THE CIRCUIT -->
+<section class="slide dark">
+  <div class="kick" data-es="Y ESA REGLA NO ESTÁ SOLAMENTE DOCUMENTADA">AND THAT RULE ISN'T DOCUMENTATION</div>
+  <h2 style="font-size:42.7px"
+    data-es-html="Dos fuentes independientes para un hallazgo grave —<br>impuesto dentro del circuito ZK.">Two independent sources for a serious finding —<br>enforced inside the ZK circuit.</h2>
+  <div class="card codecard" style="margin-top:28px">
+    <div class="lbl">contracts/velo.compact</div>
+    <div class="code">assert(verdict != MALICE || corroborationCount &gt;= 2)</div>
+  </div>
+  <div class="lead" style="margin-top:26px;font-size:24px"
+    data-es="El sistema no puede producir una atestación válida de MALICE si esa restricción no se cumple.">The system cannot produce a valid MALICE attestation unless that constraint is satisfied.</div>
+  <div class="punch" data-es="No es una promesa nuestra. Es una restricción impuesta por el sistema de pruebas.">That is not a promise from us. It is a constraint enforced by the proof system.</div>
+</section>
+
+<!-- 10 · DEPLOYED -->
+<section class="slide dark">
+  <div class="kick" data-es="Y ESTO TAMPOCO ES UN DIAGRAMA">AND THIS ISN'T A DIAGRAM EITHER</div>
+  <h2 data-es-html="El contrato está deployado<br>en la red preview de Midnight.">The contract is deployed<br>on Midnight's preview network.</h2>
+  <div class="card codecard" style="margin-top:30px">
+    <div class="kick" style="margin-bottom:12px" data-es="DIRECCIÓN DEL CONTRATO">CONTRACT ADDRESS</div>
+    <div class="addr">46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:19px;margin-top:44px">
+    <span class="pill" data-es="Compilado con compact 0.31.1">Compiled with compact 0.31.1</span>
+    <span class="pill" data-es="Claves reales de prover y verifier">Real prover and verifier keys</span>
+    <span class="pill" data-es="Sellar → atestar → verificar">Seal → attest → verify, end to end</span>
+  </div>
+</section>
+
+<!-- 11 · WE ATTACKED OURSELVES -->
+<section class="slide dark">
+  <div class="kick" data-es="ATACAMOS NUESTRO PROPIO SISTEMA">WE ATTACKED OUR OWN IMPLEMENTATION</div>
+  <div style="display:grid;grid-template-columns:250px 1fr;gap:32px">
+    <div>
+      <div class="statn">4</div>
+      <div class="statl" data-es-html="RONDAS DE AUDITORÍA<br>ADVERSARIAL">ADVERSARIAL<br>AUDIT ROUNDS</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <div class="card" style="padding:14px 22px">
+        <div style="font-size:20px;font-weight:800;color:var(--cy)">Path traversal</div>
+        <div style="font-size:16.7px;color:#aebcd2;line-height:1.4;margin-top:6px"
+          data-es="De lectura y escritura, vía el identificador de caso. Explotado de punta a punta sobre el protocolo real.">Read and write, through the case identifier. Exploited end to end over the real protocol, not theorized.</div>
+      </div>
+      <div class="card" style="padding:14px 22px">
+        <div style="font-size:20px;font-weight:800;color:var(--cy)" data-es="Independencia que no lo era">Independence that wasn't</div>
+        <div style="font-size:16.7px;color:#aebcd2;line-height:1.4;margin-top:6px"
+          data-es="Contaba categorías de detector. Un solo artefacto llegaba a MALICE con “corroboración 4”.">It was counting detector categories, not sources. One artifact reached MALICE with “corroboration 4.”</div>
+      </div>
+      <div class="card" style="padding:14px 22px">
+        <div style="font-size:20px;font-weight:800;color:var(--cy)" data-es="Contador inflado en silencio">Silent counter inflation</div>
+        <div style="font-size:16.7px;color:#aebcd2;line-height:1.4;margin-top:6px"
+          data-es="Un camino de re-attestation permitía que el mismo hallazgo inflara un contador público y simulara corroboración.">A re-attestation path let the same finding inflate a public counter, manufacturing the look of corroboration.</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:44px;font-size:21.3px;color:#bfcbdd"
+    data-es="Los corregimos, y documentamos lo que todavía queda abierto en el repositorio.">We fixed them, and documented what remains open in the repository.</div>
+  <div style="margin-top:12px;font-size:28px;font-weight:800;letter-spacing:-.02em"
+    data-es="No escondemos los modos de falla. Los convertimos en parte del audit trail.">We don't hide the failure modes. We make them part of the audit trail.</div>
+</section>
+
+<!-- 12 · NOBODY BUYS A PROOF -->
+<section class="slide light" style="justify-content:center">
+  <div style="font-size:58.7px;font-weight:800;letter-spacing:-.032em;line-height:1.1"
+    data-es-html="Nadie compra<br>una prueba de conocimiento cero.">Nobody buys<br>a zero-knowledge proof.</div>
+  <div style="margin-top:38px;font-size:42.7px;line-height:1.18;color:var(--deep)"
+    data-es-html="Un laboratorio forense, una fiscalía<br>o una aseguradora compra confianza verificable.">A forensic laboratory, a prosecutor's office<br>or an insurer buys verifiable trust.</div>
+</section>
+
+<!-- 13 · THE PROFESSIONAL WALLET -->
+<section class="slide light">
+  <div class="kick" data-es="EL PRODUCTO">THE PRODUCT</div>
+  <h2 data-es="Pensá VELO como una wallet profesional.">Think of VELO as a professional wallet.</h2>
+  <div class="row grow" style="align-items:stretch">
+    <div class="card">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em" data-es="Una wallet cripto">A crypto wallet</div>
+      <div style="margin-top:14px;font-size:21.3px;font-weight:700;color:var(--ml)" data-es="El activo es dinero.">The asset is money.</div>
+      <div style="margin-top:16px;font-size:20px;color:var(--ml);line-height:1.5"
+        data-es="Nunca manda tu clave privada por la red. Manda una prueba de que estás autorizado para actuar.">It never sends your private key across the network. It sends a proof that you are authorized to act.</div>
+    </div>
+    <div class="card" style="background:#ecedfd;border-color:#c7c9f7">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--deep)">VELO</div>
+      <div style="margin-top:14px;font-size:21.3px;font-weight:700;color:var(--deep)" data-es="El activo es un caso sellado y verificable.">The asset is a sealed, verifiable case.</div>
+      <div style="margin-top:16px;font-size:20px;color:var(--ml);line-height:1.5"
+        data-es="Nunca manda la evidencia. Manda una prueba de que el hallazgo fue producido bajo las reglas requeridas.">It never sends the evidence. It sends a proof that the finding was produced under the required rules.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · WHAT YOU COULD ASK -->
+<section class="slide dark">
+  <div class="kick" data-es="CONSULTAR EL HISTORIAL DE UN PROFESIONAL SIN VER LOS CASOS">QUERYING A PROFESSIONAL'S RECORD WITHOUT SEEING THE CASES</div>
+  <div class="grid2 grow">
+    <div class="card qcard" style="padding:18px 24px" data-es="¿Cuántos hallazgos fueron aceptados?">How many findings were accepted?</div>
+    <div class="card qcard" style="padding:18px 24px" data-es="¿Bajo qué jurisdicción?">Under which jurisdiction?</div>
+    <div class="card qcard" style="padding:18px 24px" data-es="¿Qué auditorías verificaron el proceso?">Which audits verified the process?</div>
+    <div class="card qcard" style="padding:18px 24px" data-es="¿Un paquete de evidencia fue alterado después de ser sellado?">Was an evidence package altered after it was sealed?</div>
+  </div>
+  <div style="margin-top:24px;font-size:22.7px;color:#c7d2e4;line-height:1.4"
+    data-es="Ninguna de esas consultas necesita exponer las fotografías, los nombres o los mensajes privados que están detrás.">None of those questions requires exposing the underlying photographs, names or private messages.</div>
+  <div class="honest" style="margin-top:44px"
+    data-es="Son ejemplos de lo que esa interfaz podría reportar, no métricas que estemos afirmando hoy. Lo que existe hoy es el mecanismo que hace posibles esas afirmaciones sin revelar los datos.">These are examples of what that interface could report — not metrics we are claiming today. What is real today is the mechanism that makes those claims possible without disclosure.</div>
+</section>
+
+<!-- 15 · IDENTITY -->
+<section class="slide dark">
+  <div class="kick"
+    data-es="“¿CÓMO SABEN QUE LA PERSONA QUE EMITE EL HALLAZGO ESTÁ ACREDITADA?”">“HOW DO YOU KNOW THE PERSON ISSUING THE FINDING IS ACCREDITED?”</div>
+  <div class="row grow" style="align-items:stretch">
+    <div class="card">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:#94a6c0;line-height:1.1" data-es="Sin reconocimiento facial">Not facial recognition</div>
+      <div style="margin-top:20px;font-size:21.3px;color:#aebcd2;line-height:1.52"
+        data-es="Una cara demuestra que alguien tiene una cara. No demuestra que está autorizado para emitir un hallazgo forense.">A face proves that someone has a face. It does not prove that they are authorized to issue a forensic finding.</div>
+    </div>
+    <div class="card" style="background:rgba(34,211,238,.11);border-color:rgba(34,211,238,.42)">
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--cy);line-height:1.1" data-es="Una credencial">A credential</div>
+      <div style="margin-top:20px;font-size:21.3px;color:#dce6f5;line-height:1.52"
+        data-es="Una prueba de conocimiento cero de pertenencia a un registro de peritos acreditados. Demuestra que el emisor está autorizado sin revelar quién es.">A zero-knowledge proof of membership in an accredited-experts registry. It proves the issuer is authorized without revealing who that person is.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · CLOSE -->
+<section class="slide dark">
+  <div style="font-size:28px;color:#bfcbdd;line-height:1.45;margin-top:14px"
+    data-es="La perito puede hacer su trabajo.">The expert gets to do her job.</div>
+  <div style="font-size:28px;color:#bfcbdd;line-height:1.45;margin-top:14px"
+    data-es-html="La víctima no tiene que convertirse en parte de la evidencia<br>para que el proceso pueda ser confiable.">The victim doesn't have to become part of the evidence<br>just so the process can be trusted.</div>
+  <div class="tagbig" style="margin-top:44px;margin-bottom:20px"
+    data-es-html="El veredicto se ve.<br><span style='color:#22d3ee'>La víctima no.</span>">The verdict is visible.<br><span style="color:#22d3ee">The victim is not.</span></div>
+  <svg style="position:absolute;right:62px;bottom:74px;width:72px;height:72px;opacity:.45" viewBox="0 0 40 40" fill="none">
+    <path d="M5 7 L20 34 L35 7" stroke="url(#vg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="20" cy="14.5" r="4.8" stroke="#fff" stroke-opacity=".62" stroke-width="1.7"/>
+  </svg>
+</section>
+
+</div></div>
+
+<div id="hint">← →  ·  Space  ·  F fullscreen  ·  L language</div>
+<div id="hud">
+  <span class="box" id="counter">01 / 16</span>
+  <button id="btn-en" aria-pressed="true" onclick="setLang('en')">EN</button>
+  <button id="btn-es" aria-pressed="false" onclick="setLang('es')">ES</button>
+</div>
+
+<script>
+// ---- chrome injection (logo + slide number on every slide but the first) ----
+const LOGO = '<svg viewBox="0 0 40 40" fill="none"><path d="M5 7 L20 34 L35 7" stroke="url(#vg)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="14.5" r="4.8" stroke="currentColor" stroke-opacity=".6" stroke-width="1.8"/></svg>';
+const slides = [...document.querySelectorAll('.slide')];
+slides.forEach((s, i) => {
+  if (i === 0) return;
+  const m = document.createElement('div');
+  m.className = 'mark';
+  m.innerHTML = LOGO + '<span>VELO</span>';
+  s.appendChild(m);
+  const n = document.createElement('div');
+  n.className = 'num';
+  n.textContent = String(i + 1).padStart(2, '0');
+  s.appendChild(n);
+});
+
+// ---- i18n ----
+const nodes = [];
+document.querySelectorAll('[data-es],[data-es-html]').forEach(el => {
+  nodes.push({ el, es: el.getAttribute('data-es'), esHtml: el.getAttribute('data-es-html'), en: el.innerHTML });
+});
+function setLang(lang) {
+  const isEs = lang === 'es';
+  nodes.forEach(n => {
+    if (isEs) {
+      if (n.esHtml != null) n.el.innerHTML = n.esHtml;
+      else if (n.es != null) n.el.textContent = n.es;
+    } else n.el.innerHTML = n.en;
+  });
+  document.documentElement.lang = lang;
+  document.getElementById('btn-en').setAttribute('aria-pressed', String(!isEs));
+  document.getElementById('btn-es').setAttribute('aria-pressed', String(isEs));
+}
+
+// ---- navigation ----
+let i = 0;
+const counter = document.getElementById('counter');
+function show(n) {
+  i = Math.max(0, Math.min(slides.length - 1, n));
+  slides.forEach((s, k) => s.classList.toggle('on', k === i));
+  counter.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+  location.hash = String(i + 1);
+}
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+  else if (e.key === 'f' || e.key === 'F') {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+  else if (e.key === 'l' || e.key === 'L') {
+    setLang(document.documentElement.lang === 'es' ? 'en' : 'es');
+  }
+});
+document.getElementById('fit').addEventListener('click', e => {
+  if (e.target.closest('#hud')) return;
+  show(i + 1);
+});
+
+// ---- scale the fixed 1280x720 stage to the viewport ----
+const stage = document.getElementById('stage');
+function fit() {
+  const s = Math.min(innerWidth / 1280, innerHeight / 720) * (document.fullscreenElement ? 1 : 0.96);
+  stage.style.transform = 'scale(' + s + ')';
+}
+addEventListener('resize', fit);
+document.addEventListener('fullscreenchange', fit);
+fit();
+show(parseInt(location.hash.slice(1), 10) - 1 || 0);
+</script>
+</body>
+</html>
