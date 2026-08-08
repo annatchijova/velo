@@ -77,3 +77,71 @@ describe("requireJsonContentType — the refusal explains itself", () => {
     expect(body.error).toContain("text/plain");
   });
 });
+
+/**
+ * Red team round 6, F22: the compute-bearing POST routes had no request-body
+ * size cap — memory is unbounded at the application layer. readJsonBody
+ * enforces one, refusing oversized bodies before parse.
+ */
+
+import { MAX_JSON_BODY_BYTES, readJsonBody } from "@/lib/http";
+
+describe("readJsonBody — size cap (F22)", () => {
+  it("parses a small JSON body", async () => {
+    const req = new Request("http://localhost/api/seal", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ caseId: "VELO-001" }),
+    });
+    const result = await readJsonBody(req);
+    expect(result.status).toBe(200);
+    if (result.status === 200) expect(result.body).toEqual({ caseId: "VELO-001" });
+  });
+
+  it("refuses bodies over the cap declared in content-length", async () => {
+    const req = new Request("http://localhost/api/seal", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "content-length": String(MAX_JSON_BODY_BYTES + 1),
+      },
+      body: "{}",
+    });
+    const result = await readJsonBody(req);
+    expect(result.status).toBe(413);
+  });
+
+  it("refuses oversized bodies even without a content-length header", async () => {
+    const big = `{"pad":"${"x".repeat(MAX_JSON_BODY_BYTES)}"}`;
+    const req = new Request("http://localhost/api/seal", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: big,
+    });
+    const result = await readJsonBody(req);
+    expect(result.status).toBe(413);
+  });
+
+  it("refuses malformed JSON with 400, not a crash", async () => {
+    const req = new Request("http://localhost/api/seal", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{not json",
+    });
+    const result = await readJsonBody(req);
+    expect(result.status).toBe(400);
+  });
+
+  it("accepts a body exactly at the cap", async () => {
+    const pad = "x".repeat(MAX_JSON_BODY_BYTES - 10);
+    const body = `{"pad":"${pad}"}`;
+    expect(body.length).toBe(MAX_JSON_BODY_BYTES);
+    const req = new Request("http://localhost/api/seal", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    const result = await readJsonBody(req);
+    expect(result.status).toBe(200);
+  });
+});

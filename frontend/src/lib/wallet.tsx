@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { ConnectedAPI } from "@midnight-ntwrk/dapp-connector-api";
+import { clearServerSession, establishServerSession } from "@/lib/api";
 
 export type WalletKind = "lace" | "1am" | "demo";
 
@@ -124,6 +125,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             name: wallet.name ?? WALLET_LABELS[saved.kind],
             address: shieldedAddress,
           });
+          // Restore the server session too — persistence decisions are made
+          // server-side from the cookie, so it must exist for seals to persist.
+          establishServerSession(shieldedAddress, wallet.name ?? WALLET_LABELS[saved.kind]).catch(
+            () => undefined,
+          );
         })
         .catch(() => {
           /* wallet may be locked — leave disconnected */
@@ -171,6 +177,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       };
       setSession(next);
       localStorage.setItem("velo-wallet", JSON.stringify(next));
+      // AC-J2.1: exchange the wallet address for a server session. Failure
+      // here does not fail the connect — it only means seals won't persist.
+      await establishServerSession(shieldedAddress, next.name).catch(() => undefined);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -184,6 +193,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setError(null);
     localStorage.removeItem("velo-wallet");
+    clearServerSession();
   }, []);
 
   const isAttestor = session !== null && session.kind !== "demo";

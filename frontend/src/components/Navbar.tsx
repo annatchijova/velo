@@ -39,6 +39,7 @@ export function Navbar() {
 
           <nav className="flex items-center gap-1" aria-label="Primary">
             {link("/cases", t("nav.cases"))}
+            {link("/sealed", t("nav.sealed"))}
             {link("/peritos", t("nav.peritos"))}
           </nav>
 
@@ -63,9 +64,11 @@ export function Navbar() {
                     disconnect();
                     router.push("/");
                   }}
+                  aria-label={t("nav.logout")}
+                  title={t("nav.logout")}
                   className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-semibold"
                 >
-                  <LogOut className="h-3.5 w-3.5" />
+                  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="hidden sm:inline">{t("nav.logout")}</span>
                 </button>
               </>
