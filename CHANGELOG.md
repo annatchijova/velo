@@ -33,6 +33,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Fixed
 
+- **Chain state decoding fails closed (red team F25).** `hexToBytes` in
+  `src/chain/read.ts` decoded the indexer's contract-state blob with
+  `hex.match(/../g)` + `Number.parseInt`, which turned a non-hex pair into
+  `NaN` — coerced by `Uint8Array.from` to `0x00` — and silently dropped an odd
+  trailing nibble. The reader could therefore return a *ledger object* built
+  from bytes the chain never sent, which reads as "no attestations" rather
+  than as a read failure. The decoder now validates
+  `/^([0-9a-fA-F]{2})+$/` before decoding and raises `ChainReadError`
+  otherwise, matching the strictness `hexToBytes32` has always applied to the
+  same values on the write path. This is the read-path half of the
+  silent-default defect round 5 fixed on the verdict-index half (F19).
+  Reproducible with `scripts/verify-f25-hex-decode-strictness.mjs`, which
+  runs the old and new decoders side by side; pinned by two tests in
+  `tests/chain.test.ts`, one of them the control that valid captured state
+  still decodes.
 - **Chain reads in production builds.** `GET /api/chain` worked under
   `next dev` but failed once bundled: webpack rewrote the runtime dynamic
   import of the contract bindings into its chunk loader ("Cannot find module

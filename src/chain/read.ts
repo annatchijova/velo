@@ -172,10 +172,37 @@ const CONTRACT_STATE_QUERY = `query($a: HexEncoded!) {
   }
 }`;
 
+/**
+ * Hex string to bytes, validated. Variable-length (a contract state blob,
+ * not a fixed-width hash), but as strict as `hexToBytes32` in
+ * `witness/witnesses.ts` is on the write path: reject, never repair.
+ *
+ * The previous implementation used `hex.match(/../g)` + `Number.parseInt`,
+ * which turned a non-hex pair into `NaN` and let `Uint8Array.from` coerce it
+ * to `0x00`, and silently dropped an odd trailing nibble. That is a decoder
+ * that answers confidently about bytes the chain never returned — the same
+ * class of silent-default defect as the verdict-index decode (red team F19),
+ * on the half that fix did not touch. This is red team F25.
+ *
+ * Reachable only under a misbehaving or compromised indexer, which the
+ * threat model excludes — but "the attacker cannot do this" is a reason to
+ * fail closed cheaply, not a reason to trust the input.
+ */
 function hexToBytes(hex: string): Uint8Array {
-  const pairs = hex.match(/../g);
-  if (!pairs) throw new ChainReadError("Contract state hex is empty or malformed.");
-  return Uint8Array.from(pairs.map((h) => Number.parseInt(h, 16)));
+  const trimmed = typeof hex === "string" ? hex.trim() : "";
+  if (trimmed.length === 0) {
+    throw new ChainReadError("Contract state hex is empty.");
+  }
+  if (!/^([0-9a-fA-F]{2})+$/.test(trimmed)) {
+    throw new ChainReadError(
+      `Contract state hex is malformed: expected an even-length run of hex characters, got ${trimmed.length} character(s) starting ${JSON.stringify(trimmed.slice(0, 16))}. Refusing to decode — a partially-decoded ledger would read as a real answer.`,
+    );
+  }
+  const out = new Uint8Array(trimmed.length / 2);
+  for (let i = 0; i < out.length; i++) {
+    out[i] = Number.parseInt(trimmed.slice(i * 2, i * 2 + 2), 16);
+  }
+  return out;
 }
 
 /**
