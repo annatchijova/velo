@@ -389,6 +389,19 @@ recomputes the *same* commitment, and the contract refuses to record it twice or
 inflate `attestationCount`. Red team G2. Attest a different case, or change the
 analysis.
 
+> **Where the salt lives, and why it can give you a false negative.** The salt
+> store is a LevelDB directory — `midnight-level-db-deploy`, store
+> `velo-private-state-attest` — created **relative to your working directory**
+> and encrypted with `MIDNIGHT_STORAGE_PASSWORD`. Re-attest from a different
+> directory, or with a different password, and the store is not found: a fresh
+> salt is generated, the commitment comes out different, and the contract
+> accepts it as a **new** attestation. You get a successful transaction and a
+> burnt fee instead of the guard, and nothing announces that you tested the
+> wrong thing. Same `cd`, same password — and confirm with
+> `node scripts/verify-chain-read.mjs` that `attestationCount` did **not**
+> move. That unchanged number is the result; a transaction that succeeds is
+> the failure.
+
 **A `MALICE` case refusing to attest with fewer than two corroborating sources**
 — the Daubert gate. That is §4, and it is the point of the project.
 
@@ -599,12 +612,19 @@ it, and nobody learns anything about the evidence.
 ```bash
 bun run deploy/attest-case.ts VELO-001
 # -> failed assert: this attestation already exists
+node scripts/verify-chain-read.mjs
+# -> attestationCount UNCHANGED
 ```
 
 The salt is stored per case, so the same analysis recomputes the same
 commitment, and the contract refuses to record it twice. Red team G2. Without
 this you could manufacture the appearance of independent corroboration by
 paying the fee twice.
+
+Run it from the same directory and with the same `MIDNIGHT_STORAGE_PASSWORD` as
+step 6, or this step silently tests nothing — see the note in
+[§5](#two-things-that-will-look-like-errors-and-are-not). The unchanged
+`attestationCount` is the result, not the error message.
 
 **9. The adversarial probe — the one that matters.** Force `MALICE` with a
 single corroborating source, straight at the deployed circuit:
@@ -945,6 +965,18 @@ mismo análisis recalcula el *mismo* commitment, y el contrato se niega a
 registrarlo dos veces o a inflar `attestationCount`. Red team G2. Atestiguá otro
 caso, o cambiá el análisis.
 
+> **Dónde vive el salt, y por qué puede darte un falso negativo.** El almacén
+> del salt es un directorio LevelDB — `midnight-level-db-deploy`, store
+> `velo-private-state-attest` — creado **relativo a tu directorio de trabajo** y
+> cifrado con `MIDNIGHT_STORAGE_PASSWORD`. Si volvés a atestiguar desde otro
+> directorio, o con otra contraseña, el almacén no se encuentra: se genera un
+> salt nuevo, el commitment sale distinto, y el contrato lo acepta como una
+> atestación **nueva**. Te queda una transacción exitosa y una comisión gastada
+> en lugar de la guarda, y nada avisa que probaste otra cosa. Mismo `cd`, misma
+> contraseña — y confirmá con `node scripts/verify-chain-read.mjs` que
+> `attestationCount` **no** se movió. Ese número sin cambiar es el resultado;
+> una transacción que sale bien es el fallo.
+
 **Un caso `MALICE` que se niega a atestiguar con menos de dos fuentes que
 corroboran** — la compuerta Daubert. Eso es la sección 4, y es el punto del
 proyecto.
@@ -1157,12 +1189,19 @@ chequearlo, y nadie aprende nada sobre la evidencia.
 ```bash
 bun run deploy/attest-case.ts VELO-001
 # -> failed assert: this attestation already exists
+node scripts/verify-chain-read.mjs
+# -> attestationCount SIN CAMBIOS
 ```
 
 El salt se guarda por caso, así que el mismo análisis recalcula el mismo
 commitment, y el contrato se niega a registrarlo dos veces. Red team G2. Sin
 esto podrías fabricar la apariencia de corroboración independiente pagando la
 comisión dos veces.
+
+Correlo desde el mismo directorio y con el mismo `MIDNIGHT_STORAGE_PASSWORD`
+que el paso 6, o este paso no prueba nada en silencio — ver la nota en
+[§5](#dos-cosas-que-van-a-parecer-errores-y-no-lo-son). El `attestationCount`
+sin cambiar es el resultado, no el mensaje de error.
 
 **9. La sonda adversarial — la que importa.** Forzar `MALICE` con una sola
 fuente que corrobora, directo contra el circuito desplegado:
