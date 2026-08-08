@@ -17,6 +17,15 @@ export const WALLET_KEYS: Record<Exclude<WalletKind, "demo">, string> = {
   "1am": "1am",
 };
 
+// Match an injected wallet by the `name` it reports. Injection keys are NOT
+// stable across wallets/versions: 1AM injects under the fixed key "1am", but
+// Lace 4.x injects under a per-install random UUID rather than the historical
+// "mnLace" — so a hardcoded key lookup finds 1AM and misses Lace entirely.
+const WALLET_NAME_MATCH: Record<Exclude<WalletKind, "demo">, RegExp> = {
+  lace: /lace/i,
+  "1am": /1\s*am/i,
+};
+
 export const WALLET_LABELS: Record<WalletKind, string> = {
   lace: "Lace",
   "1am": "1AM",
@@ -53,13 +62,24 @@ interface WalletContextValue {
 
 const WalletContext = createContext<WalletContextValue | null>(null);
 
+type InjectedWallet = NonNullable<Window["midnight"]>[string];
+
+// Resolve a wallet by its reported `name` first (robust to non-stable injection
+// keys like Lace's random UUID), falling back to the legacy fixed key.
+function resolveInjected(kind: Exclude<WalletKind, "demo">): InjectedWallet | undefined {
+  if (typeof window === "undefined" || !window.midnight) return undefined;
+  const match = WALLET_NAME_MATCH[kind];
+  const byName = Object.values(window.midnight).find(
+    (w) => typeof w?.name === "string" && match.test(w.name),
+  );
+  return byName ?? window.midnight[WALLET_KEYS[kind]];
+}
+
 function detectInstalled(): Partial<Record<WalletKind, boolean>> {
   if (typeof window === "undefined" || !window.midnight) return {};
-  const entries = Object.entries(window.midnight);
-  const has = (key: string) => entries.some(([k]) => k === key);
   return {
-    lace: has("mnLace"),
-    "1am": has("1am"),
+    lace: !!resolveInjected("lace"),
+    "1am": !!resolveInjected("1am"),
   };
 }
 
@@ -90,7 +110,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setSession(saved);
         return;
       }
-      const wallet = window.midnight?.[WALLET_KEYS[saved.kind]];
+      const wallet = resolveInjected(saved.kind);
       if (!wallet) return;
       wallet
         .connect(saved.networkId)
@@ -129,7 +149,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         return true;
       }
 
-      const wallet = window.midnight?.[WALLET_KEYS[kind]];
+      const wallet = resolveInjected(kind);
       if (!wallet) {
         throw new Error(
           `${WALLET_LABELS[kind]} wallet is not installed. Install it, then refresh the page.`,
