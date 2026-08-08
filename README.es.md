@@ -2,6 +2,14 @@
 
 > **El veredicto se ve, la víctima no.**
 
+<div align="center">
+
+## ▶ [Abrí el VELO Hub — todo el proyecto en una página](https://velo-hub-zeta.vercel.app/)
+
+[![Abrí el VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-abrir_todo_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
+
+</div>
+
 Atestación de veredictos forenses con conocimiento cero sobre [Midnight](https://midnight.network).
 Un perito puede probar que su veredicto es legítimo **sin publicar nunca la
 evidencia de la que salió**.
@@ -28,6 +36,7 @@ Cada página es bilingüe (EN/ES).
 - **[Estado técnico](https://annatchijova.github.io/vigia/velotechnical-status.html)** — qué es real y qué está pendiente, capa por capa.
 - **[Modelo de identidad](https://annatchijova.github.io/vigia/velo-identity.html)** — autorización de perito acreditado, no identificación biométrica.
 - **[Caso de negocio](https://annatchijova.github.io/vigia/velo-business.html)** — la capa de reputación forense y sus casos de uso.
+- **[Por qué el ZK es esencial](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html)** — por qué el zero-knowledge es estructural para VELO, no un feature opcional.
 - **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — las capas entregadas y lo que viene.
 
 ## Levantarlo localmente
@@ -79,6 +88,13 @@ producirse.
 
 La evidencia cruda nunca cruza el límite. Lo que cruza es un commitment, el
 veredicto declarado, un timestamp y una prueba sobre ellos.
+
+**Sin zero-knowledge, no hay VELO.** Sacá la prueba y las dos malas opciones
+vuelven de una: publicar la evidencia y exponer a la víctima, o no publicar nada
+y pedirle al tribunal que confíe. La prueba ZK es lo único que permite que el
+veredicto sea público mientras la evidencia queda sellada — no es un feature
+agregado al producto, *es* el producto.
+([Por qué el ZK es esencial](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html).)
 
 ## Lo que lo hace real: el sistema se niega
 

@@ -3,6 +3,14 @@
 > **The verdict is visible. The victim is not.**
 > *El veredicto se ve, la víctima no.*
 
+<div align="center">
+
+## ▶ [Open the VELO Hub — the whole project on one page](https://velo-hub-zeta.vercel.app/)
+
+[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
+
+</div>
+
 Zero-knowledge attestation of forensic verdicts on [Midnight](https://midnight.network).
 A forensic expert can prove their verdict is legitimate **without ever
 publishing the evidence it came from**.
@@ -15,6 +23,8 @@ publishing the evidence it came from**.
 > boundary sits.)
 
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
+
+📄 **[Léelo en español (README.es.md)](./README.es.md)**
 
 **Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
 
@@ -33,6 +43,7 @@ Every page below is bilingual (EN/ES).
 - **[Technical status](https://annatchijova.github.io/vigia/velotechnical-status.html)** — what is real vs. pending, layer by layer.
 - **[Identity model](https://annatchijova.github.io/vigia/velo-identity.html)** — accredited-expert authorization, not biometric identification.
 - **[Business case](https://annatchijova.github.io/vigia/velo-business.html)** — the forensic-reputation layer and its use cases.
+- **[Why ZK is load-bearing](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html)** — why zero-knowledge is architecturally essential to VELO, not an optional feature.
 - **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — delivered layers and what comes next.
 
 ## Run it locally
@@ -122,6 +133,13 @@ The raw evidence never crosses the boundary. What crosses is a commitment, the
 declared verdict, a timestamp, and a proof about them — that is enough for
 anyone watching the chain to learn that an investigation existed, roughly when,
 and its outcome category, even without seeing the case itself.
+
+**Without zero-knowledge, there is no VELO.** Take the proof out and the two bad
+options come straight back: publish the evidence and expose the victim, or
+publish nothing and ask the court to trust you. The ZK proof is the only thing
+that lets the verdict be public while the evidence stays sealed — it is not a
+feature bolted onto the product, it *is* the product.
+([Why ZK is load-bearing](https://annatchijova.github.io/vigia/velo-sin-zk-no-hay-velo.html).)
 
 ## The part that makes it real: the system refuses
 
