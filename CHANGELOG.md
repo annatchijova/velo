@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
+  1–5 never covered: the attestation/deploy tooling, the witness module, the
+  frontend beyond the F14 routes, and the coverage-gap engine change. One
+  Medium finding confirmed by induction (F20: case-variant provenance roots
+  defeat source deduplication and can carry a verdict over the Daubert gate,
+  reproducible with `scripts/verify-r6-provenance-normalization.mjs`) plus
+  five low-severity hardening/drift items (F21–F25).
 - **MVP definition.** The deployed-app PRD with numbered acceptance criteria
   (`docs/PRD_MVP.md`), six architecture decision records for the Vercel/Neon
   MVP — hosting, static corpus, local attestation with web reads, wallet
