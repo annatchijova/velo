@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="./visual/logo.jpg" alt="VELO logo — a brushed-steel V forming a checkmark inside an open circle, the tick stroke rendered in red. Below it the wordmark VELO and the line: the verdict is visible, the victim is not." width="320">
+
+</div>
+
 # VELO
 
 > **El veredicto se ve, la víctima no.**
