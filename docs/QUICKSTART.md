@@ -17,6 +17,8 @@ Three separate layers, and you can stop after any of them:
 **Want to reproduce exactly what we ran** — the happy path with the wallet, and
 the adversarial probe against the deployed circuit? That is
 [**§7, in order, with the output of each step**](#7-reproduce-what-we-ran).
+Want to attest all 14 cases yourself? Copy-paste blocks in
+[**§8**](#8-all-14-cases-on-chain-block-by-block).
 
 ---
 
@@ -673,6 +675,164 @@ Step 9 is the one to demo. Everything else is a system working; step 9 is a
 system refusing.
 
 ---
+
+## 8. All 14 cases on-chain, block by block
+
+Copy-paste, one block at a time. Each one seals the case locally, attests it on
+`preview`, and reads the ledger back so you can watch `attestationCount` go up
+by exactly one.
+
+**Before you start**, once per session:
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='pick-a-real-secret'
+export MIDNIGHT_WALLET_MNEMONIC="word1 word2 ... word24"
+unset MIDNIGHT_WALLET_SEED
+
+docker start midnight-proof-server 2>/dev/null || \
+  docker run -d --name midnight-proof-server -p 6300:6300 midnightntwrk/proof-server:8.1.0
+
+npm run build
+bun run deploy/register-dust.ts     # once per wallet
+node scripts/verify-chain-read.mjs  # note the starting attestationCount
+```
+
+**Read this before running all 14.** Each block is a real transaction: it costs
+DUST and takes a few minutes, most of it wallet sync and ZK proof generation.
+Fourteen of them is roughly an hour and needs the wallet to stay funded
+throughout. **Do them one at a time** — two attestations in flight from the same
+wallet is how you produce a stale-dust failure. If you only want to see the
+mechanism work, blocks 001, 010 and 014 cover MALICE, NOISE and ABSTAIN, which
+is the whole verdict range.
+
+All 14 attest cleanly: every `MALICE` case in the corpus has at least two
+corroborating sources, so none of them trips the Daubert gate. Making one trip
+it deliberately is [§4](#the-daubert-gate-in-full).
+
+Re-running a block you have already done will hit the replay guard rather than
+attesting twice — that is [§7 step 8](#7-reproduce-what-we-ran), and the note
+there about the storage password applies.
+
+**VELO-001 — The Pawn Sacrifice** · `MALICE`, 4 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+bun run deploy/attest-case.ts VELO-001
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-002 — The Uniform Log Auction** · `SUSPICION`, 1 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-002 --seal
+bun run deploy/attest-case.ts VELO-002
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-003 — The False Flag** · `MALICE`, 2 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-003 --seal
+bun run deploy/attest-case.ts VELO-003
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-004 — The Broken Chain** · `ABSTAIN`, 0 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-004 --seal
+bun run deploy/attest-case.ts VELO-004
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-005 — The Four-Source Convergence** · `MALICE`, 3 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-005 --seal
+bun run deploy/attest-case.ts VELO-005
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-006 — The Surgical Void** · `MALICE`, 2 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-006 --seal
+bun run deploy/attest-case.ts VELO-006
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-007 — The Ventriloquist** · `MALICE`, 2 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-007 --seal
+bun run deploy/attest-case.ts VELO-007
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-008 — The Altered Mise en Place** · `MALICE`, 2 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-008 --seal
+bun run deploy/attest-case.ts VELO-008
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-009 — The False-Layman Bait** · `SUSPICION`, 1 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-009 --seal
+bun run deploy/attest-case.ts VELO-009
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-010 — A Normal Day at the Office** · `NOISE`, 0 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-010 --seal
+bun run deploy/attest-case.ts VELO-010
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-011 — The Two Badges** · `SUSPICION`, 1 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-011 --seal
+bun run deploy/attest-case.ts VELO-011
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-012 — The Quiet Resignation** · `SUSPICION`, 1 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-012 --seal
+bun run deploy/attest-case.ts VELO-012
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-013 — The Anonymous Drop** · `ABSTAIN`, 0 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-013 --seal
+bun run deploy/attest-case.ts VELO-013
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-014 — What Was Never Looked At** · `ABSTAIN`, 0 corroborating
+
+```bash
+node scripts/run-case.mjs VELO-014 --seal
+bun run deploy/attest-case.ts VELO-014
+node scripts/verify-chain-read.mjs
+```
+
+Afterwards, the whole set is readable by anyone, with no wallet:
+
+```bash
+node scripts/verify-chain-read.mjs
+```
+
+---
 ---
 
 # Inicio rápido
@@ -692,6 +852,8 @@ Tres capas separadas, y podés parar después de cualquiera:
 **¿Querés reproducir exactamente lo que corrimos** — el camino feliz con la
 billetera, y la sonda adversarial contra el circuito desplegado? Es la
 [**sección 7, en orden, con la salida de cada paso**](#7-reproducir-lo-que-corrimos).
+¿Querés atestiguar vos los 14 casos? Bloques para copiar y pegar en la
+[**sección 8**](#8-los-14-casos-on-chain-bloque-por-bloque).
 
 ## 0. Requisitos
 
@@ -1248,3 +1410,161 @@ fallo de dust o de red no puede leerse como resultado verde.
 
 El paso 9 es el que hay que mostrar. Todo lo demás es un sistema funcionando; el
 paso 9 es un sistema negándose.
+
+---
+
+## 8. Los 14 casos on-chain, bloque por bloque
+
+Copiar y pegar, de a un bloque. Cada uno sella el caso localmente, lo atestigua
+en `preview`, y lee el ledger de vuelta para que veas `attestationCount` subir
+exactamente uno.
+
+**Antes de empezar**, una vez por sesión:
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='elegí-un-secreto-real'
+export MIDNIGHT_WALLET_MNEMONIC="palabra1 palabra2 ... palabra24"
+unset MIDNIGHT_WALLET_SEED
+
+docker start midnight-proof-server 2>/dev/null || \
+  docker run -d --name midnight-proof-server -p 6300:6300 midnightntwrk/proof-server:8.1.0
+
+npm run build
+bun run deploy/register-dust.ts     # una vez por billetera
+node scripts/verify-chain-read.mjs  # anotá el attestationCount inicial
+```
+
+**Leé esto antes de correr los 14.** Cada bloque es una transacción real: gasta
+DUST y tarda unos minutos, la mayor parte sincronización de billetera y
+generación de la prueba ZK. Catorce son más o menos una hora, y la billetera
+tiene que seguir con fondos todo ese rato. **De a uno** — dos atestaciones en
+vuelo desde la misma billetera es la forma de producir un fallo por dust viejo.
+Si solo querés ver el mecanismo funcionando, los bloques 001, 010 y 014 cubren
+MALICE, NOISE y ABSTAIN, que es todo el rango de veredictos.
+
+Los 14 atestiguan limpio: todos los casos `MALICE` del corpus tienen al menos
+dos fuentes que corroboran, así que ninguno hace saltar la compuerta Daubert.
+Hacer que salte a propósito es [§4](#la-compuerta-daubert-completa).
+
+Volver a correr un bloque que ya hiciste va a dar la guarda de replay en lugar
+de atestiguar dos veces — eso es [§7 paso 8](#7-reproducir-lo-que-corrimos), y
+la nota de ahí sobre la contraseña de almacenamiento aplica.
+
+**VELO-001 — The Pawn Sacrifice** · `MALICE`, 4 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+bun run deploy/attest-case.ts VELO-001
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-002 — The Uniform Log Auction** · `SUSPICION`, 1 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-002 --seal
+bun run deploy/attest-case.ts VELO-002
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-003 — The False Flag** · `MALICE`, 2 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-003 --seal
+bun run deploy/attest-case.ts VELO-003
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-004 — The Broken Chain** · `ABSTAIN`, 0 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-004 --seal
+bun run deploy/attest-case.ts VELO-004
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-005 — The Four-Source Convergence** · `MALICE`, 3 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-005 --seal
+bun run deploy/attest-case.ts VELO-005
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-006 — The Surgical Void** · `MALICE`, 2 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-006 --seal
+bun run deploy/attest-case.ts VELO-006
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-007 — The Ventriloquist** · `MALICE`, 2 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-007 --seal
+bun run deploy/attest-case.ts VELO-007
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-008 — The Altered Mise en Place** · `MALICE`, 2 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-008 --seal
+bun run deploy/attest-case.ts VELO-008
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-009 — The False-Layman Bait** · `SUSPICION`, 1 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-009 --seal
+bun run deploy/attest-case.ts VELO-009
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-010 — A Normal Day at the Office** · `NOISE`, 0 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-010 --seal
+bun run deploy/attest-case.ts VELO-010
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-011 — The Two Badges** · `SUSPICION`, 1 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-011 --seal
+bun run deploy/attest-case.ts VELO-011
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-012 — The Quiet Resignation** · `SUSPICION`, 1 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-012 --seal
+bun run deploy/attest-case.ts VELO-012
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-013 — The Anonymous Drop** · `ABSTAIN`, 0 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-013 --seal
+bun run deploy/attest-case.ts VELO-013
+node scripts/verify-chain-read.mjs
+```
+
+**VELO-014 — What Was Never Looked At** · `ABSTAIN`, 0 que corroboran
+
+```bash
+node scripts/run-case.mjs VELO-014 --seal
+bun run deploy/attest-case.ts VELO-014
+node scripts/verify-chain-read.mjs
+```
+
+Después, el conjunto entero es legible por cualquiera, sin billetera:
+
+```bash
+node scripts/verify-chain-read.mjs
+```
