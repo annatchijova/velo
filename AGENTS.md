@@ -122,23 +122,73 @@ the hook without strong reason.
    Keep commits focused; prefer several small conventional commits over one
    large one.
 
-3. **Push.** Push the branch and set its upstream:
+3. **Rebase onto current `main` — immediately before pushing, not before
+   branching.**
+   ```bash
+   git fetch origin main && git rebase origin/main
+   ```
+   Step 1 branched off the `main` of that moment. `main` moves while you work,
+   and the gap is not measured in days: several agents commit to this
+   repository in parallel, sometimes minutes apart. A PR built on a stale base
+   silently reverts whatever landed in between — that is not hypothetical here,
+   it is why PR #6 had to be closed rather than merged, and it nearly happened
+   again to PR #9 on a base that was three commits behind.
+
+   Rebase even when git reports no conflict. A clean textual merge says the
+   same lines were not edited twice; it says nothing about whether your change
+   still makes sense against what arrived. Read what came in.
+
+   ```bash
+   git log --oneline HEAD..origin/main                    # what landed while you worked
+   git log --oneline origin/main ^HEAD -- <your files>    # did anyone touch yours?
+   ```
+
+   Then confirm the PR is actually clean against `main` before asking anyone to
+   look at it — `gh pr view <n> --json mergeable,mergeStateStatus` should read
+   `MERGEABLE / CLEAN`, not `UNKNOWN` (which only means GitHub has not finished
+   computing it yet — re-run it).
+
+   **Do not read `git diff origin/main..your-branch` as "what merging will
+   do".** Two-dot diff compares the two tips, so everything `main` gained that
+   your branch never saw shows up as a deletion. It looks exactly like your PR
+   is about to revert a teammate's work. Merging does not work that way: it is
+   a three-way merge from the common ancestor, and files added on `main` and
+   untouched by you survive untouched.
+
+   When the stakes justify certainty, do not reason about it — run it:
+
+   ```bash
+   git worktree add -q --detach /tmp/merge-check origin/main
+   cd /tmp/merge-check && git merge --no-commit --no-ff origin/<your-branch>
+   git diff --cached --stat HEAD      # empty means the PR has become a no-op
+   ```
+
+   That also answers a question worth asking before every merge in a repository
+   with several agents in it: has someone already pushed your work directly, so
+   that the PR now changes nothing? Close it as landed rather than merging an
+   empty diff.
+
+   A separate `git worktree` is also the way to rebase or test at all when
+   another session has uncommitted edits in the shared checkout — switching
+   branches there would demand stashing work that is not yours.
+
+4. **Push.** Push the branch and set its upstream:
    ```bash
    git push -u origin <branch-name>
    ```
 
-4. **Pull request.** Open a PR from the branch into `main`:
+5. **Pull request.** Open a PR from the branch into `main`:
    ```bash
    gh pr create --base main --head <branch-name> --title "<summary>" --body "<description>"
    ```
    The PR title should be a concise summary (Conventional Commit style). The PR
    body should describe what changed and why, and include any relevant links.
 
-5. **Review.** Address review feedback in additional commits on the same branch
+6. **Review.** Address review feedback in additional commits on the same branch
    (do not rewrite history while the PR is under review unless asked). Pushing
    new commits updates the PR automatically.
 
-6. **Merge.** Merge through the GitHub UI or `gh pr merge` once the PR passes
+7. **Merge.** Merge through the GitHub UI or `gh pr merge` once the PR passes
    review. Prefer squash merging so the PR lands on `main` as one clean commit.
    After merging, delete the feature branch and pull `main`:
    ```bash

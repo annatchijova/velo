@@ -16,6 +16,41 @@ publishing the evidence it came from**.
 
 `Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
 
+**Live demo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — reading the real deployed contract on Midnight preview. No wallet, keys, or install required to browse it.
+
+![VELO — from the case ledger to a MALICE verdict that is earned, and an ABSTAIN when the chain of custody is broken](./visual/velo-demo-EN.gif)
+
+## Explore
+
+Every page below is bilingual (EN/ES).
+
+- **[Live app](https://velo-1028999311218.us-central1.run.app)** — the running frontend on Google Cloud Run, reading the real on-chain ledger.
+- **[Pitch deck](https://annatchijova.github.io/vigia/velo-pitch-deck.html)** — the bilingual slide deck.
+- **[Architecture diagram](https://annatchijova.github.io/vigia/veloarchitecture-diagram.html)** — the one-picture "one side proves, the other stays sealed" view.
+- **[Architecture](https://annatchijova.github.io/vigia/velo-architecture.html)** — the full write-up, from [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+- **[Technical status](https://annatchijova.github.io/vigia/velotechnical-status.html)** — what is real vs. pending, layer by layer.
+- **[Identity model](https://annatchijova.github.io/vigia/velo-identity.html)** — accredited-expert authorization, not biometric identification.
+- **[Business case](https://annatchijova.github.io/vigia/velo-business.html)** — the forensic-reputation layer and its use cases.
+- **[Roadmap](https://annatchijova.github.io/vigia/velo-roadmap.html)** — delivered layers and what comes next.
+
+## Run it locally
+
+No secrets are needed to browse the demo — the wallet and keys only matter for *attesting* (the write path), never for running the UI or reading the chain.
+
+```bash
+git clone https://github.com/annatchijova/velo.git
+cd velo
+
+npm install        # npm workspaces: installs the root engine + the frontend
+npm run build      # compiles dist/, which the frontend imports as `velo/*`
+
+cd frontend
+npm run dev        # http://localhost:3000
+```
+
+Node 20+ is required. The first page load compiles on demand, so it takes a few
+seconds — that is Next.js building, not a hang.
+
 ---
 
 ## The problem
@@ -142,24 +177,31 @@ routes that run the same engine server-side through the `velo` package. Local
 development:
 
 ```bash
-# from the repo root — workspaces install both packages, and the root build
-# produces the dist/ the frontend imports
-npm install
-npm run build
-
-# then, from frontend/
-npm run dev       # http://localhost:3000
+cd frontend && npm run dev     # http://127.0.0.1:3000
 ```
+
+The `dev` script passes `--hostname 127.0.0.1` explicitly. Next.js binds to
+`0.0.0.0` by default — verified in its own CLI definition, which documents
+`-H, --hostname` as `(default: 0.0.0.0)` — so without that flag the dev
+server is reachable from every machine on the network. A machine holding
+someone else's evidence must not open a port to its network, and that has
+to be stated in the script rather than assumed from a default that says the
+opposite.
+
+`npm start` is deliberately left on the default. It is the container entry
+point (see `frontend/Dockerfile`), and inside a container binding to
+`0.0.0.0` is correct — the isolation boundary is the container, not the
+interface. Do not "fix" it to match `dev`.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/seal` | Run the engine and seal a case |
-| `POST` | `/api/verify` | Internal-consistency + custody check of a bundle |
-| `POST` | `/api/attest` | Placeholder seam — returns `local_pending_contract`; real attestation runs through the local CLI ([CHAIN](./docs/CHAIN.md)) |
-| `GET` | `/api/cases` | List the synthetic corpus |
-| `GET` | `/api/cases/:caseId` | One corpus case |
-| `GET` | `/api/peritos` | Synthetic expert-witness profiles |
-| `GET` | `/api/chain` | Real on-chain ledger read — no wallet, no keys, no fees |
+| `GET` | `/api/cases` | List sealed cases — `{ cases, unreadable }` |
+| `GET` | `/api/cases/:id` | Public summary of one case |
+| `POST` | `/api/verify` | Internal-consistency check. Takes `{ bundle, tamper? }`; `tamper` re-runs the check against a deliberately corrupted copy, so the UI can demonstrate detection rather than claim it |
+| `GET` | `/api/chain` | What the Midnight ledger says right now. Reading needs no wallet, proving keys, or proof server, so it keeps working on a machine that cannot produce a proof |
+| `GET` | `/api/peritos` | The synthetic expert-witness corpus |
+| `GET` | `/api/attest` | `501` — the contract is deployed, but this endpoint does not call it yet |
 
 `POST /api/seal` takes `{ caseId, artifacts[], devilAdvocate, custodyEvents[] }`
 and returns the sealed summary plus `reasoning`, `custodyValid`,
@@ -298,7 +340,7 @@ the failure mode this whole system exists to prevent.
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
-| Red team round 1 | **12 of 13 findings fixed**, [full report](./docs/RED_TEAM_ROUND_1.md) |
+| Red team | **6 rounds** — full reports RT1–RT6 linked below |
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
 | Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
@@ -342,6 +384,8 @@ Documentation is bilingual (EN/ES): [`ARCHITECTURE`](./docs/ARCHITECTURE.md) ·
 [`RED TEAM 2`](./docs/RED_TEAM_ROUND_2.md) ·
 [`RED TEAM 3`](./docs/RED_TEAM_ROUND_3.md) ·
 [`RED TEAM 4`](./docs/RED_TEAM_ROUND_4.md) ·
+[`RED TEAM 5`](./docs/RED_TEAM_ROUND_5.md) ·
+[`RED TEAM 6`](./docs/RED_TEAM_ROUND_6.md) ·
 [`FRONTEND TDD`](./docs/FRONTEND_TDD.md) · [`ROOT TDD`](./docs/ROOT_TDD.md) ·
 [`MVP PRD`](./docs/PRD_MVP.md) · [`MVP ADRs`](./docs/ADRS_001_006.md)
 
