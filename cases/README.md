@@ -90,7 +90,26 @@ No single detector category can reach the MALICE threshold alone (the heaviest, 
 | `VELO-011-two-badges.json` | SUSPICION | Physical access vs. network (cross-source) | new — frontend access-model fixture |
 | `VELO-012-quiet-resignation.json` | SUSPICION | Log vs. device registry (cross-source) | new — frontend access-model fixture |
 | `VELO-013-anonymous-drop.json` | ABSTAIN | Provenance break | new — unclaimed-case fixture |
+| `VELO-014-lo-que-no-se-miro.json` | ABSTAIN | None — declared coverage gaps | new — absence-of-evidence fixture |
+
+`VELO-014` is the controlled twin of `VELO-010`. Both carry clean artifacts and a
+valid custody chain, both score exactly `0/1`, and no detector fires in either.
+The only difference is that `VELO-014` declares two `coverageGaps` — a proxy log
+that rotated before it was requested, and a registry hive destroyed by a routine
+reimage — so the engine returns ABSTAIN where `VELO-010` returns NOISE.
+
+The pair exists because `NOISE` was saying two different things with one word: *I
+looked everywhere and found nothing*, and *the source that would have settled this
+was never available*. The first is a finding; the second is an unknown. A test
+pins the comparison (`tests/corpus.test.ts`), including that withholding the gaps
+returns `VELO-014` to NOISE — so the pair cannot drift into differing for some
+other reason while still appearing to prove the point.
+
+Gaps are declared by the analyst, never inferred: the engine cannot know what was
+never collected. They degrade a **negative** finding only. A corroborated MALICE
+with the same gaps stays MALICE — an unrelated log rotating does not erase
+evidence of what is there.
 
 `VELO-011`, `VELO-012` and `VELO-013` exist to exercise the perito-facing "my cases" view in the frontend: see [`peritos-syntetic/README.md`](../peritos-syntetic/README.md#own-vs-others-visibility-rule-for-the-frontend) for the visibility contract they're designed to test.
 
-Run `npm test` to verify all 13 cases against the live engine (`tests/corpus.test.ts`) — this is not a one-time check, it re-runs the whole corpus against `runAllDetectors`/`score` every time the suite runs, so a future edit to either the engine's marker vocabulary or a case's artifacts that breaks the match fails the build instead of silently drifting again.
+Run `npm test` to verify all 14 cases against the live engine (`tests/corpus.test.ts`) — this is not a one-time check, it re-runs the whole corpus against `runAllDetectors`/`score` every time the suite runs, so a future edit to either the engine's marker vocabulary or a case's artifacts that breaks the match fails the build instead of silently drifting again.
