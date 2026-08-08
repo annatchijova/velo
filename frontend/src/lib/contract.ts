@@ -66,7 +66,6 @@ export interface CommitmentInput {
 
 export interface Commitment {
   fingerprint: string;
-  salt: string;
   commitment: string;
   covers: string[];
 }
@@ -74,6 +73,11 @@ export interface Commitment {
 /**
  * Placeholder commitment for the demo build, following the F3 shape:
  * sha256(SCHEME || fingerprint || custodyTip || verdict || count || salt).
+ *
+ * The salt is generated inside this function (or taken from the input when a
+ * caller supplies one) and NEVER leaves it: red team round 6 (F24) pinned the
+ * rule that no return type of this seam may carry the salt — it is a witness
+ * value, folded into the commitment and discarded.
  *
  * NOTE (honesty): the compiled Compact `persistentHash` is not SHA-256 and
  * will produce different bytes. This function exists so the demo UI has a
@@ -100,7 +104,6 @@ export function computeCommitment({
   const commitment = sha256BytesHex(preimage);
   return {
     fingerprint: bundleFingerprint,
-    salt: saltHex,
     commitment,
     covers: ["fingerprint", "custodyTip", "verdict", "corroborationCount", "salt"],
   };
