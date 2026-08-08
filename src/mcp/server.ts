@@ -2,9 +2,13 @@
 /**
  * VELO MCP server — the "wallet" interface. Same backend logic as the
  * (planned) HTML frontend, exposed so an agent can drive the flow
- * conversationally. Tools that need the deployed Compact contract
- * (attest_case, disclosure_*) are registered but return a clear pending
- * error until Capa 2 exists — no simulated chain interaction.
+ * conversationally.
+ *
+ * Chain READS (chain_status, lookup_commitment) are live against the
+ * contract deployed on Midnight preview: they need no wallet, no proving
+ * keys and no fees. Chain WRITES (attest_case) and the disclosure tools
+ * are still registered-but-pending, and return a clear error rather than
+ * simulating an attestation that has not happened.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -13,6 +17,7 @@ import { z } from "zod";
 import type { Artifact } from "../engine/evidence.js";
 import { getCase, listCases, sealCase, verifyCase } from "../core/operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
+import { lookupCommitment, readOnChainLedger } from "../chain/read.js";
 
 const server = new McpServer({ name: "velo", version: "0.1.0" });
 
@@ -135,6 +140,77 @@ server.registerTool(
   },
 );
 
+// --- Chain reads: what the ledger actually says (no wallet, no proving) ---
+server.registerTool(
+  "chain_status",
+  {
+    title: "Chain status",
+    description:
+      "Read the deployed VELO contract's ledger on Midnight: how many attestations exist and which commitments carry which verdict. " +
+      "Reports what is recorded on-chain — a commitment listed here was attested by someone, which is not the same as the analysis behind it being correct. " +
+      "Needs no wallet, no proving keys and no fees, so it works even where attesting cannot.",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      const ledger = await readOnChainLedger();
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              { ...ledger, attestationCount: ledger.attestationCount.toString() },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      // An unreachable indexer is not "zero attestations" — say which it is.
+      return {
+        content: [{ type: "text", text: err instanceof Error ? err.message : "Unknown error reading the chain" }],
+        isError: true,
+      };
+    }
+  },
+);
+
+server.registerTool(
+  "lookup_commitment",
+  {
+    title: "Look up commitment on-chain",
+    description:
+      "Check whether a specific commitment has been attested on the Midnight ledger, and with what verdict. " +
+      "Returns 'not attested' when absent — absence is an answer, not an error: every case is un-attested until it is attested.",
+    inputSchema: {
+      commitment: z
+        .string()
+        .regex(/^[0-9a-fA-F]{64}$/, "commitment must be 64 hex characters (32 bytes)"),
+    },
+  },
+  async ({ commitment }) => {
+    try {
+      const found = await lookupCommitment(commitment);
+      return {
+        content: [
+          {
+            type: "text",
+            text: found
+              ? JSON.stringify({ attested: true, ...found }, null, 2)
+              : JSON.stringify({ attested: false, commitment: commitment.toLowerCase() }, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: err instanceof Error ? err.message : "Unknown error reading the chain" }],
+        isError: true,
+      };
+    }
+  },
+);
+
 // --- Pending on-chain integration (Capa 2) — registered honestly, not simulated ---
 const pendingChainTool = (name: string, title: string, description: string) => {
   server.registerTool(
@@ -147,7 +223,7 @@ const pendingChainTool = (name: string, title: string, description: string) => {
   );
 };
 
-pendingChainTool("attest_case", "Attest case", "Publish commitment + ZK proof to Midnight testnet.");
+pendingChainTool("attest_case", "Attest case", "Publish commitment + ZK proof to Midnight. The contract IS deployed (see chain_status) but this write path is not wired yet.");
 pendingChainTool("list_disclosure_requests", "List disclosure requests", "List pending judge disclosure requests for my cases.");
 pendingChainTool("approve_disclosure", "Approve disclosure", "Grant a specific judge's request for specific fields.");
 pendingChainTool("deny_disclosure", "Deny disclosure", "Reject a judge's disclosure request.");

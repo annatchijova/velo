@@ -181,7 +181,8 @@ claude mcp add velo -- node "$(pwd)/dist/src/mcp/server.js"
 | Asset detail | `get_case` |
 | Mint | `seal_case` |
 | Block explorer | `verify_commitment` |
-| Send transaction | `attest_case` *(pending the contract)* |
+| Send transaction | `attest_case` *(not wired yet)* |
+| Block explorer, on-chain | `chain_status`, `lookup_commitment` — live reads of the deployed contract |
 
 ### Deploying
 
@@ -273,7 +274,8 @@ the failure mode this whole system exists to prevent.
 | Red team round 1 | **12 of 13 findings fixed**, [full report](./docs/RED_TEAM_ROUND_1.md) |
 | Compact contract | **Compiles** — `compact 0.31.1`, both circuits, prover and verifier keys generated. Reproduce with `bash scripts/compile-contract.sh` |
 | Contract deployed to Midnight | **Live on `preview`** — address [`46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`](https://explorer.preview.midnight.network) (deployed 2026-08-07 via `bun run deploy/deploy-contract.ts`) |
-| Calling `attest` from the app | **Not wired** — the contract is deployed, but `attest_case` / `POST /api/attest` still compute a local commitment and do not call it |
+| Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
+| Writing (`attest`) from the app | **Not wired** — `attest_case` / `POST /api/attest` still compute a local commitment and do not call the deployed contract |
 | Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
 
 The honest bottom line: the expert's side of the boundary runs and is tested,
