@@ -3,10 +3,16 @@ import { createHash, randomBytes } from "node:crypto";
 /**
  * Contract seam — Capa 2 (the Compact gate).
  *
- * The Compact contract in the main repo (`contracts/velo.compact`) is being
- * reviewed and compiled by the team; until its artifacts exist there is no
- * deployed contract to call. This module is the single seam where that
- * integration plugs in.
+ * The Compact contract (`contracts/velo.compact`) is compiled AND deployed
+ * to Midnight `preview` (address
+ * `46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`), and a
+ * real attestation already exists on that ledger — proved and submitted by
+ * the local CLI (`deploy/attest-case.ts`), where the wallet seed and proof
+ * server live. The hosted UI reads that live on-chain state through
+ * `GET /api/chain`. What this module still stands in for is only the
+ * *browser-signed write*: signing an attestation from the connected 1AM/Lace
+ * wallet in the page instead of from the CLI. This is the single seam where
+ * that last piece plugs in.
  *
  * Red team F3 in the main repo changed what the on-chain commitment covers.
  * It is no longer just the fingerprint — it is
@@ -20,9 +26,9 @@ import { createHash, randomBytes } from "node:crypto";
  * TypeScript. So this seam does not fake it: `computeCommitment` derives a
  * deterministic, documented placeholder commitment for the demo build so the
  * UI has a value to show, and it is clearly labelled as the seam. The real
- * value will come from the generated bindings once the contract compiles —
- * at which point only `computeCommitment` (and the attest route's call to
- * it) changes, not the UI.
+ * on-chain value is the one the deployed contract already computes; wiring
+ * the browser-signed path changes only `computeCommitment` (and the attest
+ * route's call to it), not the UI.
  *
  * Nothing in this module ever ships the evidence manifest or the salt —
  * only the commitment travels.
