@@ -56,6 +56,17 @@ npm test
 Expected: `# pass 58` / `# fail 0`. This compiles first, so it also catches a
 broken build.
 
+That is the **engine** suite. The frontend has its own runner and is not part
+of it — a green `npm test` says nothing about `frontend/`:
+
+```bash
+cd frontend && npx vitest run
+```
+
+Expected: `Tests  44 passed (44)`. **102 across both**, which is the number to
+quote: 58 engine + 44 frontend. Quoting only the root suite makes the frontend
+look untested when it is not.
+
 ---
 
 ## 2. The 14 cases
@@ -898,6 +909,17 @@ npm test
 
 Esperado: `# pass 58` / `# fail 0`. Compila primero, así que también detecta un
 build roto.
+
+Esa es la suite del **motor**. El frontend tiene su propio runner y no está
+incluido — un `npm test` en verde no dice nada sobre `frontend/`:
+
+```bash
+cd frontend && npx vitest run
+```
+
+Esperado: `Tests  44 passed (44)`. **102 entre las dos**, que es el número a
+citar: 58 del motor + 44 del frontend. Citar solo la suite raíz hace parecer
+que el frontend no tiene tests, y sí los tiene.
 
 ## 2. Los 14 casos
 

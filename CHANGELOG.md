@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   CLI (`docs/ADRS_001_006.md`) — and a root-package TDD workflow extending
   mandatory TDD beyond the frontend (`docs/ROOT_TDD.md`). README and frontend
   README aligned with the current state (retired loopback UI, deployed
-  contract, 14 cases, 53 root tests).
+  contract, 14 cases, 58 root tests).
 - **Deployment.** The frontend is deployable to Vercel: corpus routes served
   statically at build time (pinned by tests), monorepo build order and
   explicit Vercel install/build commands (`frontend/vercel.json`), file

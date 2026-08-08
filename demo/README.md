@@ -53,8 +53,8 @@ this file.
 
 ```bash
 npm install && npm run build     # clean build, no errors
-npm test                         # 38/38 green (includes the corpus test —
-                                  # all 13 synthetic cases reproduce their
+npm test                         # 58/58 green (includes the corpus test —
+                                  # all 14 synthetic cases reproduce their
                                   # documented verdict)
 npm run simulate                 # the flagship demo: full flow + BOTH
                                   # refusals (not enough sources → SUSPICION;

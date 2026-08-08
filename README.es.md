@@ -153,7 +153,8 @@ Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
 ```bash
 npm install
-npm test          # 58 tests, incluidos los adversariales
+npm test          # 58 tests del motor, incluidos los adversariales
+cd frontend && npx vitest run   # 44 más — 102 entre las dos suites
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -185,6 +186,7 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 | Capa | Estado |
 |---|---|
 | Motor determinista + gate de Daubert | **Funciona**, 58 tests |
+| Cobertura de tests entre las dos suites | **102 en verde** — 58 del motor (`npm test`) + 44 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |
