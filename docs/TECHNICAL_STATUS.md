@@ -509,7 +509,7 @@ it makes forensic judgment auditable.
 | **G8 — no revocation model** | Not a defect today, because no accreditation credential exists yet. When one ships, a revoked examiner must stop being able to produce valid proofs. | Standard pattern: revocation Merkle tree, non-membership proof at attest time |
 | **G10 — devil's advocate is unverifiable** | The gate checks the field is non-empty after trimming. `"x"` passes. **Deliberately not "fixed"** — a keyword heuristic is gameable and would create false confidence, and an LLM grader would put a model back in the decision path. | Roadmap: a structured result whose *shape* is checkable without pretending to verify content |
 | **F15 — agent-driven writes are unvalidated server-side** | Nothing on the server checks that a devil's advocate is anchored to real evidence. All resistance in the one tested run came from the calling model's judgment — not a property we can regression-test. | Open architectural gap |
-| **Circuit behaviour end-to-end** | Prover and verifier keys are generated and the contract is deployed, but a proof has **not** been exercised against a live test vector. `attest_case` still returns `local_pending_contract` rather than simulating a chain interaction. | Next milestone |
+| **Browser-signed attestation** | The full loop (seal → attest → read back) runs against `preview`, but the signature comes from a seed-derived wallet on the analyst's own machine via `deploy/attest-case.ts`. `POST /api/attest` still computes a local commitment: the analyst's 1AM wallet does **not** sign from the UI yet. | Next milestone |
 | **Corpus documentation drift** | `CASES.md` documents 10 cases; 14 fixtures ship (VELO-011 through -014 are undocumented there; `cases/README.md` does cover them). An older pre-F5 Spanish fixture set also still sits in the tree and would fail today's canonicalizer. | Housekeeping, tracked |
 
 Separately, and independently of all of the above: VELO does not establish that
@@ -557,10 +557,11 @@ the *state*, not the stopwatch.
 
 **Immediately (closing the loop that is already open):**
 
-1. Exercise a real proof against the deployed contract with a live test vector,
-   and replace `attest_case`'s `local_pending_contract` return with the real
-   chain interaction. This is the single highest-value remaining item: it
-   converts "keys generated" into "proof accepted."
+1. Wire the *interfaces* to the chain interaction the CLI already proves.
+   `deploy/attest-case.ts` produces real proofs and a real attestation, but
+   `attest_case` (MCP) and `POST /api/attest` still return
+   `local_pending_contract`. The remaining work is plumbing, not proving:
+   the hard question — does the circuit accept a real proof — is answered.
 2. Reconcile `CASES.md` with the 14 shipped fixtures and remove the pre-F5
    Spanish corpus generation from the tree.
 3. Fold `ruleVersion` into the commitment (G7) — a small change with a long
