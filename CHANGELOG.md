@@ -5,23 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-
-- **Absence of evidence.** The engine distinguishes "nothing was found" from
-  "the source that would have settled it was never available". An analyst can
-  declare `coverageGaps`; a declared gap degrades a **negative** finding to
-  ABSTAIN and names what was missing. It never weakens a positive one — an
-  unrelated log rotating does not erase evidence of what is there. Gaps are
-  sealed into the analysis fingerprint, so stripping them to promote ABSTAIN
-  back to NOISE fails verification.
-- **Corpus.** `VELO-014`, the controlled twin of `VELO-010` — identical clean
-  artifacts, identical `0/1` score, no detector firing in either, and a
-  different verdict for exactly one reason.
-- **UI.** The case view shows what was *not* examined alongside the verdict,
-  and now surfaces the engine's own `reasoning`, which was previously computed,
-  sealed into the bundle, and then discarded before it reached the screen.
+Version sections below are maintained automatically by
+[release-please](https://github.com/googleapis/release-please) from
+Conventional Commits; the open release pull request is the staging area for
+unreleased changes.
 
 ## [0.1.0] - 2026-08-07
 
@@ -45,8 +32,8 @@ this point, so the entire history is grouped under the initial `0.1.0`.
   `scripts/compile-contract.sh` for one-command builds.
 - **Witnesses.** Circuit witnesses (TypeScript side) bound to the generated
   bindings.
-- **Web.** Loopback-only HTTP server (`npm run web`) and Next.js frontend
-  sharing `src/core/operations.ts`.
+- **Web.** Next.js frontend, calling the same `src/core/operations.ts` as the
+  MCP server so no interface carries its own copy of the rules.
 - **Simulation.** `src/simulate.ts` end-to-end demo showing both refusal
   moments (insufficient corroboration and missing custody).
 - **Deploy.** Contract deploy tooling for the preview network.
@@ -72,8 +59,15 @@ this point, so the entire history is grouped under the initial `0.1.0`.
 
 ### Removed
 
-- Redundant loopback HTTP server superseded by shared operations; shared
-  `caseId` validator.
+Built and withdrawn before this release, so none of it ever shipped. Recorded
+because the reasons are the load-bearing part: each was a second copy of logic
+that already existed somewhere else, and duplication is how a verdict quietly
+diverges between two interfaces.
+
+- Standalone loopback HTTP server — its orchestration was a second copy of the
+  MCP server's, so it was folded into `src/core/operations.ts`. Nothing in this
+  release starts a server of its own.
+- Duplicate `caseId` validator, superseded by the shared one.
 - `frontend/lib` — orphaned duplicate pointing at the wrong network.
 - Internal-only files excluded from the submission (`PROGRESS_LOCAL.md`,
   `GUION_VIDEO.md`).
@@ -93,10 +87,7 @@ this point, so the entire history is grouped under the initial `0.1.0`.
 
 ### Security
 
-- Loopback server binds to `127.0.0.1` only, by design — a machine holding a
-  victim's evidence must not open a port to its network.
-- Red team round 3: CSRF on the loopback/frontend seal-adjacent routes
-  (finding F14) fixed.
+- Red team round 3: CSRF on the frontend's seal-adjacent routes (finding F14)
+  fixed.
 
-[Unreleased]: https://github.com/annatchijova/velo/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/annatchijova/velo/releases/tag/v0.1.0
