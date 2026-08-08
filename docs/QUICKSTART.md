@@ -14,6 +14,10 @@ Three separate layers, and you can stop after any of them:
 | 2. Frontend + MCP | the above | ~3 min |
 | 3. On-chain read / write | Bun; a funded wallet only for **write** | reading is free and instant |
 
+**Want to reproduce exactly what we ran** — the happy path with the wallet, and
+the adversarial probe against the deployed circuit? That is
+[**§7, in order, with the output of each step**](#7-reproduce-what-we-ran).
+
 ---
 
 ## 0. Prerequisites
@@ -276,16 +280,134 @@ attestations     : 2
    632dbf0159cb6df7360507b1c01cc2a62d26035cb20e56b57e7bae0ce8fb3b2b  ->  MALICE
 ```
 
-**Writing** needs Bun, a funded wallet with NIGHT *registered for dust
-generation*, and a local proof server. The full runbook — including the two
-errors you will hit and their real causes — is [`docs/CHAIN.md`](./CHAIN.md).
-Do not improvise that part; the errors are misleading (`Insufficient Funds` is
-not a funding problem) and CHAIN.md exists because we lost hours to exactly
-that.
+### Writing — attesting a case with the wallet
 
-Use a disposable wallet. The deploy dependency logs its seed unconditionally;
-this repo redacts it, but that is a mitigation around a third-party default,
-not a guarantee.
+This is the only real write path. The frontend's `POST /api/attest` returns a
+placeholder (`status: "local_pending_contract"`) and the MCP `attest_case` tool
+reports itself as not wired: browser-signed attestation is the piece that is
+not built. Everything below runs from the CLI, where the seed and the proof
+server live.
+
+#### One-time setup
+
+**a. Bun** — the deploy scripts do not run under `node`. The wallet plumbing
+ships raw `.ts` exports that `tsc`/`node` cannot resolve.
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+**b. The proof server**, listening on `127.0.0.1:6300`. Proving happens
+locally; nothing about your evidence is sent to a remote prover.
+
+```bash
+docker run -d --name midnight-proof-server -p 6300:6300 \
+  midnightntwrk/proof-server:8.1.0
+```
+
+Preview wants `8.1.0` — check the [support
+matrix](https://docs.midnight.network/relnotes/support-matrix) before assuming
+a newer tag is better. If the container already exists, `docker start
+midnight-proof-server`. Override the URL with `MIDNIGHT_PROOF_SERVER_URL` if
+you run it elsewhere.
+
+**c. A disposable wallet with NIGHT.** Use one holding nothing you cannot
+afford to lose — the deploy dependency logs its seed to stdout unconditionally.
+This repo redacts that line before it reaches your terminal (red team
+[F16](./RED_TEAM_ROUND_4.md)), but that is a mitigation around a third-party
+default, not one of this project's own guarantees.
+
+#### The three environment variables
+
+They are three different kinds of thing, and conflating them costs time:
+
+| Variable | What it is | Where it comes from |
+|---|---|---|
+| `MIDNIGHT_NETWORK_ID` | Which network. `preview` for this project | You set it. It must be a real env var on the command line — setting it inside a module is too late |
+| `MIDNIGHT_WALLET_MNEMONIC` | The wallet's 24-word recovery phrase, quoted | Your wallet. Verified working with a **1AM** phrase, standard BIP39 |
+| `MIDNIGHT_STORAGE_PASSWORD` | A local disk-encryption password for the signing-key store. **Nothing to do with any wallet** | You invent it. No default — it used to fall back to a hardcoded value, red team [F17](./RED_TEAM_ROUND_4.md) |
+
+There is also `MIDNIGHT_WALLET_SEED`, the hex seed *derived from* the phrase.
+Set the mnemonic **or** the seed, not both — if both are set the seed wins and
+the mnemonic is silently ignored. `unset MIDNIGHT_WALLET_SEED` if a stale one
+is exported.
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='pick-a-real-secret'
+export MIDNIGHT_WALLET_MNEMONIC="word1 word2 ... word24"
+```
+
+#### Once per wallet: register NIGHT for DUST generation
+
+```bash
+bun run deploy/register-dust.ts
+```
+
+Fees are paid in DUST, which is *generated* by NIGHT that has been explicitly
+registered — a separate on-chain transaction nothing else performs. Skip this
+and you get `Insufficient Funds: could not balance dust`, which is **not** a
+funding problem and more tokens will not fix it. Registration lives on-chain,
+so it is once per wallet, not once per attestation. **Attest promptly after
+registering** — see the `170` error below.
+
+#### The loop, one case at a time
+
+Three commands per case. Seal it, attest it, read it back:
+
+```bash
+# 1. Seal locally — the evidence never leaves this machine
+node scripts/run-case.mjs VELO-001 --seal
+
+# 2. Attest on-chain — real proof, real transaction
+bun run deploy/attest-case.ts VELO-001
+
+# 3. Read it back, with no wallet and no keys
+node scripts/verify-chain-read.mjs
+```
+
+Step 2 takes a few minutes: most of it is wallet sync, then ZK proof generation
+on your local proof server. It prints the transaction id and block height, and
+deliberately **not** the salt — that used to leak, and
+`scripts/verify-salt-not-printed.mjs` is what now keeps it from coming back.
+
+Then repeat with any other case:
+
+```bash
+node scripts/run-case.mjs VELO-005 --seal && bun run deploy/attest-case.ts VELO-005
+node scripts/run-case.mjs VELO-010 --seal && bun run deploy/attest-case.ts VELO-010
+```
+
+Do them one at a time. Two attestations in flight from the same wallet is how
+you produce a stale-dust failure.
+
+#### Two things that will look like errors and are not
+
+**`failed assert: this attestation already exists`** — the replay guard working.
+The salt is stored per case, so re-sealing and re-attesting the same analysis
+recomputes the *same* commitment, and the contract refuses to record it twice or
+inflate `attestationCount`. Red team G2. Attest a different case, or change the
+analysis.
+
+**A `MALICE` case refusing to attest with fewer than two corroborating sources**
+— the Daubert gate. That is §4, and it is the point of the project.
+
+#### The errors that are errors
+
+**`Insufficient Funds: could not balance dust`** — you skipped the dust
+registration above, or it has not settled.
+
+**`1010: Invalid Transaction: Custom error: 170`** — `InvalidDustSpendProof`.
+The node rejected the *DUST fee proof*, not your contract. The cause that
+actually bit us was **stale dust state**: if the dust sync is still settling
+when the transaction is built, the spend proof references a merkle root that is
+being superseded. The symptom is `dust=` flipping `true → false → true` near the
+end of the sync. The fix is freshness, not versions — re-run and submit while
+the state is fresh.
+
+The full runbook with the diagnosis behind both is
+[`docs/CHAIN.md`](./CHAIN.md) and [L3 in LEARNINGS](./LEARNINGS.md). Do not
+improvise this part; we lost hours to exactly these two.
 
 ### Verifying it yourself, hash by hash
 
@@ -380,6 +502,157 @@ behind which commitment.
 Where things live: [`docs/STRUCTURE.md`](./STRUCTURE.md).
 
 ---
+
+## 7. Reproduce what we ran
+
+The whole thing, in order, with what each step establishes. Steps 1–4 need only
+Node. Steps 5–9 need Bun, the proof server and a wallet — all of that is set up
+in [§5](#writing--attesting-a-case-with-the-wallet).
+
+Two independent things get reproduced here: the **happy path** (a case sealed
+locally, proved, attested on a live network, read back by a stranger) and the
+**adversarial probe** (the same contract refusing an attestation the engine
+could never have produced). Neither is worth much without the other — a system
+that only ever says yes has not been tested.
+
+### Steps 1–4: no wallet needed
+
+```bash
+git clone https://github.com/annatchijova/velo.git && cd velo
+npm install && npm run build
+```
+
+**1. The engine is deterministic and the corpus agrees with it.**
+
+```bash
+npm test                      # -> # pass 58 / # fail 0
+node scripts/run-case.mjs     # -> all 14 reproduce their documented verdict
+```
+
+**2. A verdict is earned, not declared.** Same clean evidence, opposite outcome,
+because one case declares what it never got to look at:
+
+```bash
+node scripts/run-case.mjs VELO-010    # -> NOISE
+node scripts/run-case.mjs VELO-014    # -> ABSTAIN
+```
+
+**3. A sealed bundle can be checked by someone who does not trust this repo.**
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json
+# -> internally consistent: YES
+```
+
+**4. The contract is deployed and its ledger is public.** No wallet, no keys,
+no fees:
+
+```bash
+node scripts/verify-chain-read.mjs
+# -> attestationCount : 2, both MALICE
+```
+
+Stop here and you have verified everything except the chain *write*.
+
+### Steps 5–9: with the wallet
+
+Set up Bun, the proof server and the three environment variables per
+[§5](#writing--attesting-a-case-with-the-wallet) first, then:
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='pick-a-real-secret'
+export MIDNIGHT_WALLET_MNEMONIC="word1 word2 ... word24"
+```
+
+**5. Register NIGHT for DUST generation.** Once per wallet, and attest promptly
+afterwards:
+
+```bash
+bun run deploy/register-dust.ts
+```
+
+**6. The happy path — attest a real case on `preview`.** VELO-001 is `MALICE`
+with four independent corroborating sources, so it passes the gate honestly:
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+bun run deploy/attest-case.ts VELO-001
+```
+
+A few minutes: wallet sync, then ZK proof generation on your local proof
+server. It prints the transaction id and block height — and not the salt.
+
+**7. Read your own attestation back, as a stranger would.**
+
+```bash
+node scripts/verify-chain-read.mjs
+```
+
+`attestationCount` has gone up by one and your commitment is in the list. That
+read used no wallet, no keys and no fees — which is the point: anyone can check
+it, and nobody learns anything about the evidence.
+
+**8. The replay guard.** Run the same attestation again:
+
+```bash
+bun run deploy/attest-case.ts VELO-001
+# -> failed assert: this attestation already exists
+```
+
+The salt is stored per case, so the same analysis recomputes the same
+commitment, and the contract refuses to record it twice. Red team G2. Without
+this you could manufacture the appearance of independent corroboration by
+paying the fee twice.
+
+**9. The adversarial probe — the one that matters.** Force `MALICE` with a
+single corroborating source, straight at the deployed circuit:
+
+```bash
+bun run deploy/attest-forced-malice.ts VELO-001
+```
+
+```
+Refused by the circuit's own assert:
+  "failed assert: MALICE requires at least 2 independent corroborating
+   sources — the Daubert gate"
+
+PREDICTION HELD — MALICE from one source cannot be attested.
+```
+
+Read what that command actually does before you run it — it is short, and the
+bypass is the whole argument. The engine cannot emit this state (`scorer.ts`
+degrades `MALICE` to `SUSPICION` below two sources) and `attest-case.ts` refuses
+locally, so the probe overrides the corroboration witness to return `1` while
+passing `MALICE` as the public argument. **Only the count is forged** — a bundle
+also lying about its fingerprint would fail for a different reason and prove
+nothing about corroboration. Nothing is left between the call and the circuit.
+
+It costs nothing: the assert fires during circuit execution, before proving and
+before any fee is balanced. It exits **non-zero if the chain accepts** the
+forced attestation, and says in that case that
+[`TECHNICAL_STATUS` §2.2](./TECHNICAL_STATUS.md) is false as written — an
+experiment that can only confirm is not an experiment. It also distinguishes
+"refused by the gate" from "refused for some other reason", so a dust or network
+failure cannot read as a green result.
+
+### What you will have shown
+
+| Step | Claim |
+|---|---|
+| 1 | The engine is deterministic and the corpus is not decorative — it runs |
+| 2 | A gap in coverage degrades a *negative* finding. Absence of evidence is not evidence of absence |
+| 3 | A sealed bundle is checkable without trusting this repository |
+| 4 | The contract is live on `preview` and readable by anyone, for free |
+| 6–7 | The full write path works end to end against a real network |
+| 8 | Attestations cannot be replayed to fake corroboration |
+| 9 | **The admissibility rule is a cryptographic constraint, not a policy note** |
+
+Step 9 is the one to demo. Everything else is a system working; step 9 is a
+system refusing.
+
+---
 ---
 
 # Inicio rápido
@@ -395,6 +668,10 @@ Tres capas separadas, y podés parar después de cualquiera:
 | 1. Motor + los 14 casos | Node 20+ | ~2 min |
 | 2. Frontend + MCP | lo anterior | ~3 min |
 | 3. Lectura / escritura en cadena | Bun; billetera con fondos solo para **escribir** | leer es gratis e inmediato |
+
+**¿Querés reproducir exactamente lo que corrimos** — el camino feliz con la
+billetera, y la sonda adversarial contra el circuito desplegado? Es la
+[**sección 7, en orden, con la salida de cada paso**](#7-reproducir-lo-que-corrimos).
 
 ## 0. Requisitos
 
@@ -558,15 +835,137 @@ resultado verde.
 node scripts/verify-chain-read.mjs
 ```
 
-**Escribir** necesita Bun, una billetera con NIGHT *registrado para generación
-de dust*, y un proof server local. El runbook completo, con los dos errores que
-te vas a encontrar y sus causas reales, está en [`docs/CHAIN.md`](./CHAIN.md).
-No improvises esa parte: los errores son engañosos (`Insufficient Funds` no es
-un problema de fondos) y CHAIN.md existe porque perdimos horas exactamente ahí.
+### Escribir — atestiguar un caso con la billetera
 
-Usá una billetera descartable. La dependencia de deploy loguea su semilla
-incondicionalmente; este repo la redacta, pero eso es una mitigación alrededor
-de un default ajeno, no una garantía.
+Es la única ruta de escritura real. El `POST /api/attest` del frontend devuelve
+un placeholder (`status: "local_pending_contract"`) y la herramienta MCP
+`attest_case` se declara a sí misma como no cableada: la atestación firmada
+desde el navegador es la pieza que no está construida. Todo lo de abajo corre
+desde la CLI, que es donde viven la semilla y el proof server.
+
+#### Preparación, una sola vez
+
+**a. Bun** — los scripts de deploy no corren bajo `node`. La plomería de
+billetera publica exports `.ts` crudos que `tsc`/`node` no pueden resolver.
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+**b. El proof server**, escuchando en `127.0.0.1:6300`. La prueba se genera
+localmente; nada de tu evidencia se manda a un prover remoto.
+
+```bash
+docker run -d --name midnight-proof-server -p 6300:6300 \
+  midnightntwrk/proof-server:8.1.0
+```
+
+Preview quiere `8.1.0` — mirá la [matriz de
+soporte](https://docs.midnight.network/relnotes/support-matrix) antes de asumir
+que un tag más nuevo es mejor. Si el contenedor ya existe, `docker start
+midnight-proof-server`. Se puede apuntar a otra URL con
+`MIDNIGHT_PROOF_SERVER_URL`.
+
+**c. Una billetera descartable con NIGHT.** Usá una que no tenga nada que no
+puedas perder: la dependencia de deploy loguea su semilla a stdout de forma
+incondicional. Este repo redacta esa línea antes de que llegue a tu terminal
+(red team [F16](./RED_TEAM_ROUND_4.md)), pero eso es una mitigación alrededor
+de un default ajeno, no una garantía propia del proyecto.
+
+#### Las tres variables de entorno
+
+Son tres cosas de naturaleza distinta, y confundirlas cuesta tiempo:
+
+| Variable | Qué es | De dónde sale |
+|---|---|---|
+| `MIDNIGHT_NETWORK_ID` | Qué red. `preview` para este proyecto | La ponés vos. Tiene que ser una variable de entorno real en la línea de comandos — setearla dentro de un módulo llega tarde |
+| `MIDNIGHT_WALLET_MNEMONIC` | La frase de recuperación de 24 palabras, entre comillas | Tu billetera. Verificado con una frase de **1AM**, BIP39 estándar |
+| `MIDNIGHT_STORAGE_PASSWORD` | Una contraseña de cifrado local del almacén de claves de firma. **No tiene nada que ver con ninguna billetera** | La inventás vos. Sin default — antes caía a un valor hardcodeado, red team [F17](./RED_TEAM_ROUND_4.md) |
+
+También existe `MIDNIGHT_WALLET_SEED`, la semilla hex *derivada de* la frase.
+Poné la mnemónica **o** la semilla, no las dos: si están ambas, gana la semilla
+y la mnemónica se ignora en silencio. `unset MIDNIGHT_WALLET_SEED` si quedó una
+vieja exportada.
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='elegí-un-secreto-real'
+export MIDNIGHT_WALLET_MNEMONIC="palabra1 palabra2 ... palabra24"
+```
+
+#### Una vez por billetera: registrar NIGHT para generar DUST
+
+```bash
+bun run deploy/register-dust.ts
+```
+
+Las comisiones se pagan en DUST, que lo *genera* el NIGHT que fue explícitamente
+registrado — una transacción on-chain aparte que ninguna otra cosa hace.
+Saltearla da `Insufficient Funds: could not balance dust`, que **no** es un
+problema de fondos y no se arregla con más tokens. El registro vive on-chain,
+así que es una vez por billetera, no una por atestación. **Atestiguá pronto
+después de registrar** — ver el error `170` abajo.
+
+#### El ciclo, de a un caso
+
+Tres comandos por caso. Sellarlo, atestiguarlo, leerlo de vuelta:
+
+```bash
+# 1. Sellar localmente — la evidencia no sale de esta máquina
+node scripts/run-case.mjs VELO-001 --seal
+
+# 2. Atestiguar on-chain — prueba real, transacción real
+bun run deploy/attest-case.ts VELO-001
+
+# 3. Leerlo de vuelta, sin billetera y sin claves
+node scripts/verify-chain-read.mjs
+```
+
+El paso 2 tarda unos minutos: la mayor parte es la sincronización de la
+billetera, y después la generación de la prueba ZK en tu proof server local.
+Imprime el id de transacción y la altura de bloque, y deliberadamente **no** el
+salt — eso se filtraba, y `scripts/verify-salt-not-printed.mjs` es lo que ahora
+impide que vuelva.
+
+Después, con cualquier otro caso:
+
+```bash
+node scripts/run-case.mjs VELO-005 --seal && bun run deploy/attest-case.ts VELO-005
+node scripts/run-case.mjs VELO-010 --seal && bun run deploy/attest-case.ts VELO-010
+```
+
+De a uno. Dos atestaciones en vuelo desde la misma billetera es la forma de
+producir un fallo por dust viejo.
+
+#### Dos cosas que van a parecer errores y no lo son
+
+**`failed assert: this attestation already exists`** — la guarda de replay
+funcionando. El salt se guarda por caso, así que volver a sellar y atestiguar el
+mismo análisis recalcula el *mismo* commitment, y el contrato se niega a
+registrarlo dos veces o a inflar `attestationCount`. Red team G2. Atestiguá otro
+caso, o cambiá el análisis.
+
+**Un caso `MALICE` que se niega a atestiguar con menos de dos fuentes que
+corroboran** — la compuerta Daubert. Eso es la sección 4, y es el punto del
+proyecto.
+
+#### Los errores que sí son errores
+
+**`Insufficient Funds: could not balance dust`** — te salteaste el registro de
+dust de arriba, o todavía no se asentó.
+
+**`1010: Invalid Transaction: Custom error: 170`** — `InvalidDustSpendProof`. El
+nodo rechazó la *prueba de comisión en DUST*, no tu contrato. La causa que
+realmente nos pasó fue **estado de dust viejo**: si la sincronización de dust
+todavía se está asentando cuando se arma la transacción, la prueba de gasto
+referencia una raíz merkle que está siendo reemplazada. El síntoma es `dust=`
+oscilando `true → false → true` cerca del final de la sincronización. La
+solución es frescura, no versiones: volvé a correrlo y enviá con el estado
+fresco.
+
+El runbook completo con el diagnóstico de los dos está en
+[`docs/CHAIN.md`](./CHAIN.md) y [L3 en LEARNINGS](./LEARNINGS.md). No improvises
+esta parte: perdimos horas exactamente en estos dos.
 
 ### Verificarlo vos misma, hash por hash
 
@@ -657,3 +1056,156 @@ caso está detrás de qué commitment.
 | `1010: ... Custom error: 170` | Estado de DUST viejo, no un desajuste de versiones. Volvé a correrlo. [CHAIN.md](./CHAIN.md) |
 
 Dónde vive cada cosa: [`docs/STRUCTURE.md`](./STRUCTURE.md).
+
+---
+
+## 7. Reproducir lo que corrimos
+
+Todo, en orden, con lo que prueba cada paso. Los pasos 1–4 solo necesitan Node.
+Los pasos 5–9 necesitan Bun, el proof server y una billetera — todo eso se
+configura en [§5](#escribir--atestiguar-un-caso-con-la-billetera).
+
+Se reproducen dos cosas independientes: el **camino feliz** (un caso sellado
+localmente, probado, atestiguado en una red real, leído de vuelta por un
+extraño) y la **sonda adversarial** (el mismo contrato rechazando una atestación
+que el motor nunca podría haber producido). Ninguna vale mucho sin la otra: un
+sistema que solo sabe decir que sí no fue puesto a prueba.
+
+### Pasos 1–4: sin billetera
+
+```bash
+git clone https://github.com/annatchijova/velo.git && cd velo
+npm install && npm run build
+```
+
+**1. El motor es determinista y el corpus coincide con él.**
+
+```bash
+npm test                      # -> # pass 58 / # fail 0
+node scripts/run-case.mjs     # -> los 14 reproducen su veredicto documentado
+```
+
+**2. Un veredicto se gana, no se declara.** Misma evidencia limpia, resultado
+opuesto, porque un caso declara lo que nunca llegó a mirar:
+
+```bash
+node scripts/run-case.mjs VELO-010    # -> NOISE
+node scripts/run-case.mjs VELO-014    # -> ABSTAIN
+```
+
+**3. Un bundle sellado lo puede chequear alguien que no confía en este repo.**
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json
+# -> internally consistent: YES
+```
+
+**4. El contrato está desplegado y su ledger es público.** Sin billetera, sin
+claves, sin comisiones:
+
+```bash
+node scripts/verify-chain-read.mjs
+# -> attestationCount : 2, las dos MALICE
+```
+
+Si parás acá, verificaste todo salvo la *escritura* en cadena.
+
+### Pasos 5–9: con la billetera
+
+Configurá Bun, el proof server y las tres variables de entorno según
+[§5](#escribir--atestiguar-un-caso-con-la-billetera), y después:
+
+```bash
+export MIDNIGHT_NETWORK_ID=preview
+export MIDNIGHT_STORAGE_PASSWORD='elegí-un-secreto-real'
+export MIDNIGHT_WALLET_MNEMONIC="palabra1 palabra2 ... palabra24"
+```
+
+**5. Registrar NIGHT para generar DUST.** Una vez por billetera, y atestiguar
+pronto después:
+
+```bash
+bun run deploy/register-dust.ts
+```
+
+**6. El camino feliz — atestiguar un caso real en `preview`.** VELO-001 es
+`MALICE` con cuatro fuentes independientes que corroboran, así que pasa la
+compuerta honestamente:
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+bun run deploy/attest-case.ts VELO-001
+```
+
+Unos minutos: sincronización de billetera, y después generación de la prueba ZK
+en tu proof server local. Imprime el id de transacción y la altura de bloque, y
+no el salt.
+
+**7. Leer tu propia atestación de vuelta, como lo haría un extraño.**
+
+```bash
+node scripts/verify-chain-read.mjs
+```
+
+`attestationCount` subió en uno y tu commitment está en la lista. Esa lectura no
+usó billetera, ni claves, ni comisiones — que es el punto: cualquiera puede
+chequearlo, y nadie aprende nada sobre la evidencia.
+
+**8. La guarda de replay.** Corré la misma atestación otra vez:
+
+```bash
+bun run deploy/attest-case.ts VELO-001
+# -> failed assert: this attestation already exists
+```
+
+El salt se guarda por caso, así que el mismo análisis recalcula el mismo
+commitment, y el contrato se niega a registrarlo dos veces. Red team G2. Sin
+esto podrías fabricar la apariencia de corroboración independiente pagando la
+comisión dos veces.
+
+**9. La sonda adversarial — la que importa.** Forzar `MALICE` con una sola
+fuente que corrobora, directo contra el circuito desplegado:
+
+```bash
+bun run deploy/attest-forced-malice.ts VELO-001
+```
+
+```
+Refused by the circuit's own assert:
+  "failed assert: MALICE requires at least 2 independent corroborating
+   sources — the Daubert gate"
+
+PREDICTION HELD — MALICE from one source cannot be attested.
+```
+
+Leé qué hace ese comando antes de correrlo: es corto, y el bypass es todo el
+argumento. El motor no puede emitir ese estado (`scorer.ts` degrada `MALICE` a
+`SUSPICION` por debajo de dos fuentes) y `attest-case.ts` se niega localmente,
+así que la sonda sobreescribe el witness de corroboración para que devuelva `1`
+mientras pasa `MALICE` como argumento público. **Solo se falsea el conteo** — un
+bundle que además mintiera sobre su fingerprint fallaría por otro motivo y no
+probaría nada sobre corroboración. No queda nada entre la llamada y el circuito.
+
+No cuesta nada: el assert dispara durante la ejecución del circuito, antes de
+probar y antes de balancear ninguna comisión. Sale **distinto de cero si la
+cadena acepta** la atestación forzada, y en ese caso dice que
+[`TECHNICAL_STATUS` §2.2](./TECHNICAL_STATUS.md) es falso tal como está escrito
+— un experimento que solo puede confirmar no es un experimento. También
+distingue "rechazado por la compuerta" de "rechazado por otra cosa", así que un
+fallo de dust o de red no puede leerse como resultado verde.
+
+### Qué vas a haber mostrado
+
+| Paso | Afirmación |
+|---|---|
+| 1 | El motor es determinista y el corpus no es decorativo: corre |
+| 2 | Una brecha de cobertura degrada un hallazgo *negativo*. Ausencia de evidencia no es evidencia de ausencia |
+| 3 | Un bundle sellado es chequeable sin confiar en este repositorio |
+| 4 | El contrato está vivo en `preview` y es legible por cualquiera, gratis |
+| 6–7 | La ruta de escritura completa funciona de punta a punta contra una red real |
+| 8 | Las atestaciones no se pueden repetir para fingir corroboración |
+| 9 | **La regla de admisibilidad es una restricción criptográfica, no una nota de política** |
+
+El paso 9 es el que hay que mostrar. Todo lo demás es un sistema funcionando; el
+paso 9 es un sistema negándose.
