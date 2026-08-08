@@ -1,5 +1,7 @@
 # Architecture
 
+![VELO architecture — on the examiner's private machine, evidence flows through the deterministic engine, the admissibility gate (NOISE / SUSPICION / MALICE / ABSTAIN), canonical sealing and the custody chain; a ZK circuit (contracts/velo.compact) takes four private witnesses and enforces the Daubert gate (MALICE requires corroboration >= 2) and the no-replay assertion; only a commitment, the declared verdict and a proof cross the compiler-enforced disclose() boundary to the public Midnight ledger, which anyone can verify offline without trusting the author](../visual/arquitectura.png)
+
 ## English
 
 ### Problem
