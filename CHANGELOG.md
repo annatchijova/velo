@@ -10,22 +10,6 @@ Version sections below are maintained automatically by
 Conventional Commits; the open release pull request is the staging area for
 unreleased changes.
 
-### Added
-
-- **Absence of evidence.** The engine distinguishes "nothing was found" from
-  "the source that would have settled it was never available". An analyst can
-  declare `coverageGaps`; a declared gap degrades a **negative** finding to
-  ABSTAIN and names what was missing. It never weakens a positive one — an
-  unrelated log rotating does not erase evidence of what is there. Gaps are
-  sealed into the analysis fingerprint, so stripping them to promote ABSTAIN
-  back to NOISE fails verification.
-- **Corpus.** `VELO-014`, the controlled twin of `VELO-010` — identical clean
-  artifacts, identical `0/1` score, no detector firing in either, and a
-  different verdict for exactly one reason.
-- **UI.** The case view shows what was *not* examined alongside the verdict,
-  and now surfaces the engine's own `reasoning`, which was previously computed,
-  sealed into the bundle, and then discarded before it reached the screen.
-
 ## [0.1.0] - 2026-08-07
 
 Initial project state — the full initial-development milestone from Midnight
