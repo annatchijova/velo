@@ -1,0 +1,28 @@
+name: frontend-build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install (workspace root)
+        run: npm ci
+      - name: Build root package
+        run: npm run build
+      - name: Root tests
+        run: npm test
+      - name: Frontend tests
+        working-directory: frontend
+        run: npm run test
+      - name: Next.js build
+        working-directory: frontend
+        run: npx next build

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **Deployment.** The frontend is deployable to Vercel: corpus routes served
+  statically at build time (pinned by tests), monorepo build order and
+  explicit Vercel install/build commands (`frontend/vercel.json`), file
+  tracing for the runtime-loaded chain artifacts, a CI build workflow, and
+  hosting wording in ARCHITECTURE/README (both languages). Attestation writes
+  stay local by design.
+
+### Fixed
+
+- **Chain reads in production builds.** `GET /api/chain` worked under
+  `next dev` but failed once bundled: webpack rewrote the runtime dynamic
+  import of the contract bindings into its chunk loader ("Cannot find module
+  'file:///…'"), and with the bindings loaded natively but `velo` bundled, a
+  second copy of the Midnight WASM runtime broke class checks ("expected
+  instance of ChargedState"). The bindings import now carries
+  `/* webpackIgnore: true */` and the frontend externalizes every `velo/*`
+  server import, so the whole runtime loads as one native copy. Verified
+  against the real preview ledger (`next start` + curl); requires Node ≥
+  20.19 (require(esm)).
 - **Absence of evidence.** The engine distinguishes "nothing was found" from
   "the source that would have settled it was never available". An analyst can
   declare `coverageGaps`; a declared gap degrades a **negative** finding to

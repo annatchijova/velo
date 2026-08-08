@@ -5,6 +5,9 @@
   "type": "module",
   "description": "VELO — zero-knowledge forensic attestation on Midnight",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run clean && tsc -p .",
     "test": "npm run clean && tsc -p . && node --test dist/tests/*.test.js",
