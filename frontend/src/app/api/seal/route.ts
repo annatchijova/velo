@@ -3,7 +3,9 @@ import { analyzeCase, sealAnalysis } from "velo/core/operations.js";
 import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { Fraction } from "velo/engine/fraction.js";
 import type { Artifact, CoverageGap, CustodyEvent, DetectorResult, ScoreResult } from "@/lib/types";
-import { requireJsonContentType } from "@/lib/http";
+import { getSessionFromRequest } from "@/lib/auth";
+import { maybePersistSeal } from "@/lib/persist";
+import { readJsonBody, requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -80,12 +82,12 @@ export async function POST(req: Request) {
   const contentTypeError = requireJsonContentType(req);
   if (contentTypeError) return contentTypeError;
 
-  let body: SealBody;
-  try {
-    body = (await req.json()) as SealBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  // F22: capped body read — memory is bounded at the application layer.
+  const parsed = await readJsonBody(req);
+  if (parsed.status !== 200) {
+    return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   }
+  const body = parsed.body as SealBody;
 
   if (!body.caseId || !Array.isArray(body.artifacts)) {
     return NextResponse.json({ error: "caseId and artifacts are required" }, { status: 400 });
@@ -115,6 +117,15 @@ export async function POST(req: Request) {
   // Cross-check: the bundle must be internally consistent as sealed.
   const selfCheck = verifyBundle(bundle);
 
+  // AC-J2.2: persistence is an addition for registered experts with a
+  // configured database — never a change to what sealing returns, and never
+  // a failure mode for anyone else.
+  const session = await getSessionFromRequest(req, process.env.AUTH_SECRET ?? "");
+  const persistence = await maybePersistSeal(
+    session,
+    bundle as unknown as Record<string, unknown> & { caseId: string; sealedAt: string; verdict: string; bundleHash: string },
+  );
+
   return NextResponse.json({
     bundle: bundle as unknown as Record<string, unknown>,
     summary: {
@@ -128,5 +139,8 @@ export async function POST(req: Request) {
     attestationPayload: attestationPayload(bundle),
     custodyValid: analysis.custodyValid,
     selfCheck,
+    persisted: persistence.persisted,
+    sealedId: persistence.id,
+    persistenceReason: persistence.reason,
   });
 }

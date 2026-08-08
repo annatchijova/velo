@@ -9,6 +9,7 @@ const dict = {
     // Nav
     "nav.cases": "Cases",
     "nav.peritos": "Examiners",
+    "nav.sealed": "Sealed ledger",
     "nav.login": "Connect",
     "nav.logout": "Disconnect",
     "nav.demo": "Demo mode",
@@ -141,6 +142,7 @@ const dict = {
     "toast.attestationFailed": "Attestation failed",
     "toast.verificationFailed": "Verification failed",
     "toast.sealedSuccess": "Bundle sealed locally — nothing has touched the network.",
+    "toast.sealedPersisted": "Bundle sealed and persisted to the public ledger.",
     "toast.attestRequiresWallet": "Attestation requires a connected Midnight wallet.",
     "toast.commitmentComputed": "Commitment computed — the verdict is bound to the sealed fingerprint.",
     "toast.tamperDetectedPrefix": "Tamper detected",
@@ -197,6 +199,20 @@ const dict = {
     "common.cancel": "Cancel",
     "common.confirm": "Confirm",
     "common.none": "none",
+
+    // Sealed ledger
+    "sealed.title": "Sealed case ledger",
+    "sealed.subtitle":
+      "Every case an expert sealed and chose to persist. Public reads, no account needed — the verdict is visible, the evidence is not.",
+    "sealed.all": "All",
+    "sealed.empty": "No sealed cases match this filter yet.",
+    "sealed.attested": "Attested on-chain",
+    "sealed.pending": "Not attested yet",
+    "sealed.sealedBy": "Sealed by",
+    "sealed.notConfiguredTitle": "Persistence is not configured on this deployment",
+    "sealed.notConfiguredBody":
+      "This environment runs without a database, so seals stay in the browser (demo behavior). The ledger appears once a database adapter is configured.",
+    "sealed.loadFailed": "Could not load the sealed ledger.",
   },
   es: {
     "nav.cases": "Casos",
@@ -204,6 +220,7 @@ const dict = {
     "nav.login": "Conectar",
     "nav.logout": "Desconectar",
     "nav.demo": "Modo demo",
+    "nav.sealed": "Ledger de sellados",
 
     "landing.badge": "Midnight · Conocimiento cero",
     "landing.title1": "El veredicto se ve.",
@@ -325,6 +342,7 @@ const dict = {
     "toast.attestationFailed": "Falló la atestación",
     "toast.verificationFailed": "Falló la verificación",
     "toast.sealedSuccess": "Bundle sellado localmente — nada tocó la red.",
+    "toast.sealedPersisted": "Bundle sellado y persistido en el ledger público.",
     "toast.attestRequiresWallet": "Atestar requiere una wallet de Midnight conectada.",
     "toast.commitmentComputed": "Commitment calculado — el veredicto queda atado al fingerprint sellado.",
     "toast.tamperDetectedPrefix": "Alteración detectada",
@@ -377,6 +395,20 @@ const dict = {
     "common.cancel": "Cancelar",
     "common.confirm": "Confirmar",
     "common.none": "ninguno",
+
+    // Ledger de sellados
+    "sealed.title": "Ledger de casos sellados",
+    "sealed.subtitle":
+      "Cada caso que un perito selló y eligió persistir. Lecturas públicas, sin cuenta — el veredicto se ve, la evidencia no.",
+    "sealed.all": "Todos",
+    "sealed.empty": "Todavía no hay casos sellados con este filtro.",
+    "sealed.attested": "Atestados on-chain",
+    "sealed.pending": "Sin atestar aún",
+    "sealed.sealedBy": "Sellado por",
+    "sealed.notConfiguredTitle": "La persistencia no está configurada en este despliegue",
+    "sealed.notConfiguredBody":
+      "Este entorno corre sin base de datos, así que los sellos quedan en el navegador (comportamiento demo). El ledger aparece cuando se configure un adaptador de base de datos.",
+    "sealed.loadFailed": "No se pudo cargar el ledger de sellados.",
   },
 } as const;
 
