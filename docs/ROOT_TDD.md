@@ -22,7 +22,7 @@ changes to historical records (`CHANGELOG.md`, `docs/RED_TEAM_ROUND_*.md`).
 - Runner: Node's built-in test runner, `node --test`.
 - Tests live in `tests/` at the repo root (compiled to `dist/tests/` by
   `npm run build`, then executed by `npm test`).
-- Test files: `tests/<area>.test.ts`. The existing suite (53 tests) covers
+- Test files: `tests/<area>.test.ts`. The existing suite (58 tests) covers
   thresholds, the Daubert corroboration gate, determinism, custody-chain
   adversarial cases, canonicalization, and witnesses.
 
@@ -84,7 +84,7 @@ registros históricos (`CHANGELOG.md`, `docs/RED_TEAM_ROUND_*.md`).
 - Runner: el test runner nativo de Node, `node --test`.
 - Los tests viven en `tests/` en la raíz del repo (compilados a `dist/tests/`
   por `npm run build`, ejecutados por `npm test`).
-- Archivos: `tests/<area>.test.ts`. La suite existente (53 tests) cubre
+- Archivos: `tests/<area>.test.ts`. La suite existente (58 tests) cubre
   umbrales, el gate de corroboración Daubert, determinismo, casos
   adversariales de la cadena de custodia, canonicalización y witnesses.
 

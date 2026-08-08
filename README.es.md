@@ -141,11 +141,18 @@ Evidencia idéntica, resultado opuesto. La admisibilidad es una propiedad del
 puede rastrear hasta una adquisición legal no es un hallazgo más débil: es uno
 inadmisible.
 
+## Inicio rápido
+
+Para levantarlo en una máquina nueva, o para correr los casos y los scripts
+adversariales uno por uno:
+[**docs/QUICKSTART.md**](./docs/QUICKSTART.md) — la guía de copiar y pegar,
+bilingüe.
+
 ## Probalo
 
 ```bash
 npm install
-npm test          # 53 tests, incluidos los adversariales
+npm test          # 58 tests, incluidos los adversariales
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -176,7 +183,7 @@ máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
 
 | Capa | Estado |
 |---|---|
-| Motor determinista + gate de Daubert | **Funciona**, 53 tests |
+| Motor determinista + gate de Daubert | **Funciona**, 58 tests |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |

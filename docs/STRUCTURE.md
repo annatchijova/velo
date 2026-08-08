@@ -60,6 +60,7 @@ velo/
 │   ├── README.md
 │   ├── tailwind.config.ts
 │   ├── tsconfig.json
+│   ├── vercel.json
 │   └── vitest.config.ts
 ├── peritos-syntetic/   ← 6 synthetic expert-witness profiles for the credential layers
 ├── scripts/   ← reproducible verification scripts for specific red team findings
@@ -78,12 +79,14 @@ velo/
 ├── CHANGELOG.md
 ├── commitlint.config.cjs
 ├── CONTRIBUTING.md
+├── Dockerfile
 ├── GUION_VIDEO.md
 ├── INSPIRATIONS.md
 ├── LICENSE
 ├── package-lock.json
 ├── package.json
 ├── PROGRESS_LOCAL.md
+├── README.es.md
 ├── README.md
 └── tsconfig.json
 ```

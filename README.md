@@ -54,6 +54,11 @@ Every page below is bilingual (EN/ES).
 
 ## Run it locally
 
+**In a hurry, or setting this up on a fresh machine?**
+[**docs/QUICKSTART.md**](./docs/QUICKSTART.md) is the copy-paste guide —
+install, the 14 cases (all at once or one at a time), the demos, and every
+adversarial script with what it proves. Bilingual.
+
 No secrets are needed to browse the demo — the wallet and keys only matter for *attesting* (the write path), never for running the UI or reading the chain.
 
 ```bash
@@ -195,7 +200,7 @@ finding. It is an inadmissible one.
 
 ```bash
 npm install
-npm test          # 53 tests, including adversarial ones
+npm test          # 58 tests, including adversarial ones
 npm run simulate  # full end-to-end story, both refusals
 ```
 
@@ -377,7 +382,7 @@ the failure mode this whole system exists to prevent.
 
 | Layer | State |
 |---|---|
-| Deterministic engine + Daubert gate | **Working**, 53 tests |
+| Deterministic engine + Daubert gate | **Working**, 58 tests |
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
