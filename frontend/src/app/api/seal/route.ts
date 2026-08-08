@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { analyzeCase, sealAnalysis } from "velo/core/operations.js";
 import { verifyBundle, attestationPayload } from "velo/seal/bundle.js";
 import { Fraction } from "velo/engine/fraction.js";
-import type { Artifact, CustodyEvent, DetectorResult, ScoreResult } from "@/lib/types";
+import type { Artifact, CoverageGap, CustodyEvent, DetectorResult, ScoreResult } from "@/lib/types";
 import { requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
@@ -25,6 +25,14 @@ interface SealBody {
   artifacts: Artifact[];
   devilAdvocate?: string;
   custodyEvents?: CustodyEvent[];
+  /**
+   * Sources that should have been examined and were not. Passed straight
+   * through: the engine degrades a NEGATIVE finding to ABSTAIN when any
+   * are declared, and seals them into the analysis fingerprint. Dropping
+   * them here would silently promote that ABSTAIN back to NOISE -- the
+   * exact overclaim the field exists to prevent.
+   */
+  coverageGaps?: CoverageGap[];
   scenario?: "engine-only" | "seal";
 }
 
@@ -51,6 +59,7 @@ function serializeScore(s: {
   detectorCategoriesFired: number;
   detectorsFired: string[];
   corroboratingSources: string[];
+  coverageGaps: CoverageGap[];
   devilAdvocate: string;
   reasoning: string;
 }): ScoreResult {
@@ -61,6 +70,7 @@ function serializeScore(s: {
     detectorCategoriesFired: s.detectorCategoriesFired,
     detectorsFired: s.detectorsFired,
     corroboratingSources: s.corroboratingSources,
+    coverageGaps: s.coverageGaps,
     devilAdvocate: s.devilAdvocate,
     reasoning: s.reasoning,
   };
@@ -86,6 +96,7 @@ export async function POST(req: Request) {
     artifacts: body.artifacts as never,
     devilAdvocate: body.devilAdvocate ?? "",
     custodyEvents: (body.custodyEvents ?? []) as never,
+    coverageGaps: (body.coverageGaps ?? []) as never,
   });
 
   const scenario = body.scenario ?? "engine-only";

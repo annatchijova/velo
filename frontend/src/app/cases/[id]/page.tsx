@@ -14,6 +14,7 @@ import { ArtifactList } from "@/components/ArtifactList";
 import { CustodyChain } from "@/components/CustodyChain";
 import { PeirceChain } from "@/components/PeirceChain";
 import { ActionPanel } from "@/components/ActionPanel";
+import { CoverageGaps } from "@/components/CoverageGaps";
 
 export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -155,6 +156,13 @@ export default function CaseDetailPage() {
               )}
             </div>
           </div>
+
+          {engine && (
+            <CoverageGaps
+              gaps={engine.score.coverageGaps ?? caseFile.coverageGaps ?? []}
+              reasoning={engine.score.reasoning}
+            />
+          )}
 
           <div className="card-solid rounded-3xl p-6 shadow-soft">
             <h2 className="text-[13px] font-extrabold uppercase tracking-wide text-ink-900">
