@@ -93,6 +93,18 @@ fired, fractures, corroborating sources, the exact rational score, the verdict
 and the engine's own reasoning. `VELO-1`, `velo-001` and the full filename all
 work.
 
+### All of them, at full detail
+
+The summary above is a check; this is the whole corpus with every breakdown,
+one after another. Useful when someone wants to read the reasoning rather than
+trust the exit code:
+
+```bash
+for c in $(ls cases/VELO-*.json | sed 's|.*/||; s|^\(VELO-[0-9]\{3\}\).*|\1|'); do node scripts/run-case.mjs "$c"; echo; done
+```
+
+Add `| tee /tmp/velo-full-run.txt` to keep a copy.
+
 ### Seal one, then verify it offline
 
 ```bash
@@ -275,6 +287,84 @@ Use a disposable wallet. The deploy dependency logs its seed unconditionally;
 this repo redacts it, but that is a mitigation around a third-party default,
 not a guarantee.
 
+### Verifying it yourself, hash by hash
+
+Four checks, in order. The fourth one is a limit, not a step — and it is the
+one worth understanding.
+
+**1. The analysis is reproducible.** Seal the same case twice:
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json | grep -E "bundle hash|fingerprint"
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json | grep -E "bundle hash|fingerprint"
+```
+
+```
+bundle hash:          853f8e8655654b418eb47936295ad09db739d45939d02c63e670caabf8e08500
+analysis fingerprint: 92d1b18a173b4f48bc999dbb64743348251c3b23ea959b2176334eb56174b2fc
+
+bundle hash:          f4d824f0e32b7a3a98228a18175470f90c0f8768ace04efb4971f02ba28f1cbb   <- different
+analysis fingerprint: 92d1b18a173b4f48bc999dbb64743348251c3b23ea959b2176334eb56174b2fc   <- identical
+```
+
+That is the two-hash design doing its job. The **fingerprint** identifies the
+analysis, so re-running the engine on the same evidence reproduces it exactly —
+that is what makes the verdict checkable by someone else. The **bundle hash**
+identifies this particular execution, so it includes the seal timestamp and the
+custody chain and changes every time. Conflating the two would make
+reproducibility impossible to demonstrate: you could never tell "the same
+analysis, run again" from "a different analysis".
+
+**2. The bundle is internally consistent.** `dist/src/seal/verify.js` imports
+nothing from this project and nothing from npm — `node:crypto` and `node:fs`
+only. Hand it to an opposing expert with the bundle and nothing else:
+
+```bash
+node dist/src/seal/verify.js local-cases/VELO-001.json
+```
+
+It recomputes both hashes and walks every custody link. It prints
+`internally consistent`, never `valid` — a reader takes "valid" to mean
+"authentic", and this establishes something strictly weaker.
+
+**3. The attestation exists on-chain.** Free, from anywhere:
+
+```bash
+node scripts/verify-chain-read.mjs
+```
+
+Or from a block explorer nobody here controls:
+[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)
+
+**4. You cannot recompute the on-chain commitment from the bundle — and that
+is deliberate.**
+
+The commitment is
+`persistentHash([domain, fingerprint, custodyTip, verdict, corroborationCount, salt])`.
+A bundle gives you five of those six. The **salt** is a per-case 32-byte value
+that never leaves the analyst's machine, and without it the hash cannot be
+reproduced.
+
+That is the whole point. The other five values are public or guessable — the
+domain separator is in the source, the verdict is on the ledger, the
+corroboration count is a number under 18. If the salt were published, anyone
+could hash a candidate tuple and *confirm* whether it is the one behind a given
+commitment. The commitment would stop hiding anything.
+
+So the link between "this sealed bundle" and "that on-chain commitment" is not
+something a third party recomputes. It is what the **zero-knowledge proof
+establishes** — that whoever attested knew a preimage satisfying the circuit's
+constraints, including the Daubert gate. Recomputing it yourself would mean the
+privacy property had already failed.
+
+What you can verify independently, then: that the analysis is reproducible,
+that the bundle is self-consistent, that an attestation exists on a public
+chain carrying a verdict, and — see §4 — that the gate refuses a forced
+`MALICE`. What you cannot verify by recomputation, by design, is which case is
+behind which commitment.
+
 ---
 
 ## 6. If something breaks
@@ -359,6 +449,18 @@ Imprime el desglose completo de ese caso: artefactos, custodia, detectores que
 dispararon, fracturas, fuentes que corroboran, el score racional exacto, el
 veredicto y el razonamiento del propio motor. Funcionan `VELO-1`, `velo-001` y
 el nombre de archivo completo.
+
+### Todos, en detalle completo
+
+El resumen de arriba es un chequeo; esto es el corpus entero con cada
+desglose, uno tras otro. Sirve cuando alguien quiere *leer* el razonamiento en
+vez de confiar en el código de salida:
+
+```bash
+for c in $(ls cases/VELO-*.json | sed 's|.*/||; s|^\(VELO-[0-9]\{3\}\).*|\1|'); do node scripts/run-case.mjs "$c"; echo; done
+```
+
+Agregale `| tee /tmp/velo-corrida-completa.txt` para guardar una copia.
 
 ### Sellar uno y verificarlo offline
 
@@ -465,6 +567,84 @@ un problema de fondos) y CHAIN.md existe porque perdimos horas exactamente ahí.
 Usá una billetera descartable. La dependencia de deploy loguea su semilla
 incondicionalmente; este repo la redacta, pero eso es una mitigación alrededor
 de un default ajeno, no una garantía.
+
+### Verificarlo vos misma, hash por hash
+
+Cuatro chequeos, en orden. El cuarto no es un paso sino un límite — y es el que
+vale la pena entender.
+
+**1. El análisis es reproducible.** Sellá el mismo caso dos veces:
+
+```bash
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json | grep -E "bundle hash|fingerprint"
+node scripts/run-case.mjs VELO-001 --seal
+node dist/src/seal/verify.js local-cases/VELO-001.json | grep -E "bundle hash|fingerprint"
+```
+
+```
+bundle hash:          853f8e8655654b418eb47936295ad09db739d45939d02c63e670caabf8e08500
+analysis fingerprint: 92d1b18a173b4f48bc999dbb64743348251c3b23ea959b2176334eb56174b2fc
+
+bundle hash:          f4d824f0e32b7a3a98228a18175470f90c0f8768ace04efb4971f02ba28f1cbb   <- distinto
+analysis fingerprint: 92d1b18a173b4f48bc999dbb64743348251c3b23ea959b2176334eb56174b2fc   <- idéntico
+```
+
+Ese es el diseño de dos hashes funcionando. El **fingerprint** identifica al
+análisis, así que volver a correr el motor sobre la misma evidencia lo
+reproduce exacto — eso es lo que hace que otro pueda chequear el veredicto. El
+**bundle hash** identifica a esta ejecución en particular, así que incluye el
+timestamp del sellado y la cadena de custodia, y cambia siempre. Confundirlos
+haría imposible demostrar reproducibilidad: nunca podrías distinguir "el mismo
+análisis, corrido de nuevo" de "otro análisis".
+
+**2. El bundle es internamente consistente.** `dist/src/seal/verify.js` no
+importa nada de este proyecto ni de npm — solo `node:crypto` y `node:fs`. Se lo
+podés dar al perito de la contraparte con el bundle y nada más:
+
+```bash
+node dist/src/seal/verify.js local-cases/VELO-001.json
+```
+
+Recomputa los dos hashes y recorre cada eslabón de custodia. Imprime
+`internally consistent`, nunca `valid`: quien lee "válido" entiende
+"auténtico", y esto establece algo estrictamente más débil.
+
+**3. La atestación existe on-chain.** Gratis, desde cualquier lado:
+
+```bash
+node scripts/verify-chain-read.mjs
+```
+
+O desde un explorer que nadie acá controla:
+[preview.midnightexplorer.com/contracts/0x46cac58c…023d9d](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)
+
+**4. El commitment on-chain NO se puede recomputar desde el bundle — y es a
+propósito.**
+
+El commitment es
+`persistentHash([dominio, fingerprint, custodyTip, verdict, corroborationCount, salt])`.
+Un bundle te da cinco de esos seis. El **salt** es un valor de 32 bytes por
+caso que nunca sale de la máquina del perito, y sin él el hash no se puede
+reproducir.
+
+Ese es todo el punto. Los otros cinco son públicos o adivinables: el separador
+de dominio está en el código, el veredicto está en el ledger, la cuenta de
+corroboración es un número menor a 18. Si el salt se publicara, cualquiera
+podría hashear una tupla candidata y *confirmar* si es la que está detrás de un
+commitment dado. El commitment dejaría de ocultar nada.
+
+Así que el vínculo entre "este bundle sellado" y "ese commitment on-chain" no
+es algo que un tercero recomputa. Es lo que **establece la prueba de
+conocimiento cero**: que quien atestó conocía una preimagen que satisface las
+restricciones del circuito, incluida la compuerta Daubert. Poder recomputarlo
+vos misma significaría que la propiedad de privacidad ya falló.
+
+Lo que sí se verifica de forma independiente, entonces: que el análisis es
+reproducible, que el bundle es autoconsistente, que existe una atestación en
+una cadena pública con un veredicto, y —ver §4— que la compuerta rechaza un
+`MALICE` forzado. Lo que no se verifica por recomputación, por diseño, es qué
+caso está detrás de qué commitment.
 
 ## 6. Si algo se rompe
 
