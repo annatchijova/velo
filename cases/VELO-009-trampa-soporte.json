@@ -77,8 +77,10 @@
     }
   ],
   "expected_fractures": [
-    "COMPETENCE_THEATER"
+    "COMPETENCE_THEATER",
+    "POSSIBLE_SCENE_STAGING"
   ],
+  "fracture_notes": "POSSIBLE_SCENE_STAGING comes from the Eco set-level filter (ported from VIGIA). Doctrinally apt here — the case IS staged bait — though the specific trigger terms include prose artifacts ('provenance root', a negated 'exploit'), which is the filter's known bluntness on analyst-written descriptions. It adds fracture weight but no corroborating source, so the case still shows exactly one independent source and stays below the Daubert gate.",
   "peirce_chain": {
     "firstness": "Non-technical user's ticket with a kernel-exploit screenshot.",
     "secondness": "No technical corroboration: no history, no process, no network.",

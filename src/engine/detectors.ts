@@ -1,3 +1,4 @@
+import { ecoOverinterpretation } from "./eco.js";
 import type { Artifact, Marker } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
@@ -169,6 +170,43 @@ export function detectProcessMasquerade(artifacts: Artifact[]): DetectorResult {
   );
 }
 
+/**
+ * Set-level Eco fracture, ported from VIGIA (`eco_overinterpretation_check`,
+ * wired as its D1 gate use (b)): when more than half of the artifact
+ * descriptions carry obvious-bait vocabulary, the scene itself is the
+ * anomaly — evidence that screams attack in the majority is more consistent
+ * with staging than with a competent adversary. The decision is the integer
+ * predicate `2 * hits > n`; the float ratio the Eco module also reports is
+ * narrative-only and never read here.
+ *
+ * This contributes a fracture like any other detector — it does not by
+ * itself force a verdict.
+ *
+ * contributingArtifactIds is deliberately EMPTY: this is a claim about
+ * the evidence SET, not about any artifact individually, and the inputs
+ * are analyst-written descriptions, not acquired evidence content.
+ * Counting the bait-carrying artifacts as corroborating sources would let
+ * vocabulary in prose (including negations like "no exploit found" and
+ * meta-commentary like "same provenance root") inflate the Daubert
+ * corroboration count — verified against the corpus, where it added a
+ * clean TPM reading as a fourth "corroborating source" because its
+ * description said "the attack is post-boot". The Daubert gate counts
+ * independent evidence of the finding; a set-level prose predicate is not
+ * that. Which texts tripped the filter remains available to the narrative
+ * layer via `ecoOverinterpretation` itself.
+ */
+export function detectSceneStaging(artifacts: Artifact[]): DetectorResult {
+  const eco = ecoOverinterpretation(artifacts.map((a) => a.description));
+  const fired = eco.staged;
+  return {
+    name: "scene_staging",
+    fired,
+    fractures: fired ? ["POSSIBLE_SCENE_STAGING"] : [],
+    weight: fired ? new Fraction(1, 4) : Fraction.zero(),
+    contributingArtifactIds: [],
+  };
+}
+
 export function runAllDetectors(artifacts: Artifact[]): DetectorResult[] {
   return [
     detectTemporalViolation(artifacts),
@@ -176,5 +214,6 @@ export function runAllDetectors(artifacts: Artifact[]): DetectorResult[] {
     detectAntiForensicMarker(artifacts),
     detectNarrativePattern(artifacts),
     detectProcessMasquerade(artifacts),
+    detectSceneStaging(artifacts),
   ];
 }

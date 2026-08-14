@@ -1,4 +1,5 @@
 import type { DetectorResult } from "./detectors.js";
+import { obviousBaitHits } from "./eco.js";
 import type { Artifact, CoverageGap } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
@@ -141,11 +142,23 @@ export function score(input: ScoreInput): ScoreResult {
           "Score and corroboration both qualify for MALICE, but no devil's-advocate counter-argument was supplied. Degraded to SUSPICION rather than publish an unscrutinized verdict.",
       };
     }
+    // Gate D1 (Eco), ported from VIGIA: exculpatory text that itself
+    // screams attack vocabulary is a signal, not a refutation. VELO's
+    // devil's-advocate never reduces the score (verified against this
+    // file: its presence is what ENABLES MALICE under the Daubert
+    // scrutiny gate), so there is no reduction to block — the gate here
+    // is the pre-emission record that the counter-argument tripped the
+    // Eco filter, sealed into the reasoning so a reader weighs it.
+    const devilBait = obviousBaitHits(devilAdvocate);
+    const d1Note =
+      devilBait.length > 0
+        ? ` Gate D1 (Eco filter): the devil's-advocate text itself contains obvious-bait vocabulary (${devilBait.join(", ")}) — under the Eco filter an overly obvious refutation is a signal, not a refutation.`
+        : "";
     return {
       ...base,
       verdict: "MALICE",
       devilAdvocate,
-      reasoning: `${corroborationCount} independent sources corroborate (>= ${MIN_CORROBORATION_FOR_MALICE} required), score ${totalScore.toDisplayString()} exceeds ${MALICE_THRESHOLD.toDisplayString()}.`,
+      reasoning: `${corroborationCount} independent sources corroborate (>= ${MIN_CORROBORATION_FOR_MALICE} required), score ${totalScore.toDisplayString()} exceeds ${MALICE_THRESHOLD.toDisplayString()}.${d1Note}`,
     };
   }
 

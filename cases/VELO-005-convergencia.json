@@ -98,8 +98,10 @@
   "expected_fractures": [
     "PROCESS_MASQUERADE",
     "NETWORK_HOST_CONTRADICTION",
-    "TIMESTAMPS_STOMPED"
+    "TIMESTAMPS_STOMPED",
+    "POSSIBLE_SCENE_STAGING"
   ],
+  "fracture_notes": "POSSIBLE_SCENE_STAGING comes from the Eco set-level filter (ported from VIGIA): three of the four artifact descriptions carry obvious-attack vocabulary (lsass, cobalt, attack), which trips the strict-majority predicate. On this case it is a known limitation of scanning analyst prose rather than acquired content — the corroboration count is unaffected by design, because a set-level prose predicate is not independent evidence.",
   "peirce_chain": {
     "firstness": "Four independent artifacts pointing to the same compromise.",
     "secondness": "Low cross-correlation: these sources cannot have been fabricated together.",
