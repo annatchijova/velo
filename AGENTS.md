@@ -196,6 +196,37 @@ the hook without strong reason.
    git checkout main && git pull origin main
    ```
 
+## Agent skills
+
+Two skills ship with this repository under `.claude/skills/` and are loaded
+automatically by Claude Code. Any agent working here is expected to apply them;
+other tooling should treat the two `SKILL.md` files as binding methodology.
+
+- **`abductive-engineering`** — the reasoning method for every non-trivial
+  diagnosis, review, or design decision. Work the Peircean loop explicitly:
+  observe without interpreting (Firstness), contrast against the expected
+  baseline (Secondness), infer the general rule (Thirdness); then abduce the
+  best hypothesis, deduce a checkable consequence, and test it against the
+  live system before claiming a cause. Always attempt the refuting (benign)
+  hypothesis before shipping a "fix" — most confident findings die there.
+  This is the same doctrine the engine itself ports from VIGIA (the
+  inform-only abductive layer in `src/inference/abductive.ts` is its
+  operationalized form: hypotheses ranked by integer Ockham cost, never
+  allowed to touch a verdict).
+
+- **`red-team-auditing`** — the adversarial application of the same loop, for
+  auditing this codebase or any finding about it. Certainty must be earned by
+  induction, never asserted by confidence: a finding is PLAUSIBLE until a
+  deduced consequence has been executed against the live code, and only then
+  CONFIRMED. Verify any auditor's claim (human, AI, linter) against the live
+  file before patching; reject stale or imagined anchors explicitly. VELO's
+  own history is the argument for this skill — F2, F6, F8, F13, F20 in the
+  test suite are red-team findings that survived exactly this discipline.
+
+These two complement the repository's architectural invariants rather than
+replace them: the deterministic core stays float-free, the LLM stays out of
+the decision path, and degradation stays honest (ABSTAIN over false PASS).
+
 ## Standards summary
 
 - **Semantic Versioning 2.0.0** — `package.json` version is the single source of
