@@ -46,6 +46,19 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - **Agent skills.** `.claude/skills/abductive-engineering` and
   `.claude/skills/red-team-auditing` now ship with the repository, and
   `AGENTS.md` documents how they bind for any agent working here.
+- **Evidence Merkle tree with selective disclosure** (`src/seal/merkle.ts`).
+  Sealed bundles now carry `evidenceRoot`, a domain-separated SHA-256 Merkle
+  root (RFC 6962-style prefixes; odd nodes promoted, never duplicated — the
+  CVE-2012-2459 guard) over the canonical bytes of each artifact.
+  `artifactInclusionProof` / `verifyArtifactInclusion` let a prover disclose
+  ONE artifact plus an O(log n) proof against the root without revealing the
+  rest of the evidence set. Verification accumulates the complete damage map
+  instead of stopping at the first error, and states what a passing proof
+  does and does not establish (patterns adopted from continuum's
+  `legacy/core/hash_chain.py` and its KL-008b/KL-009 postmortems). The root
+  is derived and recomputed by both verifiers — the library one and the
+  standalone judge's tool, pinned to each other by test — and bundles sealed
+  before the field existed verify with a caveat, not a failure.
 
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
   1–5 never covered: the attestation/deploy tooling, the witness module, the
