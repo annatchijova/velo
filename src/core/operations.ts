@@ -1,6 +1,7 @@
 import { runAllDetectors, type DetectorResult } from "../engine/detectors.js";
 import type { Artifact, CoverageGap } from "../engine/evidence.js";
 import { score, type ScoreResult } from "../engine/scorer.js";
+import { computeArtifactTrust, type ArtifactTrust } from "../engine/trust_fusion.js";
 import { sealBundle, verifyBundle, type BundleVerification, type SealedBundle } from "../seal/bundle.js";
 import {
   appendCustodyEvent,
@@ -47,6 +48,13 @@ export interface AnalysisResult {
   custodyChain: CustodyChain;
   custodyValid: boolean;
   custodyReason: string;
+  /**
+   * Per-artifact effective-trust audit (VIGIA trust_fusion port, exact
+   * Fractions serialized as strings). Reported BESIDE the verdict, never
+   * an input to it — see src/engine/trust_fusion.ts for why the VIGIA
+   * verdict gates were deliberately not adopted.
+   */
+  artifactTrust: ArtifactTrust[];
 }
 
 /**
@@ -70,10 +78,12 @@ export function analyzeCase(input: AnalyzeCaseInput): AnalysisResult {
 
   const detectorResults = runAllDetectors(artifacts);
   const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid, coverageGaps });
+  const artifactTrust = computeArtifactTrust(artifacts, detectorResults);
 
   return {
     detectorResults,
     scoreResult,
+    artifactTrust,
     custodyChain,
     custodyValid,
     custodyReason: hasAcquisitionHistory

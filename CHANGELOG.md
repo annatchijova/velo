@@ -46,6 +46,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - **Agent skills.** `.claude/skills/abductive-engineering` and
   `.claude/skills/red-team-auditing` now ship with the repository, and
   `AGENTS.md` documents how they bind for any agent working here.
+- **Per-artifact effective-trust audit** (`src/engine/trust_fusion.ts`),
+  completing item 5 of the VIGIA port with its recon premise corrected: the
+  live Python decays trust by temporal-violation severity, not by evidence
+  age, and only its lookup tables are sealable. VELO ports the
+  Fraction-exact tables from the canonical scorer (bucketed exp(-2x),
+  provenance-chain depth factor 0.95^k, empty chain 1/10) and reports
+  effectiveTrust per artifact in `AnalysisResult.artifactTrust` — exact
+  Fraction strings, beside the verdict, never an input to it. VIGIA's
+  trust-gated verdict caps were deliberately not adopted: one is
+  unreachable without an external prior-trust input, and the other
+  counterbalances a hard-MALICE gate VELO does not have.
 - **Evidence Merkle tree with selective disclosure** (`src/seal/merkle.ts`).
   Sealed bundles now carry `evidenceRoot`, a domain-separated SHA-256 Merkle
   root (RFC 6962-style prefixes; odd nodes promoted, never duplicated — the
