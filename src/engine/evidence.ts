@@ -21,6 +21,11 @@ export type Marker =
   | "usn_journal_gap"
   | "mft_entry_anomaly"
   | "surgical_deletion"
+  // anti-forensic: defense evasion (VIGIA caie Rule 13 — vssadmin shadow
+  // deletion / host firewall disabled; deliberate, privilege-requiring acts
+  // with no benign automated equivalent)
+  | "vsc_deleted"
+  | "firewall_disabled"
   // narrative pattern
   | "competence_theater"
   | "narrative_poisoning"
@@ -29,7 +34,11 @@ export type Marker =
   // process/path
   | "process_masquerade"
   | "unusual_path"
-  | "parent_anomaly";
+  | "parent_anomaly"
+  // process: injection/hiding (VIGIA caie Rule 14 — a process executing
+  // code that is not its on-disk image, or unlinked from the process list)
+  | "process_injection"
+  | "pid_hidden";
 
 export interface Artifact {
   id: string;
