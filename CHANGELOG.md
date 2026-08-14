@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **VIGIA port, phases 1-3** (`docs/PORT-FROM-VIGIA.md`). Deterministic
+  forensic capabilities ported from the VIGIA Python engine into the sealed
+  decision path, parity-tested against live runs of the Python originals:
+  - Eco overinterpretation filter (`src/engine/eco.ts`): the verbatim
+    50-term obvious-bait vocabulary, word-boundary search, and the integer
+    predicate `2*hits > n`. Wired as the set-level `scene_staging` detector
+    (fracture `POSSIBLE_SCENE_STAGING`, weight 1/4, deliberately
+    contributing no corroborating sources — prose vocabulary must not
+    inflate the Daubert independent-source count) and as scorer gate D1 (a
+    bait-laden devil's advocate is recorded in the sealed reasoning as a
+    signal, not a refutation).
+  - caie fracture predicates: new markers `vsc_deleted` /
+    `firewall_disabled` (fracture `DEFENSE_EVASION_ARTIFACT`, Rule 13) and
+    `process_injection` / `pid_hidden` (`PROCESS_INJECTION_ANTIFORENSIC`,
+    Rule 14); the R3-1 timestamp plausibility window (epoch/FILETIME
+    sentinels and post-2038 dates raise `TIMESTAMP_OUT_OF_RANGE`, fail
+    closed, and never enter the causality comparison); the Timestomp
+    sub-second signature (`TIMESTAMP_PRECISION_ANOMALY`, >= 5 trailing
+    zeros, Rule 9).
+  - vigia_scorer B-151a: a score built on fewer than two contributing
+    artifacts is capped at 65/100, with an auditable trace in the sealed
+    reasoning. Verdict-neutral (the Daubert gate already blocks
+    single-source MALICE).
+  - Abductive intent engine (`src/inference/abductive.ts`), inform-only:
+    Peirce hypothesis ranking by integer Ockham cost and coverage, 32
+    templates across 12 IR phases extracted mechanically from the live
+    Python, result hashes byte-identical to the Python engine. A
+    regression test enforces that no decision-path module imports it.
+  - Not ported, deliberately: canonicalize/custody (already at parity),
+    B-068 three-branch corroboration (needs spoofability/domain taxonomy
+    VELO lacks), hard-MALICE B-172 (would bypass the corroboration gate),
+    the UNKNOWN verdict band (fixed scale), Grice/stylometry/entropy/
+    likelihood-ratio floats (non-sealable, narrative-layer only),
+    trust-fusion decay (deferred until cases carry evidence age).
+- **Agent skills.** `.claude/skills/abductive-engineering` and
+  `.claude/skills/red-team-auditing` now ship with the repository, and
+  `AGENTS.md` documents how they bind for any agent working here.
+
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
   1–5 never covered: the attestation/deploy tooling, the witness module, the
   frontend beyond the F14 routes, and the coverage-gap engine change. One
