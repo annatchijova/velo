@@ -82,6 +82,33 @@ Hoy un perito forense tiene dos opciones, y las dos son malas:
 Todo flujo de trabajo forense en producción elige una de las dos. VELO no elige
 ninguna.
 
+## En simple, paso a paso
+
+1. **El perito tiene el caso en su computadora** — discos, logs, capturas.
+   Nunca sale de ahí.
+2. **Le pide a VELO que lo analice**, hablándole por MCP (el mismo protocolo
+   que usan los agentes de IA para llamar herramientas) — el perito conecta
+   su cliente y llama a `seal_case`. No hay formulario ni upload.
+3. **Un motor matemático analiza la evidencia — no una IA.** Busca 5 tipos de
+   señales de manipulación con reglas fijas, sin redondeo ni azar: los
+   mismos datos siempre dan el mismo veredicto, en cualquier máquina.
+4. **El motor exige que el perito se cuestione a sí mismo.** Si el resultado
+   es el veredicto más grave (`MALICE`), el sistema lo degrada
+   automáticamente a menos que el perito haya escrito un argumento en contra
+   de su propio hallazgo.
+5. **Todo se sella localmente** con una cadena de hashes — como un precinto
+   que se rompe visiblemente si alguien lo toca después.
+6. **Se genera una prueba de conocimiento cero (ZK)** de que se siguieron las
+   reglas de admisibilidad, sin revelar una sola línea del caso.
+7. **Solo esa prueba, un hash (el "commitment") y el veredicto se publican en
+   Midnight.** La evidencia cruda jamás cruza esa línea.
+8. **Cualquiera —un juez, la contraparte, el público— puede verificar** que
+   el veredicto es real y que se siguieron las reglas, sin ver ni un archivo
+   del caso.
+
+Abajo está la versión técnica del mismo flujo, con el diagrama y las reglas
+exactas que el circuito hace cumplir.
+
 ## Cómo
 
 ![Arquitectura de VELO — en la máquina privada del perito, la evidencia pasa por el motor determinista, el gate de admisibilidad (NOISE / SUSPICION / MALICE / ABSTAIN), el sellado canónico y la cadena de custodia; un circuito ZK (contracts/velo.compact) fuerza el gate de Daubert (MALICE exige corroboración >= 2) y el assert de no-replay; solo cruzan el commitment, el veredicto declarado y una prueba por el borde disclose() (compiler-enforced) al ledger público de Midnight, verificable offline](./visual/arquitectura.png)
@@ -153,7 +180,8 @@ Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
 ```bash
 npm install
-npm test          # 58 tests, incluidos los adversariales
+npm test          # 58 tests del motor, incluidos los adversariales
+cd frontend && npx vitest run   # 47 más — 105 entre las dos suites
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -161,30 +189,45 @@ El ciclo completo contra Midnight `preview` está en
 **[`docs/CHAIN.md`](./docs/CHAIN.md)**: sellar local → atestar on-chain → leer
 desde el ledger.
 
-### Despliegue en Vercel
+### Despliegue (Google Cloud Run)
 
-El frontend Next.js se despliega en Vercel como proyecto monorepo: **Root
-Directory `frontend/`**, framework Next.js, Node 20+. Dos configuraciones en
-`frontend/vercel.json` son estructurales:
+La app está **viva en
+[velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)**,
+desplegada como contenedor desde el `Dockerfile` de la raíz del repo
+(multi-etapa: instalar → compilar el motor raíz → `next build` → `next start`
+en el `$PORT` de Cloud Run):
 
-- `installCommand: "cd .. && npm ci"` — instala desde el lockfile de la raíz
-  del workspace, para que el paquete `velo` (el motor) resuelva.
-- `buildCommand: "npm run build:deploy"` — compila el paquete raíz (`tsc`)
-  antes de `next build`, porque el frontend importa `velo/*` → `dist/src/*`.
+```bash
+gcloud run deploy velo --source . --region us-central1
+```
+
+Proyecto `vigia-497422`, `us-central1`, `--allow-unauthenticated`,
+`min-instances 0` (escala a cero; unos segundos de cold start en el primer
+request). El contexto de build es la **raíz del repo**: la imagen debe llevar
+el `dist/` del paquete raíz, el corpus, `contracts/managed/` (los bindings
+commiteados que `/api/chain` carga en cada request) y
+`deploy/managed-shim/` (la dirección del contrato desplegado).
 
 Las rutas del corpus (`/api/cases`, `/api/cases/:id`, `/api/peritos`) son
 **estáticas en el build** (`force-static` + `generateStaticParams`), así el
-runtime serverless nunca lee el filesystem del repo para servirlas. Las
-lecturas de cadena (`GET /api/chain`) corren serverless con los bindings del
-contrato commiteados (`contracts/managed/`) — sin wallet, sin claves, sin
-costo. Las **escrituras** de atestación nunca corren en Vercel; quedan en la
-máquina del perito (`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
+runtime nunca lee el filesystem del repo para servirlas. Las lecturas de
+cadena (`GET /api/chain`) corren en el contenedor con los bindings del
+contrato commiteados — sin wallet, sin claves, sin costo. Las **escrituras**
+de atestación nunca corren en la app hosteada; quedan en la máquina del perito
+(`deploy/attest-case.ts`, ver [CHAIN](./docs/CHAIN.md)).
+
+Por qué no Vercel: el builder `@vercel/next` falló de forma reproducible de su
+lado (`ENOENT` en `export-detail.json` después de un `next build` exitoso); el
+pivote está registrado en [`ADR-007`](./docs/ADRS_001_006.md).
+`frontend/vercel.json` y la configuración relacionada quedan en el repo, sin
+uso.
 
 ## Estado — qué es real y qué no
 
 | Capa | Estado |
 |---|---|
 | Motor determinista + gate de Daubert | **Funciona**, 58 tests |
+| Cobertura de tests entre las dos suites | **105 en verde** — 58 del motor (`npm test`) + 47 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |

@@ -36,3 +36,65 @@ export function requireJsonContentType(req: Request): NextResponse | null {
   }
   return null;
 }
+
+/**
+ * Red team round 6, F22: the compute-bearing POST routes read their bodies
+ * with no size cap — request memory was unbounded at the application layer.
+ * readJsonBody enforces the cap while streaming (a body that declares or
+ * turns out to be oversized is refused before it is fully buffered or
+ * parsed), and turns malformed JSON into a 400 instead of a crash.
+ */
+export const MAX_JSON_BODY_BYTES = 256 * 1024;
+
+export type ReadJsonOutcome =
+  | { status: 200; body: unknown }
+  | { status: 400 | 413; error: string };
+
+export async function readJsonBody(req: Request, maxBytes = MAX_JSON_BODY_BYTES): Promise<ReadJsonOutcome> {
+  const declared = req.headers.get("content-length");
+  if (declared !== null) {
+    const declaredBytes = Number.parseInt(declared, 10);
+    if (Number.isFinite(declaredBytes) && declaredBytes > maxBytes) {
+      return { status: 413, error: `Request body exceeds the ${maxBytes}-byte limit.` };
+    }
+  }
+
+  const reader = req.body?.getReader();
+  if (!reader) {
+    return { status: 400, error: "Expected a JSON body." };
+  }
+
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > maxBytes) {
+        await reader.cancel().catch(() => undefined);
+        return { status: 413, error: `Request body exceeds the ${maxBytes}-byte limit.` };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { status: 400, error: "Could not read the request body." };
+  }
+
+  const text = new TextDecoder().decode(concatBytes(chunks));
+  try {
+    return { status: 200, body: JSON.parse(text) };
+  } catch {
+    return { status: 400, error: "Body is not valid JSON." };
+  }
+}
+
+function concatBytes(chunks: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(chunks.reduce((n, c) => n + c.byteLength, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
+}

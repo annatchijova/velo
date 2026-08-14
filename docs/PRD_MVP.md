@@ -1,4 +1,4 @@
-# MVP PRD — VELO on Vercel
+# MVP PRD — VELO on Cloud Run
 
 > The working app, not the showcase: queryable sealed cases, expert identity,
 > and on-chain attestation status — deployed, phased, and tested.
@@ -26,12 +26,24 @@ browser tab or the `local-cases/` file that produced it.
 
 The MVP turns that loop into a deployed product:
 
-1. The frontend is hosted (Vercel) so anyone can run the engine, seal, and
-   verify.
+1. The frontend is hosted on **Google Cloud Run** (live at
+   `https://velo-1028999311218.us-central1.run.app`) so anyone can run the
+   engine, seal, and verify. The Vercel deployment was abandoned due to a
+   platform-side error; Cloud Run was chosen as the hosting target.
 2. Sealed cases persist in a database and become a public, queryable ledger.
 3. Experts get an identity (their Midnight wallet) and their seals carry it.
 4. On-chain attestations are linked to sealed cases and shown with precise
    trust labels.
+
+**Phase status** (as of 2026-08-08):
+- **Phase 1** (PRD/ADR/ROOT_TDD docs): ✅ Done (PR #14 merged)
+- **Phase 2** (deploy config): ✅ Done (PR #15 merged; Vercel-specific deploy
+  superseded by Cloud Run deployment)
+- **Phase 3** (persistence + wallet identity): 🔄 In progress
+- **Phase 4** (attestation linkage + verification panel): ⏳ Pending
+
+**Red team**: 6 rounds, 35 findings. F19/F20/F23/F25 fixed. F15/F21/F22 open.
+F24 partial (seam type drift).
 
 ### Personas
 
@@ -109,12 +121,12 @@ MCP server hosting.
 
 ### Phase map
 
-| Phase | Deliverable | Journeys |
-|---|---|---|
-| 1 | This PRD + ADRs + ROOT_TDD + docs consistency | — |
-| 2 | Frontend live on Vercel (corpus served statically, chain reads work) | J1 |
-| 3 | Neon persistence + wallet identity + sealed ledger | J2 |
-| 4 | Attestation linkage + `/verify` panel + browser-seam retirement | J3, J4 |
+| Phase | Deliverable | Journeys | Status |
+|---|---|---|---|
+| 1 | This PRD + ADRs + ROOT_TDD + docs consistency | — | ✅ Done (PR #14) |
+| 2 | Frontend live on **Cloud Run** (corpus served statically, chain reads work; Vercel config superseded by Dockerfile + gcloud deploy) | J1 | ✅ Done (PR #15 + Cloud Run deploy) |
+| 3 | Persistence behind a DB adapter (Neon or Cloud SQL, picked at deploy time) + wallet identity + sealed ledger | J2 | 🔄 In progress |
+| 4 | Attestation linkage + `/verify` panel + browser-seam retirement | J3, J4 | ⏳ Pending |
 
 ---
 
@@ -131,14 +143,26 @@ navegador o en el archivo `local-cases/` que lo produjo.
 
 El MVP convierte ese ciclo en un producto desplegado:
 
-1. El frontend queda hosteado (Vercel) para que cualquiera pueda correr el
-   motor, sellar y verificar.
+1. El frontend queda hosteado en **Google Cloud Run** (vivo en
+   `https://velo-1028999311218.us-central1.run.app`) para que cualquiera pueda
+   correr el motor, sellar y verificar. El despliegue en Vercel se abandonó por
+   un error del lado de la plataforma; Cloud Run quedó como destino de hosting.
 2. Los casos sellados persisten en una base de datos y se vuelven un ledger
    público y consultable.
 3. Los peritos tienen identidad (su wallet de Midnight) y sus sellos la
    llevan.
 4. Las atestaciones on-chain quedan vinculadas a los casos sellados y se
    muestran con etiquetas de confianza precisas.
+
+**Estado de fases** (al 2026-08-08):
+- **Fase 1** (docs PRD/ADR/ROOT_TDD): ✅ Hecho (PR #14 mergeado)
+- **Fase 2** (config de despliegue): ✅ Hecho (PR #15 mergeado; el deploy
+  específico de Vercel fue reemplazado por el despliegue en Cloud Run)
+- **Fase 3** (persistencia + identidad de wallet): 🔄 En progreso
+- **Fase 4** (vínculo de atestaciones + panel de verificación): ⏳ Pendiente
+
+**Red team**: 6 rondas, 35 hallazgos. F19/F20/F23/F25 arreglados. F15/F21/F22
+abiertos. F24 parcial (deriva de tipos en la costura).
 
 ### Personas
 
@@ -220,9 +244,9 @@ hostear el servidor MCP.
 
 ### Mapa de fases
 
-| Fase | Entregable | Recorridos |
-|---|---|---|
-| 1 | Este PRD + ADRs + ROOT_TDD + consistencia de docs | — |
-| 2 | Frontend vivo en Vercel (corpus estático, lecturas de cadena funcionando) | J1 |
-| 3 | Persistencia Neon + identidad de wallet + ledger de sellados | J2 |
-| 4 | Vínculo de atestaciones + panel `/verify` + retiro de la costura del navegador | J3, J4 |
+| Fase | Entregable | Recorridos | Estado |
+|---|---|---|---|
+| 1 | Este PRD + ADRs + ROOT_TDD + consistencia de docs | — | ✅ Hecho (PR #14) |
+| 2 | Frontend vivo en **Cloud Run** (corpus estático, lecturas de cadena funcionando; la config de Vercel fue reemplazada por Dockerfile + deploy gcloud) | J1 | ✅ Hecho (PR #15 + deploy Cloud Run) |
+| 3 | Persistencia detrás de un adaptador de BD (Neon o Cloud SQL, elegido al desplegar) + identidad de wallet + ledger de sellados | J2 | 🔄 En progreso |
+| 4 | Vínculo de atestaciones + panel `/verify` + retiro de la costura del navegador | J3, J4 | ⏳ Pendiente |

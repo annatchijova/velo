@@ -124,7 +124,7 @@ async function loadBindings(): Promise<VeloBindings> {
     );
   }
   // webpackIgnore keeps this a NATIVE runtime import. Without it, bundlers
-  // (Next.js/webpack on Vercel) rewrite the fully-dynamic import() into their
+  // (Next.js/webpack in production builds) rewrite the fully-dynamic import() into their
   // own chunk loader, which cannot resolve an absolute file:// path at request
   // time and fails with "Cannot find module 'file:///...'". The path is only
   // known at runtime (repoRoot() walk-up), so it must never be bundled.

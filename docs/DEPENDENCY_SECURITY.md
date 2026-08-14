@@ -5,7 +5,7 @@ upgraded. Recorded because "3 high severity vulnerabilities" on a
 security project invites a fair question, and the answer should not have
 to be reconstructed under time pressure.
 
-Last reviewed: 2026-08-07.
+Last reviewed: 2026-08-08.
 
 ## Applied
 
@@ -47,6 +47,27 @@ risk being upgraded away from.
 This is a scoped, dated decision, not a claim that the advisories are
 harmless. Before this project runs anywhere real, Next 16 should be the
 first upgrade attempted, with time to fix what it breaks.
+
+## Added in MVP Phase 3 (persistence)
+
+Four runtime dependencies and two dev dependencies were added for the
+sealed-case ledger (2026-08-08):
+
+| Package | Role | Exposure |
+|---|---|---|
+| `drizzle-orm` | Query builder / schema over the shared Postgres schema | Server-only (API routes, migrate/seed scripts) |
+| `@neondatabase/serverless` | Neon HTTP driver (serverless Postgres) | Server-only; used only when `DB_ADAPTER=neon` |
+| `pg` (node-postgres) | Cloud SQL / standard Postgres driver | Server-only; used only when `DB_ADAPTER=cloudsql` |
+| `jose` | HS256 session JWT signing/verification | Server-only (`/api/auth/session`) |
+| `drizzle-kit` (dev) | Migration generation | Build/dev only, never shipped |
+| `tsx` (dev) | Runs the TS migrate/seed scripts | Dev only, never shipped |
+
+Scope notes: none of these touch evidence bytes — the ledger stores sealed
+bundles (verdict, hashes, custody metadata), which the engine has already
+stripped of raw evidence. `jose` is used only to sign/verify our own session
+tokens with `AUTH_SECRET`; it never sees wallet keys. Both DB drivers are
+lazy: with no `DB_ADAPTER`/`DATABASE_URL` configured they are never
+instantiated, and the app keeps its demo behavior.
 
 ## Reproducing
 

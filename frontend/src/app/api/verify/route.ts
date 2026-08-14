@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyBundle } from "velo/seal/bundle.js";
 import { verifyCustodyChain } from "velo/seal/custody.js";
-import { requireJsonContentType } from "@/lib/http";
+import { readJsonBody, requireJsonContentType } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -37,12 +37,12 @@ export async function POST(req: Request) {
   const contentTypeError = requireJsonContentType(req);
   if (contentTypeError) return contentTypeError;
 
-  let body: VerifyBody;
-  try {
-    body = (await req.json()) as VerifyBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  // F22: capped body read.
+  const parsed = await readJsonBody(req);
+  if (parsed.status !== 200) {
+    return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   }
+  const body = parsed.body as VerifyBody;
 
   if (!body.bundle) {
     return NextResponse.json({ error: "bundle is required" }, { status: 400 });

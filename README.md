@@ -89,6 +89,34 @@ options today, and both are bad:
 
 Every digital forensics workflow in production picks one. VELO picks neither.
 
+## In plain terms, step by step
+
+1. **The expert has the case on their own computer** — disk images, logs,
+   captures. It never leaves that machine.
+2. **They ask VELO to analyze it over MCP** (the same protocol AI agents use
+   to call tools) — the expert connects their client and calls `seal_case`.
+   There is no upload form.
+3. **A mathematical engine analyzes the evidence — not an AI.** It checks for
+   5 kinds of tampering signals using fixed rules, no rounding, no
+   randomness: the same input always produces the same verdict, on any
+   machine.
+4. **The engine forces the expert to argue against themselves.** If the
+   result qualifies for the most serious verdict (`MALICE`), the system
+   automatically downgrades it unless the expert has written a
+   counter-argument against their own finding.
+5. **Everything is sealed locally** with a hash chain — a seal that visibly
+   breaks if anyone touches it afterward.
+6. **A zero-knowledge proof is generated** that the admissibility rules were
+   followed, without revealing a single line of the case.
+7. **Only that proof, a hash (the "commitment"), and the verdict get
+   published to Midnight.** The raw evidence never crosses that line.
+8. **Anyone — a judge, opposing counsel, the public — can verify** that the
+   verdict is real and that the rules were followed, without seeing a single
+   file from the case.
+
+The technical version of the same flow — diagram and the exact rules the
+circuit enforces — follows below.
+
 ## How
 
 ![VELO architecture — on the examiner's private machine, evidence flows through the deterministic engine, the admissibility gate (NOISE / SUSPICION / MALICE / ABSTAIN), canonical sealing and the custody chain; a ZK circuit (contracts/velo.compact) enforces the Daubert gate (MALICE requires corroboration >= 2) and the no-replay assertion; only a commitment, the declared verdict and a proof cross the compiler-enforced disclose() boundary to the public Midnight ledger, verifiable offline](./visual/arquitectura.png)
@@ -201,7 +229,8 @@ finding. It is an inadmissible one.
 
 ```bash
 npm install
-npm test          # 58 tests, including adversarial ones
+npm test          # 58 engine tests, including adversarial ones
+cd frontend && npx vitest run   # 47 more — 105 across both suites
 npm run simulate  # full end-to-end story, both refusals
 ```
 
@@ -262,24 +291,36 @@ The browser API routes and the MCP server call the same functions in
 `src/core/operations.ts`. Neither reimplements the other — red team F8 was two
 copies of one function that had already drifted apart before anyone noticed.
 
-### Deploying to Vercel
+### Deploying (Google Cloud Run)
 
-The Next.js frontend deploys to Vercel as a monorepo project: **Root
-Directory `frontend/`**, framework Next.js, Node 20+. Two settings in
-`frontend/vercel.json` are load-bearing:
+The app is **live at
+[velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)**,
+deployed as a container from the repo-root `Dockerfile` (multi-stage: install
+→ build the root engine → `next build` → `next start` on Cloud Run's `$PORT`):
 
-- `installCommand: "cd .. && npm ci"` — installs from the workspace root
-  lockfile, so the `velo` engine package resolves.
-- `buildCommand: "npm run build:deploy"` — compiles the root package (`tsc`)
-  before `next build`, because the frontend imports `velo/*` → `dist/src/*`.
+```bash
+gcloud run deploy velo --source . --region us-central1
+```
+
+Project `vigia-497422`, `us-central1`, `--allow-unauthenticated`,
+`min-instances 0` (scales to zero; a few seconds of cold start on the first
+request). The build context is the **repo root**: the image must carry the
+root package's `dist/`, the corpus, `contracts/managed/` (the committed
+bindings `/api/chain` loads at request time) and
+`deploy/managed-shim/` (the deployed contract address).
 
 The corpus routes (`/api/cases`, `/api/cases/:id`, `/api/peritos`) are
 **static at build time** (`force-static` + `generateStaticParams`), so the
-serverless runtime never reads the repo filesystem for them. Chain reads
-(`GET /api/chain`) run serverless via the committed contract bindings
-(`contracts/managed/`) — no wallet, keys, or fees on Vercel. Attestation
-**writes never run on Vercel**; they stay on the expert's machine
-(`deploy/attest-case.ts`, see [CHAIN](./docs/CHAIN.md)).
+runtime never reads the repo filesystem for them. Chain reads
+(`GET /api/chain`) run in the container via the committed contract bindings —
+no wallet, keys, or fees. Attestation **writes never run in the hosted app**;
+they stay on the expert's machine (`deploy/attest-case.ts`, see
+[CHAIN](./docs/CHAIN.md)).
+
+Why not Vercel: the `@vercel/next` builder failed reproducibly on its side
+(`ENOENT` on `export-detail.json` after a successful `next build`); the pivot
+is recorded in [`ADR-007`](./docs/ADRS_001_006.md). `frontend/vercel.json`
+and the related config remain in the repo, unused.
 
 ### As an MCP server
 
@@ -384,6 +425,7 @@ the failure mode this whole system exists to prevent.
 | Layer | State |
 |---|---|
 | Deterministic engine + Daubert gate | **Working**, 58 tests |
+| Test coverage across both suites | **105 green** — 58 engine (`npm test`) + 47 frontend (`vitest run` in `frontend/`). Counted by the runners, not estimated |
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |

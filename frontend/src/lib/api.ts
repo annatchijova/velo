@@ -1,4 +1,45 @@
-import type { CaseFile, PeritoFile } from "@/lib/types";
+import type {
+  CaseFile,
+  PeritoFile,
+  SealedLedgerResponse,
+  SessionResponse,
+} from "@/lib/types";
+
+/**
+ * Server session (AC-J2.1): the connected wallet address is exchanged for a
+ * signed httpOnly cookie. The cookie — not this client code — is what the
+ * seal route sees, which is what makes persistence a server decision.
+ */
+export async function establishServerSession(walletAddress: string, name?: string): Promise<SessionResponse> {
+  const res = await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletAddress, name }),
+  });
+  if (!res.ok) throw new Error("Could not establish a server session");
+  return res.json();
+}
+
+export async function clearServerSession(): Promise<void> {
+  await fetch("/api/auth/session", { method: "DELETE" }).catch(() => undefined);
+}
+
+export async function fetchSealedLedger(params?: {
+  verdict?: string;
+  expert?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<SealedLedgerResponse> {
+  const search = new URLSearchParams();
+  if (params?.verdict) search.set("verdict", params.verdict);
+  if (params?.expert) search.set("expert", params.expert);
+  if (params?.limit !== undefined) search.set("limit", String(params.limit));
+  if (params?.offset !== undefined) search.set("offset", String(params.offset));
+  const qs = search.toString();
+  const res = await fetch(`/api/sealed${qs ? `?${qs}` : ""}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load the sealed ledger");
+  return res.json();
+}
 
 export async function fetchCases(): Promise<CaseFile[]> {
   const res = await fetch("/api/cases", { cache: "no-store" });
@@ -73,21 +114,7 @@ export async function verifyBundle(bundle: unknown, tamper?: string): Promise<Ve
   return res.json();
 }
 
-export async function attestCase(
-  bundle: unknown,
-  walletLabel: string,
-): Promise<AttestResult> {
-  const res = await fetch("/api/attest", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bundle, walletLabel }),
-  });
-  if (!res.ok) throw new Error("Attestation failed");
-  return res.json();
-}
-
 import type {
-  AttestResponse,
   EngineRun,
   SealResponse,
   VerifyResponse,
@@ -96,4 +123,3 @@ import type {
 type EngineRunResult = EngineRun;
 type SealResult = SealResponse;
 type VerifyResult = VerifyResponse;
-type AttestResult = AttestResponse;

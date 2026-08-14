@@ -2,12 +2,29 @@
 
 ## English
 
-**Current MVP plan.** The deployed-app roadmap — Vercel hosting, persisted and
-queryable sealed cases (Neon), wallet-based expert identity, and the
-attestation linkage with a public verification panel — is specified in
-[`PRD_MVP.md`](./PRD_MVP.md), with the decisions recorded in
-[`ADRS_001_006.md`](./ADRS_001_006.md). This document keeps the hackathon
-history and the longer horizon below.
+**Current MVP plan.** The deployed-app roadmap — specified in
+[`PRD_MVP.md`](./PRD_MVP.md), decisions in
+[`ADRS_001_006.md`](./ADRS_001_006.md) (ADR-001…007):
+
+- ✅ **Phase 1** — PRD, ADRs, root-package TDD workflow, docs consistency
+  (PR #14).
+- ✅ **Phase 2** — deployed frontend. The Vercel path shipped as config
+  (PR #15) but the Vercel builder failed reproducibly on its side; the app is
+  **live on Google Cloud Run** instead (ADR-007):
+  `https://velo-1028999311218.us-central1.run.app` — corpus served
+  statically, real on-chain ledger reads, no wallet needed to browse.
+- 🔄 **Phase 3** — persisted, queryable sealed cases behind a database
+  adapter (`NeonAdapter`/`CloudSQLAdapter`, engine chosen at deploy time) and
+  wallet-based expert identity.
+- ⏳ **Phase 4** — attestation linkage (CLI → web record) and the public
+  verification panel with chain-verified vs expert-reported labels; retirement
+  of the browser attest seam.
+
+Deferred hardening from red team rounds: F15 (MCP prompt injection), F21
+(seed-redaction multi-word leak). F22 (request-body size cap) is folded into
+Phase 3 route work.
+
+This document keeps the hackathon history and the longer horizon below.
 
 **Hackathon scope (net-new code only, written during the event).** The
 deterministic engine and local sealing (layers 1-2), the Compact contract
@@ -36,12 +53,30 @@ mandatory TDD workflow documented in `docs/FRONTEND_TDD.md`.
 
 ## Español
 
-**Plan MVP actual.** La hoja de ruta de la app desplegada — hosting en Vercel,
-casos sellados persistidos y consultables (Neon), identidad de perito por
-wallet, y el vínculo de atestaciones con un panel público de verificación —
-está especificada en [`PRD_MVP.md`](./PRD_MVP.md), con las decisiones
-registradas en [`ADRS_001_006.md`](./ADRS_001_006.md). Este documento conserva
-la historia del hackathon y el horizonte más largo de abajo.
+**Plan MVP actual.** La hoja de ruta de la app desplegada — especificada en
+[`PRD_MVP.md`](./PRD_MVP.md), decisiones en
+[`ADRS_001_006.md`](./ADRS_001_006.md) (ADR-001…007):
+
+- ✅ **Fase 1** — PRD, ADRs, flujo TDD del paquete raíz, consistencia de docs
+  (PR #14).
+- ✅ **Fase 2** — frontend desplegado. El camino Vercel se commiteó como
+  configuración (PR #15) pero el builder de Vercel falló de forma reproducible
+  de su lado; la app está **viva en Google Cloud Run** en su lugar (ADR-007):
+  `https://velo-1028999311218.us-central1.run.app` — corpus servido
+  estáticamente, lecturas reales del ledger on-chain, sin wallet para navegar.
+- 🔄 **Fase 3** — casos sellados persistidos y consultables detrás de un
+  adaptador de base de datos (`NeonAdapter`/`CloudSQLAdapter`, motor elegido al
+  desplegar) e identidad de perito por wallet.
+- ⏳ **Fase 4** — vínculo de atestaciones (CLI → registro web) y el panel
+  público de verificación con etiquetas chain-verified vs expert-reported;
+  retiro de la costura de atestación del navegador.
+
+Endurecimiento diferido de las rondas de red team: F15 (prompt injection en
+MCP), F21 (filtración multi-palabra en la redacción de seeds). F22 (límite de
+tamaño de cuerpo de request) se incorpora al trabajo de rutas de la Fase 3.
+
+Este documento conserva la historia del hackathon y el horizonte más largo de
+abajo.
 
 **Alcance del hackathon (solo código net-new, escrito durante el evento).** El
 motor determinista y el sellado local (capas 1-2), el contrato Compact que

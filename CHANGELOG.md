@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs re-aligned to the Cloud Run reality.** The app is live on Google
+  Cloud Run (ADR-007); the Vercel path was abandoned after the `@vercel/next`
+  builder failed reproducibly on its side. `PRD_MVP.md` (Cloud Run hosting +
+  phase statuses), `ADRS_001_006.md` (ADR-001/005 supersession status + DB
+  adapter decision), `ROADMAP.md` (current phase map + deferred red-team
+  hardening), README/README.es ("Deploying to Vercel" → "Deploying (Google
+  Cloud Run)"), and `ARCHITECTURE.md` layer 4 (EN+ES) all now describe what
+  actually runs. Test counts synced to the runners (58 engine + 47 frontend).
+
+### Fixed
+
+- **Red team F24 (code half).** The placeholder-commitment seam's return type
+  no longer carries the salt: `computeCommitment` generates it internally and
+  returns only `{ fingerprint, commitment, covers }`. Pinned by three new
+  tests (`frontend/src/lib/contract.test.ts`); the seam is retired entirely
+  in MVP Phase 4.
+
 ### Added
 
 - **VIGIA port, phases 1-3** (`docs/PORT-FROM-VIGIA.md`). Deterministic
@@ -86,7 +105,28 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   is derived and recomputed by both verifiers — the library one and the
   standalone judge's tool, pinned to each other by test — and bundles sealed
   before the field existed verify with a caveat, not a failure.
-
+- **MVP Phase 4 — attestation linkage + verification panel (AC-J3.*, AC-J4.*).**
+  - `POST /api/attestations` (frontend): the local CLI links an on-chain
+    attestation to a persisted sealed case. Authenticated by the expert API
+    key (only its SHA-256 hash stored, ADR-006); the route additionally
+    verifies the bundle belongs to that expert. The link is the
+    expert-REPORTED side of the trust model; on-chain facts stay independently
+    readable (ADR-003).
+  - `GET /api/verification` + public `/verify` page: query by sealed-case id
+    or commitment. Internal consistency + custody are recomputed (never
+    trusted); the on-chain state is read from the deployed contract and shown
+    with strictly separate labels — **chain-verified** vs **expert-reported**
+    — and degrades to "unavailable" when the indexer is unreachable, never to
+    a false "not attested" (AC-J4.3). Nav link (EN/ES).
+  - CLI (`deploy/attest-case.ts`): after a successful on-chain attestation,
+    optionally posts `{bundleHash, txHash, commitment}` to a deployed app when
+    `VELO_API_URL` + `VELO_API_KEY` are set. The commitment is identified by
+    diffing the ledger before/after (Compact's `persistentHash` is
+    circuit-internal and cannot be recomputed in TypeScript). Strictly
+    best-effort: a web failure never fails the attestation. New
+    `src/chain/post-attestation.ts` with 7 node:test cases (env gating, exact
+    payload + bearer header, soft failures on refusal/network error, ledger
+    diffing).
 - **Red team round 6.** `docs/RED_TEAM_ROUND_6.md` audits the surfaces rounds
   1–5 never covered: the attestation/deploy tooling, the witness module, the
   frontend beyond the F14 routes, and the coverage-gap engine change. One
@@ -101,7 +141,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   CLI (`docs/ADRS_001_006.md`) — and a root-package TDD workflow extending
   mandatory TDD beyond the frontend (`docs/ROOT_TDD.md`). README and frontend
   README aligned with the current state (retired loopback UI, deployed
-  contract, 14 cases, 53 root tests).
+  contract, 14 cases, 58 root tests).
 - **Deployment.** The frontend is deployable to Vercel: corpus routes served
   statically at build time (pinned by tests), monorepo build order and
   explicit Vercel install/build commands (`frontend/vercel.json`), file
@@ -111,6 +151,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Fixed
 
+- **Request-body size cap (red team F22).** `POST /api/seal`, `/api/verify`,
+  `/api/attest`, and `/api/auth/session` now read their bodies through
+  `readJsonBody`, which enforces a 256 KB cap while streaming (both the
+  declared `Content-Length` and the actual bytes received) and turns
+  malformed JSON into a 400 instead of a crash.
+- **Navbar disconnect button accessible name.** The icon-only disconnect
+  button now has an `aria-label` (and `title`) so it is reachable by screen
+  readers and by the mobile e2e project at every viewport.
 - **Chain state decoding fails closed (red team F25).** `hexToBytes` in
   `src/chain/read.ts` decoded the indexer's contract-state blob with
   `hex.match(/../g)` + `Number.parseInt`, which turned a non-hex pair into

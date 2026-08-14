@@ -428,12 +428,14 @@ contraste WCAG 2.1 AA, targets táctiles de 44×44 px, orden de `:focus-visible`
 `prefers-reduced-motion`.
 
 Progresión de la suite a lo largo de las rondas de auditoría, tal como quedó
-registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53** (la única caída es el
+registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58** (la única caída es el
 retiro del servidor HTTP de loopback después de F14, no una regresión; el último
-paso es el trabajo de huecos de cobertura y lectura on-chain). Entre las suites
-de motor y frontend hay **54 bloques de test declarados, que se expanden a unos
-83 casos en runtime** contando los tests parametrizados y el loop sobre los 14
-casos del corpus — ver §6 para la salvedad sobre ese número.
+paso es el trabajo de huecos de cobertura y lectura on-chain). Entre las dos suites los runners informan **102
+tests pasando: 58 en el motor (`npm test`) y 44 en el frontend (`vitest run` en
+`frontend/`)**. Son runners separados, así que una suite raíz en verde no dice
+nada sobre el frontend ni al revés — se dan los dos números porque cualquiera
+solo subestima la cobertura. Versiones anteriores de este documento estimaban el
+total a mano; en §6 queda registrado por qué se retiró esa estimación.
 
 ---
 
@@ -588,13 +590,17 @@ corrupto en el momento del análisis.**
 | Barrido de monotonicidad de pares de marcadores | 19×19, 0 violaciones | ronda 1, experimento E14e |
 | Advisories de npm limpiadas por el bump de parche de Next | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories diferidas conscientemente | 2 | ídem, con razonamiento fechado |
-| Suite raíz en la última corrida registrada | 53/53 en verde | `npm test` sobre `main`, 2026-08-07 |
+| Suite raíz | 58/58 en verde | `npm test` sobre `main`, 2026-08-08 |
+| Suite de frontend | 44/44 en verde | `vitest run` en `frontend/`, 2026-08-08 |
+| **Las dos suites** | **102/102 en verde** | medido, no derivado — ver la salvedad abajo |
 
-**Salvedad sobre el conteo de tests.** La cifra de "83 casos en runtime" es en
-parte derivada y no literal: el test de corpus del motor declara un solo
-`test(...)` dentro de un loop sobre 14 fixtures, y varios tests de frontend usan
-`it.each`. El conteo literal de bloques de test declarados es 54. Reportamos los
-dos en vez de elegir el que queda mejor.
+**Salvedad sobre el conteo de tests, retirada.** Versiones anteriores de este
+documento informaban "unos 83 casos en runtime", una cifra derivada a mano
+porque el test de corpus del motor declara un solo `test(...)` dentro de un loop
+sobre los fixtures y varios tests de frontend usan `it.each`. Esa estimación ya
+no hace falta: se corrieron las dos suites y se contaron. Los runners informan
+**58** y **44**, que es lo que dice la tabla. La cifra vieja no era falsa, era
+innecesaria: estimaba algo que se podía medir.
 
 **Salvedad sobre el tiempo transcurrido.** La afirmación "construido en menos de
 un ciclo de hackathon" se verifica en el historial de git, no en este documento.

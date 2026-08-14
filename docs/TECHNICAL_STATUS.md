@@ -407,12 +407,15 @@ AA contrast, 44×44 px touch targets, `:focus-visible` order,
 `prefers-reduced-motion`.
 
 Suite progression through the audit rounds, as recorded at the time:
-**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53** (the one drop is the retirement
+**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58** (the one drop is the retirement
 of the loopback HTTP server after F14, not a regression; the last step is the
-coverage-gap and on-chain-read work). Across the engine and frontend suites
-there are **54 declared test blocks, expanding to roughly 83 runtime cases**
-once parameterized tests and the 14-case corpus loop are counted — see §6 for
-the caveat on that number.
+coverage-gap and on-chain-read work). Across both suites the runners report **102
+passing tests: 58 in the engine (`npm test`) and 44 in the frontend
+(`vitest run` in `frontend/`)**. The two are separate runners, so a green root
+suite says nothing about the frontend and vice versa — both numbers are given
+because either alone understates the coverage. Earlier versions of this
+document estimated the total by hand; §6 records why that estimate was
+withdrawn.
 
 ---
 
@@ -564,13 +567,17 @@ examiner at the moment of analysis.**
 | Marker-pair monotonicity sweep | 19×19, 0 violations | round 1, experiment E14e |
 | npm advisories cleared by the Next patch bump | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories consciously deferred | 2 | same, with dated reasoning |
-| Root suite at last recorded run | 53/53 green | `npm test` on `main`, 2026-08-07 |
+| Root suite | 58/58 green | `npm test` on `main`, 2026-08-08 |
+| Frontend suite | 44/44 green | `vitest run` in `frontend/`, 2026-08-08 |
+| **Both suites** | **102/102 green** | measured, not derived — see the caveat below |
 
-**Caveat on the test count.** The "83 runtime cases" figure is partly derived
-rather than literal: the engine corpus test declares one `test(...)` inside a
-loop over 14 case fixtures, and several frontend tests use `it.each`. The
-literal count of declared test blocks is 54. We are reporting both rather than
-picking the flattering one.
+**Caveat on the test count, withdrawn.** Earlier versions of this document
+reported "roughly 83 runtime cases", a figure derived by hand because the
+engine corpus test declares one `test(...)` inside a loop over the case
+fixtures and several frontend tests use `it.each`. That estimate is no longer
+needed: both suites were run and counted. The runners report **58** and **44**,
+which is what the table says. The old figure was not wrong so much as
+unnecessary — it estimated something that could simply be measured.
 
 **Caveat on elapsed time.** The claim "built in under a hackathon cycle" is
 verifiable in git history, not in this document. What this document asserts is

@@ -3,6 +3,15 @@ import { createHash, randomBytes } from "node:crypto";
 /**
  * Contract seam — Capa 2 (the Compact gate).
  *
+ * STATUS (MVP Phase 4): RETIRED. Nothing imports this module anymore. The
+ * browser `/api/attest` route that used `computeCommitment` was deleted:
+ * attestation happens on the expert's machine via the local CLI
+ * (`deploy/attest-case.ts`), and the web app reads the real on-chain state
+ * through `GET /api/chain` and the `/verify` panel. This placeholder is kept
+ * only because the future browser-signed path (post-MVP, ADR-003 evolution)
+ * may plug back in here; until then it is dead code by design, and its
+ * F24-fixed return shape (no salt) is pinned by contract.test.ts.
+ *
  * The Compact contract (`contracts/velo.compact`) is compiled AND deployed
  * to Midnight `preview` (address
  * `46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d`), and a
@@ -66,7 +75,6 @@ export interface CommitmentInput {
 
 export interface Commitment {
   fingerprint: string;
-  salt: string;
   commitment: string;
   covers: string[];
 }
@@ -74,6 +82,11 @@ export interface Commitment {
 /**
  * Placeholder commitment for the demo build, following the F3 shape:
  * sha256(SCHEME || fingerprint || custodyTip || verdict || count || salt).
+ *
+ * The salt is generated inside this function (or taken from the input when a
+ * caller supplies one) and NEVER leaves it: red team round 6 (F24) pinned the
+ * rule that no return type of this seam may carry the salt — it is a witness
+ * value, folded into the commitment and discarded.
  *
  * NOTE (honesty): the compiled Compact `persistentHash` is not SHA-256 and
  * will produce different bytes. This function exists so the demo UI has a
@@ -100,7 +113,6 @@ export function computeCommitment({
   const commitment = sha256BytesHex(preimage);
   return {
     fingerprint: bundleFingerprint,
-    salt: saltHex,
     commitment,
     covers: ["fingerprint", "custodyTip", "verdict", "corroborationCount", "salt"],
   };
