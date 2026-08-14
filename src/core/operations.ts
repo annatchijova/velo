@@ -11,6 +11,8 @@ import {
   type CustodyEventType,
 } from "../seal/custody.js";
 import { listBundles, loadBundle, saveBundle, toSummary, type CaseListing, type CaseSummary } from "../mcp/store.js";
+import { narrate, type NarrativeRecord, type NarratorBackend } from "../narrative/narrator.js";
+import { resolveNarrator } from "../narrative/backends.js";
 
 /**
  * The operations every interface calls.
@@ -143,4 +145,45 @@ export function getCase(caseId: string): CaseSummary | null {
 export function verifyCase(caseId: string): BundleVerification | null {
   const bundle = loadBundle(caseId);
   return bundle ? verifyBundle(bundle) : null;
+}
+
+export interface NarrateCaseResult {
+  narrative: NarrativeRecord | null;
+  /** Why the narrative is absent or flagged — honest degradation, stated. */
+  note: string;
+}
+
+/**
+ * Narrate an already-sealed case. STRICTLY POST-SEAL and read-only: the
+ * narrator can only be invoked on a bundle loaded from disk, after
+ * sealing, and nothing it returns feeds back into any sealed value. If no
+ * backend is configured or the backend fails, the case remains complete
+ * and valid — the narrative is a feature, never the core.
+ */
+export async function narrateCase(caseId: string, backend?: NarratorBackend | null): Promise<NarrateCaseResult | null> {
+  const bundle = loadBundle(caseId);
+  if (!bundle) return null;
+
+  const narrator = backend ?? resolveNarrator();
+  if (!narrator) {
+    return {
+      narrative: null,
+      note: "No narrator configured (set VELO_NARRATOR=ollama or VELO_NARRATOR=anthropic). The sealed analysis is complete without prose.",
+    };
+  }
+  try {
+    const narrative = await narrate(bundle, narrator);
+    return {
+      narrative,
+      note: narrative.proseConsistentWithVerdict
+        ? "Narrative generated beside the seal. The prose is decorative; the sealed verdict is authoritative."
+        : `Narrative generated but flagged: ${narrative.consistencyNote}`,
+    };
+  } catch (err) {
+    // A narrator failure must not destroy or degrade the sealed analysis.
+    return {
+      narrative: null,
+      note: `Narrator ${narrator.name} (${narrator.model}) failed: ${err instanceof Error ? err.message : String(err)}. The sealed analysis is unaffected.`,
+    };
+  }
 }

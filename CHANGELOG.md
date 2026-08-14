@@ -46,6 +46,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - **Agent skills.** `.claude/skills/abductive-engineering` and
   `.claude/skills/red-team-auditing` now ship with the repository, and
   `AGENTS.md` documents how they bind for any agent working here.
+- **LLM narrative layer with swappable backends** (`src/narrative/`). A
+  narrator puts an ALREADY-SEALED case into prose: `narrate()` only accepts
+  a `SealedBundle`, so the type system enforces that the model runs after
+  the seal; it receives a compressed read-only summary whose prompt states
+  every figure is fixed, and its prose is stored beside the seal with a
+  deterministic consistency flag (a narration contradicting the sealed
+  verdict is flagged for review, never corrected — the seal wins). Two
+  interchangeable backends: Ollama (local, `VELO_NARRATOR=ollama`) and the
+  Anthropic API via the official SDK (`VELO_NARRATOR=anthropic`, default
+  model claude-opus-4-8). The swap test pins the doctrine: changing
+  backends changes wording only, never a verdict or hash. No narrator
+  configured or a narrator failure degrades the feature honestly — the
+  sealed analysis is complete without prose. Exposed through
+  `narrateCase` in the shared operations backend and the `narrate_case`
+  MCP tool; a regression test asserts no engine/seal/inference module
+  imports the narrative layer.
 - **Per-artifact effective-trust audit** (`src/engine/trust_fusion.ts`),
   completing item 5 of the VIGIA port with its recon premise corrected: the
   live Python decays trust by temporal-violation severity, not by evidence

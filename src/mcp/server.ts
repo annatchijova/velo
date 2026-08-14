@@ -15,7 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import type { Artifact } from "../engine/evidence.js";
-import { getCase, listCases, sealCase, verifyCase } from "../core/operations.js";
+import { getCase, listCases, narrateCase, sealCase, verifyCase } from "../core/operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 import { lookupCommitment, readOnChainLedger } from "../chain/read.js";
 
@@ -140,6 +140,26 @@ server.registerTool(
   },
   async ({ caseId }) => {
     const result = verifyCase(caseId);
+    if (!result) {
+      return { content: [{ type: "text", text: `No case found with id ${caseId}` }], isError: true };
+    }
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  },
+);
+
+server.registerTool(
+  "narrate_case",
+  {
+    title: "Narrate sealed case",
+    description:
+      "Have the configured LLM narrator (VELO_NARRATOR=ollama or anthropic) put an ALREADY-SEALED case into plain prose. " +
+      "The narrator runs strictly after sealing, receives a read-only summary, and its prose is stored beside the seal, " +
+      "never inside it — swapping or removing the narrator changes wording only, never a verdict or a hash. " +
+      "With no narrator configured this reports that honestly instead of failing.",
+    inputSchema: { caseId: caseIdSchema },
+  },
+  async ({ caseId }) => {
+    const result = await narrateCase(caseId);
     if (!result) {
       return { content: [{ type: "text", text: `No case found with id ${caseId}` }], isError: true };
     }
