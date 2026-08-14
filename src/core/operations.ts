@@ -13,6 +13,7 @@ import {
 import { listBundles, loadBundle, saveBundle, toSummary, type CaseListing, type CaseSummary } from "../mcp/store.js";
 import { narrate, type NarrativeRecord, type NarratorBackend } from "../narrative/narrator.js";
 import { resolveNarrator } from "../narrative/backends.js";
+import { preAnalyze, type PreAnalysis } from "../analysis/pre_analysis.js";
 
 /**
  * The operations every interface calls.
@@ -145,6 +146,17 @@ export function getCase(caseId: string): CaseSummary | null {
 export function verifyCase(caseId: string): BundleVerification | null {
   const bundle = loadBundle(caseId);
   return bundle ? verifyBundle(bundle) : null;
+}
+
+/**
+ * Run the pre-analysis signal producers over candidate evidence, BEFORE
+ * any analysis or seal. Advisory only: the caller reads the suggestions
+ * and decides which markers to apply to which artifacts — applied markers
+ * then enter the engine through the same door as analyst-declared ones.
+ * Nothing here feeds analyzeCase or sealCase automatically.
+ */
+export function preAnalyzeEvidence(artifacts: Artifact[], texts: string[] = []): PreAnalysis {
+  return preAnalyze(artifacts, texts);
 }
 
 export interface NarrateCaseResult {

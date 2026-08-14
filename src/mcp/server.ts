@@ -15,7 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import type { Artifact } from "../engine/evidence.js";
-import { getCase, listCases, narrateCase, sealCase, verifyCase } from "../core/operations.js";
+import { getCase, listCases, narrateCase, preAnalyzeEvidence, sealCase, verifyCase } from "../core/operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 import { lookupCommitment, readOnChainLedger } from "../chain/read.js";
 
@@ -143,6 +143,26 @@ server.registerTool(
     if (!result) {
       return { content: [{ type: "text", text: `No case found with id ${caseId}` }], isError: true };
     }
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  },
+);
+
+server.registerTool(
+  "pre_analyze",
+  {
+    title: "Pre-analyze evidence",
+    description:
+      "Run the non-sealable signal producers (timing regularity ported from VIGIA jitter analysis; Grice quantity maxims " +
+      "over optional texts) over candidate artifacts BEFORE sealing. Returns marker SUGGESTIONS (advisory - review them and, " +
+      "if you agree, add the marker to the artifact before calling seal_case) and narrative signals (floats, never sealed). " +
+      "Nothing here changes a verdict by itself: suggestions enter the engine only as regular input markers you choose to apply.",
+    inputSchema: {
+      artifacts: z.array(artifactSchema),
+      texts: z.array(z.string()).default([]).describe("Optional free texts tied to the case (tickets, notes) for the Grice quantity pass."),
+    },
+  },
+  async ({ artifacts, texts }) => {
+    const result = preAnalyzeEvidence(artifacts as Artifact[], texts);
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   },
 );

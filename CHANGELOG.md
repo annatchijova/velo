@@ -65,6 +65,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - **Agent skills.** `.claude/skills/abductive-engineering` and
   `.claude/skills/red-team-auditing` now ship with the repository, and
   `AGENTS.md` documents how they bind for any agent working here.
+- **Pre-analysis signal producers** (`src/analysis/pre_analysis.ts`),
+  executing the portable subset of VIGIA port phase 4 under the
+  non-sealable adapter pattern: timing-regularity analysis (VIGIA jitter
+  thresholds, verified against the live Python — variance < 0.1s,
+  CV < 0.05, absence of human pauses, per-source grouping) SUGGESTS the
+  existing `temporal_entropy_null` marker with its evidence; the caller
+  decides whether to apply it, and an applied marker enters the engine
+  through the same sealed input path as an analyst-declared one. Grice
+  quantity maxims (saturation/scarcity, integer thresholds) emit narrative
+  signals. Floats live only in narrative fields; producers never mutate
+  artifacts; a regression test pins that engine/seal/inference never
+  import the analysis layer, and a behavioral test pins the doctrine:
+  the verdict changes only when the caller applies a suggestion. Skipped
+  with stated input-gap reasons: shannon entropy, Grice relation-maxim
+  evasion, likelihood ratio, stylometry. Exposed as `preAnalyzeEvidence`
+  and the `pre_analyze` MCP tool.
 - **LLM narrative layer with swappable backends** (`src/narrative/`). A
   narrator puts an ALREADY-SEALED case into prose: `narrate()` only accepts
   a `SealedBundle`, so the type system enforces that the model runs after
