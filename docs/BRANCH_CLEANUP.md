@@ -3,7 +3,7 @@
 **Status:** proposal for the team to decide together, nothing deleted yet.
 **As of:** 2026-08-08, against `main` @ `4255a14`.
 
-The hackathon is not over, so no branch has been deleted. This file lists the
+The work is not over, so no branch has been deleted. This file lists the
 stale/superseded branches and *why* each looks discardable, so the call can be
 made together (with Dahgoth) rather than unilaterally. Each row says what the
 branch did and the specific thing already on `main` that replaces it — verify
@@ -33,11 +33,11 @@ before deleting.
 
 | Item | State | Note |
 |---|---|---|
-| **PR #12** `build/release-and-commit-rules` | OPEN, 26 behind | Adopts release-please + repairs commit rules. It is real, working infra — but it changes the commit/release workflow and is well behind `main`. **Recommendation: defer to after the hackathon.** It adds nothing to the demo/recording and merging release automation under deadline pressure is avoidable risk. Rebase onto `main` and merge post-event if the team wants it. |
+| **PR #12** `build/release-and-commit-rules` | OPEN, 26 behind | Adopts release-please + repairs commit rules. It is real, working infra — but it changes the commit/release workflow and is well behind `main`. **Recommendation: defer.** It adds nothing to the demo/recording and merging release automation under deadline pressure is avoidable risk. Rebase onto `main` and merge later if the team wants it. |
 
 ## Suggested action tomorrow
 
 1. Confirm the three "already merged" branches are truly redundant, then delete them.
 2. Skim the "recommend discarding" seven, delete the ones the team agrees on
    (`fix/ui-overclaims-and-i18n` especially should go — it is a revert trap).
-3. Decide PR #12 together: defer (recommended) or rebase + merge post-hackathon.
+3. Decide PR #12 together: defer (recommended) or rebase + merge later.

@@ -216,8 +216,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [0.1.0] - 2026-08-07
 
-Initial project state — the full initial-development milestone from Midnight
-Hack Buenos Aires (7–8 August 2026). This release covers every commit from the
+Initial project state — the full initial-development milestone (7–8 August
+2026). This release covers every commit from the
 first one to the current HEAD; nothing has been released or tagged prior to
 this point, so the entire history is grouped under the initial `0.1.0`.
 

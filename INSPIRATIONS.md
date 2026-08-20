@@ -1,7 +1,6 @@
 # Inspirations
 
-VELO is net-new code, written entirely during Midnight Hack Buenos Aires
-(Aug 7-8, 2026). This file exists so reviewers don't have to guess where the
+VELO is net-new code, written from scratch (Aug 7-8, 2026). This file exists so reviewers don't have to guess where the
 underlying concepts come from, and so nobody mistakes an *adaptation* for a
 *copy*: every project listed below is written in **Python**. VELO is written
 in **TypeScript and Compact**. There is no code to copy-paste between them —

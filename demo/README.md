@@ -106,7 +106,7 @@ That's a precise, defensible claim, not an overclaim.
 5. `demo/pages/velo-identity.html` — only if asked "how do you know who the
    expert is" — credential, not biometrics, tied to real audit findings.
 6. `demo/pages/velo-business.html` — only if asked about business viability —
-   flagged in the page itself as vision/roadmap, not hackathon code.
+   flagged in the page itself as vision/roadmap, not shipped code.
 7. `demo/pages/velo-roadmap.html` — closing slide equivalent: what's built
    vs. what's next.
 
@@ -182,8 +182,8 @@ Reading these out loud, unprompted, is stronger than waiting to be caught.
 
 ## 6. If something breaks live
 
-From the team's own hackathon plan (`docs/ROADMAP.md`'s spirit, carried
-into demo day): **do not narrate a failure as a success.** If `npm run
+From the team's own plan (`docs/ROADMAP.md`'s spirit, carried into any
+live demo): **do not narrate a failure as a success.** If `npm run
 simulate` or the compile script fails on stage:
 
 1. Read the actual error out loud — VELO's whole premise is that a system

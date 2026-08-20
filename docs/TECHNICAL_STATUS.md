@@ -1,7 +1,7 @@
 # VELO — Technical Status
 
 **Zero-knowledge forensic attestation on Midnight**
-Midnight Hack Buenos Aires · v0.1.0 · status as of 2026-08-07
+v0.1.0 · status as of 2026-08-07
 
 > The verdict is visible. The victim is not.
 
@@ -171,7 +171,7 @@ those. Full argument in `IDENTITY.md`.
 ### 2.6 We hit three real Midnight platform walls and documented all three
 
 These are in `LEARNINGS.md` because "we understood the platform on the first
-try" is not a claim a hackathon project gets to make honestly.
+try" is not a claim this project gets to make honestly.
 
 - **L1 — `Insufficient Funds: could not balance dust` on a fully funded
   wallet.** Fees on Midnight are paid in DUST; DUST is not a faucet token, it is
@@ -579,7 +579,7 @@ needed: both suites were run and counted. The runners report **58** and **44**,
 which is what the table says. The old figure was not wrong so much as
 unnecessary — it estimated something that could simply be measured.
 
-**Caveat on elapsed time.** The claim "built in under a hackathon cycle" is
+**Caveat on elapsed time.** The claim "built in a single build cycle" is
 verifiable in git history, not in this document. What this document asserts is
 the *state*, not the stopwatch.
 
@@ -680,7 +680,6 @@ docs/DEPENDENCY_SECURITY.md     the upgrade taken and the one deliberately defer
 
 ---
 
-*Prepared for the Midnight Hack Buenos Aires jury, presented 2026-08-08; status
-verified 2026-08-07. Every finding ID
+*Presented 2026-08-08; status verified 2026-08-07. Every finding ID
 in this document resolves to a dated section in the repository's own audit
 record. Spanish version: `ESTADO_TECNICO.md`.*

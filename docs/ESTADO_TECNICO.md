@@ -1,7 +1,7 @@
 # VELO — Estado técnico
 
 **Atestación forense de conocimiento cero sobre Midnight**
-Midnight Hack Buenos Aires · v0.1.0 · estado al 2026-08-07
+v0.1.0 · estado al 2026-08-07
 
 > El veredicto se ve, la víctima no.
 
@@ -176,7 +176,7 @@ exactamente eso. El argumento completo está en `IDENTITY.md`.
 ### 2.6 Chocamos con tres paredes reales de la plataforma y documentamos las tres
 
 Están en `LEARNINGS.md` porque "entendimos la plataforma al primer intento" no es
-algo que un proyecto de hackathon pueda afirmar con honestidad.
+algo que este proyecto pueda afirmar con honestidad.
 
 - **L1 — `Insufficient Funds: could not balance dust` con la wallet fondeada.**
   En Midnight las fees se pagan en DUST; el DUST no es un token que manda el
@@ -602,8 +602,8 @@ no hace falta: se corrieron las dos suites y se contaron. Los runners informan
 **58** y **44**, que es lo que dice la tabla. La cifra vieja no era falsa, era
 innecesaria: estimaba algo que se podía medir.
 
-**Salvedad sobre el tiempo transcurrido.** La afirmación "construido en menos de
-un ciclo de hackathon" se verifica en el historial de git, no en este documento.
+**Salvedad sobre el tiempo transcurrido.** La afirmación "construido en un solo
+ciclo de trabajo" se verifica en el historial de git, no en este documento.
 Lo que este documento afirma es el *estado*, no el cronómetro.
 
 ---
@@ -706,7 +706,6 @@ docs/DEPENDENCY_SECURITY.md     el upgrade que tomamos y el que diferimos a prop
 
 ---
 
-*Preparado para el jurado de Midnight Hack Buenos Aires, presentado el 2026-08-08;
-estado verificado el 2026-08-07. Cada ID de
+*Presentado el 2026-08-08; estado verificado el 2026-08-07. Cada ID de
 hallazgo de este documento resuelve a una sección fechada del propio registro de
 auditoría del repositorio. Versión en inglés: `TECHNICAL_STATUS.md`.*

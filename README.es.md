@@ -20,7 +20,7 @@ Atestación de veredictos forenses con conocimiento cero sobre [Midnight](https:
 Un perito puede probar que su veredicto es legítimo **sin publicar nunca la
 evidencia de la que salió**.
 
-`Apache-2.0` · `TypeScript + Compact` · Midnight Hack Buenos Aires, 7–8 de agosto de 2026
+`Apache-2.0` · `TypeScript + Compact` · Construido sobre Midnight
 
 📄 **[English README](./README.md)** — versión completa, con diagramas, la API y las
 instrucciones de deploy.

@@ -1,4 +1,4 @@
-# Security Audit — VELO v0.1.0 (Midnight Hack Buenos Aires)
+# Security Audit — VELO v0.1.0
 ## Red Team — Round 2: promise vs. guarantee
 
 **Date:** 2026-08-07 · **Method:** Abductive Engineering (A–D–I) + Red-Team Auditing, adversarial-judge posture
@@ -122,7 +122,7 @@ Same as Round 1: **CODE FACT** (read in the code/docs, as written) · **PLAUSIBL
 **Severity:** Low-medium · **Level:** PLAUSIBLE HYPOTHESIS
 
 - **The concern:** the Daubert gate threshold (`>= 2`) is hardcoded in `velo.compact`. If a future version of VELO ships with a different threshold (3 sources, or a different rule shape entirely), attestations made under the old contract remain on-chain with no marker distinguishing "checked against rule v1" from "checked against rule v2" — a verifier reading an old commitment cannot tell which rule produced it without out-of-band knowledge of which contract address (and therefore which compiled version) it came from.
-- **Why this stays a hypothesis:** in the current single-contract, single-version deployment for the hackathon, this has no observable effect — it only matters once a second contract version exists, which has not happened.
+- **Why this stays a hypothesis:** in the current single-contract, single-version deployment, this has no observable effect — it only matters once a second contract version exists, which has not happened.
 - **Documented as a known limitation, roadmap:** a `ruleVersion` constant folded into the commitment hash (alongside the existing domain separator `"velo:attestation:v1"` — which already partially plays this role by fixing the hash to *this* circuit's semantics) would make version binding explicit rather than implicit-via-domain-separator. Worth doing before a second contract version ships, not before tomorrow's demo.
 
 ---

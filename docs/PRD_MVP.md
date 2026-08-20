@@ -17,7 +17,7 @@ Related documents: [`ADRS_001_006.md`](./ADRS_001_006.md) (the decisions),
 
 ### Context
 
-The hackathon closed the loop locally: a case is sealed, attested on-chain
+The initial build closed the loop locally: a case is sealed, attested on-chain
 with a real ZK proof (`deploy/attest-case.ts`, one attestation live on
 `preview`), and read back from the ledger (`GET /api/chain`,
 `src/chain/read.ts`). None of that is reachable by anyone but the person
@@ -134,7 +134,7 @@ MCP server hosting.
 
 ### Contexto
 
-El hackathon cerró el ciclo localmente: un caso se sella, se atesta on-chain
+La construcción inicial cerró el ciclo localmente: un caso se sella, se atesta on-chain
 con una prueba ZK real (`deploy/attest-case.ts`, una atestación viva en
 `preview`) y se lee de vuelta del ledger (`GET /api/chain`,
 `src/chain/read.ts`). Nada de eso es alcanzable más que por quien corre el

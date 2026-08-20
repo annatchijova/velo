@@ -15,7 +15,7 @@
 - **Attacker CANNOT:** read the deploying operator's actual environment variables remotely, without another vulnerability. Intercept network traffic (out of scope here).
 - **Trust boundary crossed:** the deploying wallet's private key material (seed) versus anything that should ever be observable outside the process that holds it.
 
-**The judge test:** if asked to prove the wallet used to deploy VELO's contract can't have its funds stolen by anyone who ever saw a terminal during this hackathon, what would you have to assume? Finding A shows the honest answer today is "that nobody looked at the output of the deploy command."
+**The judge test:** if asked to prove the wallet used to deploy VELO's contract can't have its funds stolen by anyone who ever saw a terminal during development, what would you have to assume? Finding A shows the honest answer today is "that nobody looked at the output of the deploy command."
 
 ## Epistemic legend
 
@@ -61,7 +61,7 @@ CODE FACT · PLAUSIBLE HYPOTHESIS · CONFIRMED BY INDUCTION · FALSIFIED
       ↓
   package's build-wallet.ts:37  log.info(`Wallet seed: ${seed}`)   <-- plaintext, unconditional, to stdout
   ```
-- **Why this matters specifically for this project, this week:** the deploy script is meant to be run live, against `preview` (the hackathon's official network, confirmed in the kickoff talk per this repo's own comments), likely on a shared or screen-shared machine, possibly during prep with people watching. A wallet seed is not a case ID or a devil's advocate string — it is complete control over whatever funds and identity that wallet has, permanently (a seed cannot be rotated the way a password can).
+- **Why this matters specifically for this project:** the deploy script is meant to be run live, against `preview` (the project's official network, per this repo's own comments), likely on a shared or screen-shared machine, possibly during prep with people watching. A wallet seed is not a case ID or a devil's advocate string — it is complete control over whatever funds and identity that wallet has, permanently (a seed cannot be rotated the way a password can).
 - **Threat-model precondition:** none beyond "someone can see the terminal output of the deploy command" — screen share, a pasted snippet in chat for debugging, CI logs if this is ever automated, or shoulder-surfing. This is a very low bar compared to every other finding in this project's four rounds.
 - **Not yet confirmed by execution:** this environment has no funded wallet to actually run the deploy against `preview` and watch the log line appear — the finding rests on reading the exact pinned dependency's published source, which is a strong basis (CODE FACT, not speculation) but is one level below the CONFIRMED BY INDUCTION standard the rest of this project holds itself to. If reproducing this live is wanted, it needs a disposable/dust-only wallet, never a wallet holding anything of value.
 - **A second instance, found while fixing the first:** `deploy-contract.ts`'s own `console.log("Deploying VELO contract with network config:", midnightNetworkConfig)` logs the whole `midnightNetworkConfig` object — which, per `midnight-env.ts`, carries `walletSeed` as a plain field. This one is 100% VELO's own code, not the dependency's, and needed no abduction: reading the object shape was enough.

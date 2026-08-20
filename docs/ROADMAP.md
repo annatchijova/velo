@@ -24,9 +24,9 @@ Deferred hardening from red team rounds: F15 (MCP prompt injection), F21
 (seed-redaction multi-word leak). F22 (request-body size cap) is folded into
 Phase 3 route work.
 
-This document keeps the hackathon history and the longer horizon below.
+This document keeps the initial-build history and the longer horizon below.
 
-**Hackathon scope (net-new code only, written during the event).** The
+**Initial build scope (net-new code only).** The
 deterministic engine and local sealing (layers 1-2), the Compact contract
 enforcing the corroboration rule as a circuit constraint (layer 3), a local
 frontend and MCP interface exercising seal / attest / verify end-to-end (layer
@@ -37,9 +37,9 @@ allows, and are documented honestly as partial or unimplemented rather than
 presented as finished. From this point forward, all frontend work follows the
 mandatory TDD workflow documented in `docs/FRONTEND_TDD.md`.
 
-**Beyond the hackathon (net-new restriction no longer applies):**
+**Beyond the initial build (net-new restriction no longer applies):**
 
-- Replace the event's mini-engine with a production-grade forensic engine
+- Replace the initial mini-engine with a production-grade forensic engine
   validated against a large case corpus, piloted against real referrals.
 - Run an independent adversarial audit against VELO itself before any real use.
 - Selective disclosure with threshold secret-sharing (K-of-N) instead of a
@@ -75,10 +75,10 @@ Endurecimiento diferido de las rondas de red team: F15 (prompt injection en
 MCP), F21 (filtración multi-palabra en la redacción de seeds). F22 (límite de
 tamaño de cuerpo de request) se incorpora al trabajo de rutas de la Fase 3.
 
-Este documento conserva la historia del hackathon y el horizonte más largo de
-abajo.
+Este documento conserva la historia de la construcción inicial y el horizonte
+más largo de abajo.
 
-**Alcance del hackathon (solo código net-new, escrito durante el evento).** El
+**Alcance de la construcción inicial (solo código net-new).** El
 motor determinista y el sellado local (capas 1-2), el contrato Compact que
 aplica la regla de corroboración como restricción del circuito (capa 3), un
 frontend local e interfaz MCP que ejercitan sellar / atestar / verificar de
@@ -90,9 +90,9 @@ implementadas en vez de presentarse como terminadas. De aquí en adelante, todo
 trabajo de frontend sigue el flujo de TDD obligatorio documentado en
 `docs/FRONTEND_TDD.md`.
 
-**Después del hackathon (ya no rige la restricción net-new):**
+**Más allá de la construcción inicial (ya no rige la restricción net-new):**
 
-- Reemplazar el mini-motor del evento por un motor forense de nivel productivo,
+- Reemplazar el mini-motor inicial por un motor forense de nivel productivo,
   validado contra un corpus de casos grande, con piloto sobre oficios reales.
 - Correr una auditoría adversarial independiente sobre VELO mismo antes de
   cualquier uso real.

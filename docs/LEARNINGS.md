@@ -1,7 +1,7 @@
 # Learnings
 
 Things this team got wrong first and understood second, recorded while the
-reasoning was still fresh. Kept because a hackathon project that claims it
+reasoning was still fresh. Kept because a project that claims it
 understood everything on the first try is either not being audited or not
 being honest, and this one is built around the opposite claim.
 

@@ -28,7 +28,7 @@ publishing the evidence it came from**.
 > [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for exactly where that
 > boundary sits.)
 
-`Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
+`Apache-2.0` · `TypeScript + Compact` · Built on Midnight
 
 📄 **[Léelo en español (README.es.md)](./README.es.md)**
 
@@ -344,8 +344,7 @@ claude mcp add velo -- node "$(pwd)/dist/src/mcp/server.js"
 ### Deploying
 
 `deploy/deploy-contract.ts` deploys `contracts/velo.compact` to the network in
-`deploy/network-config.ts` (`preview` by default — the hackathon's official
-network). It runs under [Bun](https://bun.sh), not `npm run build && node`:
+`deploy/network-config.ts` (`preview` by default). It runs under [Bun](https://bun.sh), not `npm run build && node`:
 the deploy dependency ships raw `.ts` exports that plain `tsc`/`node` cannot
 resolve.
 
