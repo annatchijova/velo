@@ -13,16 +13,29 @@
   **live on Google Cloud Run** instead (ADR-007):
   `https://velo-1028999311218.us-central1.run.app` — corpus served
   statically, real on-chain ledger reads, no wallet needed to browse.
-- 🔄 **Phase 3** — persisted, queryable sealed cases behind a database
+- ✅ **Phase 3** — persisted, queryable sealed cases behind a database
   adapter (`NeonAdapter`/`CloudSQLAdapter`, engine chosen at deploy time) and
-  wallet-based expert identity.
-- ⏳ **Phase 4** — attestation linkage (CLI → web record) and the public
+  wallet-based expert identity (PR #25).
+- ✅ **Phase 4** — attestation linkage (CLI → web record) and the public
   verification panel with chain-verified vs expert-reported labels; retirement
-  of the browser attest seam.
+  of the browser attest seam (PR #27).
 
-Deferred hardening from red team rounds: F15 (MCP prompt injection), F21
-(seed-redaction multi-word leak). F22 (request-body size cap) is folded into
-Phase 3 route work.
+All four phases are merged. **Next up, in order:**
+
+1. Document the VIGÍA port (PR #28) in `ARCHITECTURE.md` — `trust_fusion`,
+   `abductive`, `pre_analysis` and `narrative` are currently named zero times
+   there — stating for each which side of the sealable boundary it sits on.
+2. Red team round 7 over those modules. Rounds 1–6 all predate them, and the
+   narrator is the first outbound-network and LLM surface in a repo that was
+   until now entirely local.
+3. Surface selective disclosure in the frontend. Merkle inclusion proofs are
+   the strongest product story in the port and are invisible today.
+
+Deferred hardening from red team rounds: F15 (MCP prompt injection, an open
+architectural gap) and F21 (seed redaction matches a single token, so a
+multi-word seed leaks words 2..n — `deploy/redact-seed.ts`). F22
+(request-body size cap) is **done**: `readJsonBody` caps bodies at 256 KB and
+all four POST routes use it.
 
 This document keeps the initial-build history and the longer horizon below.
 
@@ -64,16 +77,29 @@ mandatory TDD workflow documented in `docs/FRONTEND_TDD.md`.
   de su lado; la app está **viva en Google Cloud Run** en su lugar (ADR-007):
   `https://velo-1028999311218.us-central1.run.app` — corpus servido
   estáticamente, lecturas reales del ledger on-chain, sin wallet para navegar.
-- 🔄 **Fase 3** — casos sellados persistidos y consultables detrás de un
+- ✅ **Fase 3** — casos sellados persistidos y consultables detrás de un
   adaptador de base de datos (`NeonAdapter`/`CloudSQLAdapter`, motor elegido al
-  desplegar) e identidad de perito por wallet.
-- ⏳ **Fase 4** — vínculo de atestaciones (CLI → registro web) y el panel
+  desplegar) e identidad de perito por wallet (PR #25).
+- ✅ **Fase 4** — vínculo de atestaciones (CLI → registro web) y el panel
   público de verificación con etiquetas chain-verified vs expert-reported;
-  retiro de la costura de atestación del navegador.
+  retiro de la costura de atestación del navegador (PR #27).
+
+Las cuatro fases están mergeadas. **Lo que sigue, en orden:**
+
+1. Documentar el port de VIGÍA (PR #28) en `ARCHITECTURE.md` — `trust_fusion`,
+   `abductive`, `pre_analysis` y `narrative` hoy aparecen cero veces ahí —
+   diciendo para cada uno de qué lado de la frontera sellable cae.
+2. Ronda 7 de red team sobre esos módulos. Las rondas 1–6 son todas anteriores,
+   y el narrador es la primera superficie de red saliente y de LLM en un repo
+   que hasta ahora era enteramente local.
+3. Exponer la divulgación selectiva en el frontend. Las pruebas Merkle de
+   inclusión son la mejor historia de producto del port y hoy son invisibles.
 
 Endurecimiento diferido de las rondas de red team: F15 (prompt injection en
-MCP), F21 (filtración multi-palabra en la redacción de seeds). F22 (límite de
-tamaño de cuerpo de request) se incorpora al trabajo de rutas de la Fase 3.
+MCP, hueco arquitectónico abierto) y F21 (la redacción matchea un solo token,
+así que una seed multi-palabra filtra las palabras 2..n — `deploy/redact-seed.ts`).
+F22 (límite de tamaño de cuerpo de request) está **hecho**: `readJsonBody` corta
+en 256 KB y las cuatro rutas POST lo usan.
 
 Este documento conserva la historia de la construcción inicial y el horizonte
 más largo de abajo.

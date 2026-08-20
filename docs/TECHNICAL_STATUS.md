@@ -407,10 +407,11 @@ AA contrast, 44×44 px touch targets, `:focus-visible` order,
 `prefers-reduced-motion`.
 
 Suite progression through the audit rounds, as recorded at the time:
-**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58** (the one drop is the retirement
-of the loopback HTTP server after F14, not a regression; the last step is the
-coverage-gap and on-chain-read work). Across both suites the runners report **102
-passing tests: 58 in the engine (`npm test`) and 44 in the frontend
+**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58 → 115/115** (the one drop is the
+retirement of the loopback HTTP server after F14, not a regression; the
+coverage-gap and on-chain-read work took it to 58, and the VIGÍA port to 115).
+Across both suites the runners report **231
+passing tests: 115 in the engine (`npm test`) and 116 in the frontend
 (`vitest run` in `frontend/`)**. The two are separate runners, so a green root
 suite says nothing about the frontend and vice versa — both numbers are given
 because either alone understates the coverage. Earlier versions of this
@@ -567,17 +568,25 @@ examiner at the moment of analysis.**
 | Marker-pair monotonicity sweep | 19×19, 0 violations | round 1, experiment E14e |
 | npm advisories cleared by the Next patch bump | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories consciously deferred | 2 | same, with dated reasoning |
-| Root suite | 58/58 green | `npm test` on `main`, 2026-08-08 |
-| Frontend suite | 44/44 green | `vitest run` in `frontend/`, 2026-08-08 |
-| **Both suites** | **102/102 green** | measured, not derived — see the caveat below |
+| Root suite | 115/115 green | `npm test`, 2026-08-20 |
+| Frontend suite | 116/116 green | `vitest run` in `frontend/`, 2026-08-20 |
+| **Both suites** | **231/231 green** | measured, not derived — `node scripts/count-tests.mjs` |
 
-**Caveat on the test count, withdrawn.** Earlier versions of this document
-reported "roughly 83 runtime cases", a figure derived by hand because the
-engine corpus test declares one `test(...)` inside a loop over the case
-fixtures and several frontend tests use `it.each`. That estimate is no longer
-needed: both suites were run and counted. The runners report **58** and **44**,
-which is what the table says. The old figure was not wrong so much as
-unnecessary — it estimated something that could simply be measured.
+**Caveat on the test count, withdrawn — and then enforced.** Earlier versions
+of this document reported "roughly 83 runtime cases", a figure derived by hand
+because the engine corpus test declares one `test(...)` inside a loop over the
+case fixtures and several frontend tests use `it.each`. That estimate is no
+longer needed: both suites are run and counted. The runners report **115** and
+**116**, which is what the table says.
+
+Measuring once was not enough. Between 2026-08-08 and 2026-08-20 this document
+kept saying 58 and 44 while the suites grew to 115 and 116, and `README.md`
+drifted to a third pair of numbers — three figures, none current. A document
+that asserts verifiability cannot be the least verified thing in the
+repository. `scripts/count-tests.mjs` now re-measures both suites and fails if
+any documented count disagrees with the runners, or if a sentence it is
+supposed to police has been reworded out from under it. The number is no
+longer something anyone has to remember to update.
 
 **Caveat on elapsed time.** The claim "built in a single build cycle" is
 verifiable in git history, not in this document. What this document asserts is

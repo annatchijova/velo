@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/count-tests.mjs` — documented test counts are now measured and
+  enforced.** The script runs both suites with their own runners, then checks
+  every place a document states a count. A mismatch fails; so does a claim
+  site whose sentence was reworded, because a check that silently stops
+  checking is worse than no check. Wired into CI after both suites run.
+
+### Fixed
+
+- **The docs disagreed with the runners, and with each other.**
+  `TECHNICAL_STATUS.md` claimed 58 engine + 44 frontend, `README.md` claimed
+  58 + 47, and the runners reported 115 + 116 — three figures, none current.
+  Synced across `README.md`, `README.es.md`, `TECHNICAL_STATUS.md`,
+  `ESTADO_TECNICO.md`, `QUICKSTART.md` and `velotechnicalstatus.html` (53
+  claim sites), and the estimate-vs-measurement caveat rewritten to say why
+  measuring once was not enough. For a project whose thesis is that its
+  assertions are verifiable, a stale self-measurement is the defect that costs
+  the most.
+- **MVP phase status was stale.** `PRD_MVP.md` and `ROADMAP.md` reported
+  Phase 3 in progress and Phase 4 pending; both merged (`d8dd6ab`/PR #25,
+  `82df676`/PR #27). Red team status corrected too: F22 is fixed
+  (`readJsonBody` caps bodies at 256 KB and all four POST routes use it), not
+  deferred. F15 and F21 remain open and are now described precisely.
+
 ### Changed
 
 - **Docs re-aligned to the Cloud Run reality.** The app is live on Google

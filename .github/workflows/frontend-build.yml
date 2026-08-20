@@ -23,6 +23,11 @@ jobs:
       - name: Frontend tests
         working-directory: frontend
         run: npm run test
+      # Re-measures both suites and fails if any document states a test count
+      # that disagrees with the runners, or if a sentence it is supposed to
+      # police has been reworded. See scripts/count-tests.mjs for why.
+      - name: Documented test counts match the runners
+        run: node scripts/count-tests.mjs
       - name: Next.js build
         working-directory: frontend
         run: npx next build
