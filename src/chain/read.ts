@@ -132,7 +132,7 @@ async function loadBindings(): Promise<VeloBindings> {
   return bindingsCache;
 }
 
-/** Network id for chain reads. Defaults to preview, the hackathon network. */
+/** Network id for chain reads. Defaults to preview, VELO's target network. */
 export function networkId(): string {
   return getEnv("MIDNIGHT_NETWORK_ID") ?? "preview";
 }

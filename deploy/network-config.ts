@@ -1,9 +1,8 @@
 import { getEnv } from "../src/core/env.js";
 
 /**
- * VELO targets the Hack Buenos Aires hackathon's official network —
- * confirmed as Preview in the kickoff talk (Jay Albert), not Preprod,
- * which is what earlier local experimentation had defaulted to.
+ * VELO targets Preview as its official network — not Preprod, which is
+ * what earlier local experimentation had defaulted to.
  *
  * MIDNIGHT_NETWORK_ID must be set as a real environment variable on the
  * command line (`MIDNIGHT_NETWORK_ID=preview bun run deploy/deploy-contract.ts`),

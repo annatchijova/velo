@@ -1,4 +1,4 @@
-# Auditoría de Seguridad — VELO v0.1.0 (Midnight Hack Buenos Aires)
+# Auditoría de Seguridad — VELO v0.1.0
 ## Red Team — Ronda 1
 
 **Fecha:** 2026-08-07 · **Método:** Abductive Engineering (A–D–I) + Red-Team Auditing
@@ -95,7 +95,7 @@ Regla aplicada: ningún hallazgo dice CONFIRMED sin su experimento; los vectores
       ↓ Capa 2 (diseño documentado)
   el circuito probaría "corroboration_count >= 2" — es decir, "2 categorías", no "2 fuentes independientes"
   ```
-- **Por qué es Alta y no "el perito corrupto ya estaba fuera de alcance":** la documentación exime al sistema del *perito que miente en el análisis*, pero el claim que viaja al ZK y al pitch es más fuerte: que la regla de *independencia* se cumplió. El sistema hoy no tiene ningún concepto de "fuente": `Artifact.source` es un string libre que nadie lee. Semióticamente, el signo `corroborationCount` produce en el lector (juez, jurado del hackathon) el interpretante "fuentes independientes", y su objeto es "categorías de detector disparadas". Eso es symbol abuse en el sentido estricto de la skill.
+- **Por qué es Alta y no "el perito corrupto ya estaba fuera de alcance":** la documentación exime al sistema del *perito que miente en el análisis*, pero el claim que viaja al ZK y al pitch es más fuerte: que la regla de *independencia* se cumplió. El sistema hoy no tiene ningún concepto de "fuente": `Artifact.source` es un string libre que nadie lee. Semióticamente, el signo `corroborationCount` produce en el lector (juez, revisor) el interpretante "fuentes independientes", y su objeto es "categorías de detector disparadas". Eso es symbol abuse en el sentido estricto de la skill.
 - **Fix:** definir fuente por proveniencia física (raíz distinta de `provenanceChain` / `source` normalizado) y exigir ≥2 raíces independientes; como mínimo, renombrar el campo y el claim a `detectorCategoriesFired` hasta que exista lo primero.
 
 ---

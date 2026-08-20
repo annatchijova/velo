@@ -3,7 +3,7 @@
 **Status:** design decision, not yet built. The mechanism this document argues
 for — the anonymous expert credential — is Layer 7 in
 [`ARCHITECTURE.md`](./ARCHITECTURE.md) and is explicitly scoped as a
-stretch goal, not part of the hackathon delivery. This document exists so the
+stretch goal, not part of the current delivery. This document exists so the
 *absence* of facial recognition or other biometrics in VELO reads as a
 deliberate boundary, not an oversight.
 

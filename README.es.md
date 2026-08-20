@@ -20,7 +20,7 @@ Atestación de veredictos forenses con conocimiento cero sobre [Midnight](https:
 Un perito puede probar que su veredicto es legítimo **sin publicar nunca la
 evidencia de la que salió**.
 
-`Apache-2.0` · `TypeScript + Compact` · Midnight Hack Buenos Aires, 7–8 de agosto de 2026
+`Apache-2.0` · `TypeScript + Compact` · Construido sobre Midnight
 
 📄 **[English README](./README.md)** — versión completa, con diagramas, la API y las
 instrucciones de deploy.
@@ -180,8 +180,8 @@ Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
 ```bash
 npm install
-npm test          # 58 tests del motor, incluidos los adversariales
-cd frontend && npx vitest run   # 47 más — 105 entre las dos suites
+npm test          # 125 tests del motor, incluidos los adversariales
+cd frontend && npx vitest run   # 116 más — 241 entre las dos suites
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -226,8 +226,8 @@ uso.
 
 | Capa | Estado |
 |---|---|
-| Motor determinista + gate de Daubert | **Funciona**, 58 tests |
-| Cobertura de tests entre las dos suites | **105 en verde** — 58 del motor (`npm test`) + 47 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados |
+| Motor determinista + gate de Daubert | **Funciona**, 125 tests |
+| Cobertura de tests entre las dos suites | **241 en verde** — 125 del motor (`npm test`) + 116 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados — `node scripts/count-tests.mjs` vuelve a medir y falla si esta línea se desactualiza |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |

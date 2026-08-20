@@ -74,7 +74,7 @@ CODE FACT · PLAUSIBLE HYPOTHESIS · CONFIRMED BY INDUCTION · FALSIFIED
   local-cases/<caseId>.json is created OR silently overwritten
   ```
 - **Why this is worse here than in a generic app:** VELO's entire pitch is that a sealed verdict is trustworthy because of what had to be true to produce it (Daubert gate, custody chain, exact arithmetic). None of that is bypassed — the cryptography and the scoring logic are exactly as sound as Round 1 left them. What's bypassed is the assumption of *who is allowed to call `seal_case` at all*. A verdict an attacker fully controls, written to the same store the analyst's own UI reads from, indistinguishable from a real one via the API — that undermines the "verdict corresponds to sealed evidence" claim at the one layer no ZK proof or hash chain can cover: how the record got created in the first place.
-- **Threat-model precondition:** the analyst has the local web UI running (`npm run web`) and has any other page open in the same browser. For a hackathon demo specifically, this is close to the *default* condition, not an edge case — a browser with the VELO tab and other tabs open simultaneously is the normal way to use it.
+- **Threat-model precondition:** the analyst has the local web UI running (`npm run web`) and has any other page open in the same browser. For a live demo specifically, this is close to the *default* condition, not an edge case — a browser with the VELO tab and other tabs open simultaneously is the normal way to use it.
 
 **Remediation:**
 - `src/web/server.ts` (the original target) no longer exists — retired same-day in `9f6a4db`, superseded by `./frontend/`'s Next.js API routes over the same shared `src/core/operations.ts`.

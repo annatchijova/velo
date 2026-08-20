@@ -1,4 +1,4 @@
-# VELO frontend — Midnight Hack Buenos Aires 2026
+# VELO frontend
 
 > The verdict is visible. The victim is not.
 > El veredicto se ve, la víctima no.

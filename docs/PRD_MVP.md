@@ -17,7 +17,7 @@ Related documents: [`ADRS_001_006.md`](./ADRS_001_006.md) (the decisions),
 
 ### Context
 
-The hackathon closed the loop locally: a case is sealed, attested on-chain
+The initial build closed the loop locally: a case is sealed, attested on-chain
 with a real ZK proof (`deploy/attest-case.ts`, one attestation live on
 `preview`), and read back from the ledger (`GET /api/chain`,
 `src/chain/read.ts`). None of that is reachable by anyone but the person
@@ -35,15 +35,23 @@ The MVP turns that loop into a deployed product:
 4. On-chain attestations are linked to sealed cases and shown with precise
    trust labels.
 
-**Phase status** (as of 2026-08-08):
+**Phase status** (as of 2026-08-20):
 - **Phase 1** (PRD/ADR/ROOT_TDD docs): ✅ Done (PR #14 merged)
 - **Phase 2** (deploy config): ✅ Done (PR #15 merged; Vercel-specific deploy
   superseded by Cloud Run deployment)
-- **Phase 3** (persistence + wallet identity): 🔄 In progress
-- **Phase 4** (attestation linkage + verification panel): ⏳ Pending
+- **Phase 3** (persistence + wallet identity): ✅ Done (`d8dd6ab`, PR #25 merged)
+- **Phase 4** (attestation linkage + verification panel): ✅ Done (`82df676`,
+  PR #27 merged)
 
-**Red team**: 6 rounds, 35 findings. F19/F20/F23/F25 fixed. F15/F21/F22 open.
-F24 partial (seam type drift).
+All four MVP phases are merged. The next body of work is not a fifth phase of
+this PRD: it is the VIGÍA port (PR #28 — pre-analysis, trust fusion, abductive
+inference, Merkle selective disclosure, the LLM narrator), which landed in the
+engine but is not yet surfaced anywhere in the frontend and is not yet covered
+by `ARCHITECTURE.md` or by a red team round.
+
+**Red team**: 6 rounds, 35 findings. F19/F20/F22/F23/F25 fixed. F15 and F21
+open. F24 partial (seam type drift). Rounds 1–6 all predate the VIGÍA port, so
+none of those modules has been audited.
 
 ### Personas
 
@@ -134,7 +142,7 @@ MCP server hosting.
 
 ### Contexto
 
-El hackathon cerró el ciclo localmente: un caso se sella, se atesta on-chain
+La construcción inicial cerró el ciclo localmente: un caso se sella, se atesta on-chain
 con una prueba ZK real (`deploy/attest-case.ts`, una atestación viva en
 `preview`) y se lee de vuelta del ledger (`GET /api/chain`,
 `src/chain/read.ts`). Nada de eso es alcanzable más que por quien corre el
@@ -154,15 +162,24 @@ El MVP convierte ese ciclo en un producto desplegado:
 4. Las atestaciones on-chain quedan vinculadas a los casos sellados y se
    muestran con etiquetas de confianza precisas.
 
-**Estado de fases** (al 2026-08-08):
+**Estado de fases** (al 2026-08-20):
 - **Fase 1** (docs PRD/ADR/ROOT_TDD): ✅ Hecho (PR #14 mergeado)
 - **Fase 2** (config de despliegue): ✅ Hecho (PR #15 mergeado; el deploy
   específico de Vercel fue reemplazado por el despliegue en Cloud Run)
-- **Fase 3** (persistencia + identidad de wallet): 🔄 En progreso
-- **Fase 4** (vínculo de atestaciones + panel de verificación): ⏳ Pendiente
+- **Fase 3** (persistencia + identidad de wallet): ✅ Hecho (`d8dd6ab`, PR #25
+  mergeado)
+- **Fase 4** (vínculo de atestaciones + panel de verificación): ✅ Hecho
+  (`82df676`, PR #27 mergeado)
 
-**Red team**: 6 rondas, 35 hallazgos. F19/F20/F23/F25 arreglados. F15/F21/F22
-abiertos. F24 parcial (deriva de tipos en la costura).
+Las cuatro fases del MVP están mergeadas. El próximo bloque de trabajo no es una
+quinta fase de este PRD: es el port de VIGÍA (PR #28 — pre-análisis, trust
+fusion, inferencia abductiva, divulgación selectiva por Merkle, el narrador
+LLM), que aterrizó en el motor pero todavía no se expone en ninguna parte del
+frontend, ni está cubierto por `ARCHITECTURE.md` ni por una ronda de red team.
+
+**Red team**: 6 rondas, 35 hallazgos. F19/F20/F22/F23/F25 arreglados. F15 y F21
+abiertos. F24 parcial (deriva de tipos en la costura). Las rondas 1–6 son todas
+anteriores al port de VIGÍA, así que ninguno de esos módulos fue auditado.
 
 ### Personas
 

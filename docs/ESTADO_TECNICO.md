@@ -1,7 +1,7 @@
 # VELO — Estado técnico
 
 **Atestación forense de conocimiento cero sobre Midnight**
-Midnight Hack Buenos Aires · v0.1.0 · estado al 2026-08-07
+v0.1.0 · estado al 2026-08-07
 
 > El veredicto se ve, la víctima no.
 
@@ -176,7 +176,7 @@ exactamente eso. El argumento completo está en `IDENTITY.md`.
 ### 2.6 Chocamos con tres paredes reales de la plataforma y documentamos las tres
 
 Están en `LEARNINGS.md` porque "entendimos la plataforma al primer intento" no es
-algo que un proyecto de hackathon pueda afirmar con honestidad.
+algo que este proyecto pueda afirmar con honestidad.
 
 - **L1 — `Insufficient Funds: could not balance dust` con la wallet fondeada.**
   En Midnight las fees se pagan en DUST; el DUST no es un token que manda el
@@ -428,10 +428,11 @@ contraste WCAG 2.1 AA, targets táctiles de 44×44 px, orden de `:focus-visible`
 `prefers-reduced-motion`.
 
 Progresión de la suite a lo largo de las rondas de auditoría, tal como quedó
-registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58** (la única caída es el
-retiro del servidor HTTP de loopback después de F14, no una regresión; el último
-paso es el trabajo de huecos de cobertura y lectura on-chain). Entre las dos suites los runners informan **102
-tests pasando: 58 en el motor (`npm test`) y 44 en el frontend (`vitest run` en
+registrada en su momento: **9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58 → 125/125** (la única
+caída es el retiro del servidor HTTP de loopback después de F14, no una
+regresión; el trabajo de huecos de cobertura y lectura on-chain lo llevó a 58,
+el port de VIGÍA a 115, y el propio gate de conteo de este documento a 125). Entre las dos suites los runners informan **241
+tests pasando: 125 en el motor (`npm test`) y 116 en el frontend (`vitest run` en
 `frontend/`)**. Son runners separados, así que una suite raíz en verde no dice
 nada sobre el frontend ni al revés — se dan los dos números porque cualquiera
 solo subestima la cobertura. Versiones anteriores de este documento estimaban el
@@ -590,20 +591,28 @@ corrupto en el momento del análisis.**
 | Barrido de monotonicidad de pares de marcadores | 19×19, 0 violaciones | ronda 1, experimento E14e |
 | Advisories de npm limpiadas por el bump de parche de Next | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories diferidas conscientemente | 2 | ídem, con razonamiento fechado |
-| Suite raíz | 58/58 en verde | `npm test` sobre `main`, 2026-08-08 |
-| Suite de frontend | 44/44 en verde | `vitest run` en `frontend/`, 2026-08-08 |
-| **Las dos suites** | **102/102 en verde** | medido, no derivado — ver la salvedad abajo |
+| Suite raíz | 125/125 en verde | `npm test`, 2026-08-20 |
+| Suite de frontend | 116/116 en verde | `vitest run` en `frontend/`, 2026-08-20 |
+| **Las dos suites** | **241/241 en verde** | medido, no derivado — `node scripts/count-tests.mjs` |
 
-**Salvedad sobre el conteo de tests, retirada.** Versiones anteriores de este
-documento informaban "unos 83 casos en runtime", una cifra derivada a mano
-porque el test de corpus del motor declara un solo `test(...)` dentro de un loop
-sobre los fixtures y varios tests de frontend usan `it.each`. Esa estimación ya
-no hace falta: se corrieron las dos suites y se contaron. Los runners informan
-**58** y **44**, que es lo que dice la tabla. La cifra vieja no era falsa, era
-innecesaria: estimaba algo que se podía medir.
+**Salvedad sobre el conteo de tests, retirada — y después impuesta.** Versiones
+anteriores de este documento informaban "unos 83 casos en runtime", una cifra
+derivada a mano porque el test de corpus del motor declara un solo `test(...)`
+dentro de un loop sobre los fixtures y varios tests de frontend usan `it.each`.
+Esa estimación ya no hace falta: las dos suites se corren y se cuentan. Los
+runners informan **125** y **116**, que es lo que dice la tabla.
 
-**Salvedad sobre el tiempo transcurrido.** La afirmación "construido en menos de
-un ciclo de hackathon" se verifica en el historial de git, no en este documento.
+Medir una vez no alcanzó. Entre el 2026-08-08 y el 2026-08-20 este documento
+siguió diciendo 58 y 44 mientras las dos suites más o menos se duplicaban, y
+el `README.md` se desvió a un tercer par de números — tres cifras, ninguna actual.
+Un documento que afirma verificabilidad no puede ser lo menos verificado del
+repositorio. `scripts/count-tests.mjs` ahora vuelve a medir las dos suites y
+falla si algún conteo documentado no coincide con los runners, o si alguna
+frase que tiene que vigilar fue reescrita por debajo. El número ya no depende de
+que alguien se acuerde de actualizarlo.
+
+**Salvedad sobre el tiempo transcurrido.** La afirmación "construido en un solo
+ciclo de trabajo" se verifica en el historial de git, no en este documento.
 Lo que este documento afirma es el *estado*, no el cronómetro.
 
 ---
@@ -706,7 +715,6 @@ docs/DEPENDENCY_SECURITY.md     el upgrade que tomamos y el que diferimos a prop
 
 ---
 
-*Preparado para el jurado de Midnight Hack Buenos Aires, presentado el 2026-08-08;
-estado verificado el 2026-08-07. Cada ID de
+*Presentado el 2026-08-08; estado verificado el 2026-08-07. Cada ID de
 hallazgo de este documento resuelve a una sección fechada del propio registro de
 auditoría del repositorio. Versión en inglés: `TECHNICAL_STATUS.md`.*

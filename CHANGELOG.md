@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/count-tests.mjs` — documented test counts are now measured and
+  enforced.** The script runs both suites with their own runners, then checks
+  every place a document states a count. A mismatch fails; so does a claim
+  site whose sentence was reworded, because a check that silently stops
+  checking is worse than no check. Wired into CI after both suites run.
+- **`tests/count-tests.test.ts` — the gate is itself tested.** Its first CI
+  run failed on its own blind spot: vitest colourises its summary under CI, so
+  `Tests  116 passed` arrived wrapped in SGR escapes and the pattern missed.
+  It refused to report a number it could not read rather than guessing — the
+  right failure — but a gate nobody tests is a gate that finds its blind spots
+  in production. The suite now parses the actual colourised bytes from the
+  failing CI log, asserts every registry pattern still matches its document,
+  and covers the fixer's capture-offset arithmetic.
+
+### Fixed
+
+- **The docs disagreed with the runners, and with each other.**
+  `TECHNICAL_STATUS.md` claimed 58 engine + 44 frontend, `README.md` claimed
+  58 + 47, and the runners reported 115 + 116 — three figures, none current.
+  Synced across `README.md`, `README.es.md`, `TECHNICAL_STATUS.md`,
+  `ESTADO_TECNICO.md`, `QUICKSTART.md` and `velotechnicalstatus.html` (53
+  claim sites), and the estimate-vs-measurement caveat rewritten to say why
+  measuring once was not enough. For a project whose thesis is that its
+  assertions are verifiable, a stale self-measurement is the defect that costs
+  the most.
+- **MVP phase status was stale.** `PRD_MVP.md` and `ROADMAP.md` reported
+  Phase 3 in progress and Phase 4 pending; both merged (`d8dd6ab`/PR #25,
+  `82df676`/PR #27). Red team status corrected too: F22 is fixed
+  (`readJsonBody` caps bodies at 256 KB and all four POST routes use it), not
+  deferred. F15 and F21 remain open and are now described precisely.
+
 ### Changed
 
 - **Docs re-aligned to the Cloud Run reality.** The app is live on Google
@@ -216,8 +249,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [0.1.0] - 2026-08-07
 
-Initial project state — the full initial-development milestone from Midnight
-Hack Buenos Aires (7–8 August 2026). This release covers every commit from the
+Initial project state — the full initial-development milestone (7–8 August
+2026). This release covers every commit from the
 first one to the current HEAD; nothing has been released or tagged prior to
 this point, so the entire history is grouped under the initial `0.1.0`.
 

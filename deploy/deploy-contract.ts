@@ -1,5 +1,5 @@
 // Deploys contracts/velo.compact to the network selected in
-// network-config.ts (default: preview, the Hack Buenos Aires network).
+// network-config.ts (default: preview).
 //
 // Run with Bun, not `npm run build && node ...`: @effectstream/midnight-contracts
 // ships its exports as raw .ts source (bun-native), which plain tsc/node

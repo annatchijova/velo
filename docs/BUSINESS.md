@@ -1,8 +1,8 @@
 # Business Case
 
 This document reframes VELO's positioning and lays out the commercial case beyond
-the hackathon deliverable. **None of this is being built this weekend.** The
-hackathon scope is fixed by [`ROADMAP.md`](./ROADMAP.md); this document is the
+the current deliverable. **None of this is being built yet.** The current
+scope is fixed by [`ROADMAP.md`](./ROADMAP.md); this document is the
 vision layer that scope serves, kept separate on purpose so a pitch slide never
 gets mistaken for a shipped feature.
 
@@ -122,13 +122,12 @@ set via a ZK Merkle proof, without revealing which expert — the same relation
 a wallet address has to its owner's identity. Under this framing, that layer
 stops being an optional stretch goal and becomes the piece that makes
 "reputation" a well-founded claim instead of an unverified label. It remains
-scoped as a **post-hackathon** layer; the business case explains *why* it
+scoped as a **later** layer; the business case explains *why* it
 matters, not a change to *when* it gets built.
 
-### What this means for the next ~20 hours
+### What this means in the near term
 
-This document changes what the demo *says*, not what gets *built* this
-weekend. Recommended, in order:
+This document changes what the demo *says*, not what gets *built* now. Recommended, in order:
 
 1. Close the open red-team item and the critical invariants (done — F5
    fixed and verified against the corpus).
@@ -268,13 +267,13 @@ acreditados vía una prueba de Merkle en ZK, sin revelar cuál perito — la mis
 relación que tiene una dirección de wallet con la identidad de su dueño. Bajo
 este encuadre, esa capa deja de ser un stretch goal opcional y pasa a ser la
 pieza que hace de "reputación" una afirmación bien fundada en vez de una
-etiqueta sin verificar. Sigue siendo una capa **post-hackathon**; el caso de
+etiqueta sin verificar. Sigue siendo una capa **posterior**; el caso de
 negocio explica *por qué* importa, no cambia *cuándo* se construye.
 
-### Qué significa esto para las próximas ~20 horas
+### Qué significa esto en el corto plazo
 
-Este documento cambia lo que la demo *dice*, no lo que se *construye* este
-fin de semana. Recomendado, en orden:
+Este documento cambia lo que la demo *dice*, no lo que se *construye* ahora.
+Recomendado, en orden:
 
 1. Cerrar el hallazgo de red team abierto y los invariantes críticos (hecho —
    F5 arreglado y verificado contra el corpus).

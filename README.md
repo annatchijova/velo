@@ -28,7 +28,7 @@ publishing the evidence it came from**.
 > [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for exactly where that
 > boundary sits.)
 
-`Apache-2.0` · `TypeScript + Compact` · Built at Midnight Hack Buenos Aires, 7–8 August 2026
+`Apache-2.0` · `TypeScript + Compact` · Built on Midnight
 
 📄 **[Léelo en español (README.es.md)](./README.es.md)**
 
@@ -229,8 +229,8 @@ finding. It is an inadmissible one.
 
 ```bash
 npm install
-npm test          # 58 engine tests, including adversarial ones
-cd frontend && npx vitest run   # 47 more — 105 across both suites
+npm test          # 125 engine tests, including adversarial ones
+cd frontend && npx vitest run   # 116 more — 241 across both suites
 npm run simulate  # full end-to-end story, both refusals
 ```
 
@@ -344,8 +344,7 @@ claude mcp add velo -- node "$(pwd)/dist/src/mcp/server.js"
 ### Deploying
 
 `deploy/deploy-contract.ts` deploys `contracts/velo.compact` to the network in
-`deploy/network-config.ts` (`preview` by default — the hackathon's official
-network). It runs under [Bun](https://bun.sh), not `npm run build && node`:
+`deploy/network-config.ts` (`preview` by default). It runs under [Bun](https://bun.sh), not `npm run build && node`:
 the deploy dependency ships raw `.ts` exports that plain `tsc`/`node` cannot
 resolve.
 
@@ -424,8 +423,8 @@ the failure mode this whole system exists to prevent.
 
 | Layer | State |
 |---|---|
-| Deterministic engine + Daubert gate | **Working**, 58 tests |
-| Test coverage across both suites | **105 green** — 58 engine (`npm test`) + 47 frontend (`vitest run` in `frontend/`). Counted by the runners, not estimated |
+| Deterministic engine + Daubert gate | **Working**, 125 tests |
+| Test coverage across both suites | **241 green** — 125 engine (`npm test`) + 116 frontend (`vitest run` in `frontend/`). Counted by the runners, not estimated — `node scripts/count-tests.mjs` re-measures and fails if this line drifts |
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |
