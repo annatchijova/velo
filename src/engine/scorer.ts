@@ -1,4 +1,5 @@
 import type { DetectorResult } from "./detectors.js";
+import { obviousBaitHits } from "./eco.js";
 import type { Artifact, CoverageGap } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
@@ -36,6 +37,16 @@ export interface ScoreResult {
 const MALICE_THRESHOLD = new Fraction(33, 100);
 const NOISE_CEILING = new Fraction(8, 100);
 const MIN_CORROBORATION_FOR_MALICE = 2;
+/**
+ * VIGIA B-151a: a lone contributing artifact cannot sustain a
+ * high-confidence score, however many detector categories it trips. The
+ * cap is verdict-neutral by construction here — one artifact is at most
+ * one provenance source, so the Daubert gate already blocks MALICE — but
+ * the sealed score itself must not overstate what one artifact supports,
+ * and the cap leaves an auditable trace in the reasoning (VIGIA's own
+ * fix: a transformation that reduces probative strength must say so).
+ */
+const SINGLE_ARTIFACT_SCORE_CAP = new Fraction(65, 100);
 
 export interface ScoreInput {
   detectorResults: DetectorResult[];
@@ -102,19 +113,31 @@ export function score(input: ScoreInput): ScoreResult {
   }
 
   const fired = detectorResults.filter((d) => d.fired);
-  const totalScore = fired.reduce((acc, d) => acc.add(d.weight), Fraction.zero());
+  const rawScore = fired.reduce((acc, d) => acc.add(d.weight), Fraction.zero());
   const detectorsFired = fired.map((d) => d.name);
 
   const byId = new Map(artifacts.map((a) => [a.id, a]));
   const sources = new Set<string>();
+  const contributingArtifactIds = new Set<string>();
   for (const d of fired) {
     for (const artifactId of d.contributingArtifactIds) {
+      contributingArtifactIds.add(artifactId);
       const artifact = byId.get(artifactId);
       if (artifact) sources.add(sourceOf(artifact));
     }
   }
   const corroboratingSources = [...sources].sort();
   const corroborationCount = corroboratingSources.length;
+
+  // B-151a single-artifact cap (see SINGLE_ARTIFACT_SCORE_CAP). Counts
+  // artifacts that actually made detectors fire — VIGIA counts artifacts
+  // with a positive adjusted score, which is the same notion here.
+  let totalScore = rawScore;
+  let capNote = "";
+  if (contributingArtifactIds.size < 2 && rawScore.greaterThan(SINGLE_ARTIFACT_SCORE_CAP)) {
+    totalScore = SINGLE_ARTIFACT_SCORE_CAP;
+    capNote = ` Single-artifact cap (VIGIA B-151a): raw score ${rawScore.toDisplayString()} came from fewer than two contributing artifacts and was capped to ${SINGLE_ARTIFACT_SCORE_CAP.toDisplayString()} — a lone artifact cannot sustain a high-confidence score.`;
+  }
 
   const meetsMaliceThreshold = totalScore.greaterThan(MALICE_THRESHOLD);
   const hasCorroboration = corroborationCount >= MIN_CORROBORATION_FOR_MALICE;
@@ -138,14 +161,26 @@ export function score(input: ScoreInput): ScoreResult {
         verdict: "SUSPICION",
         devilAdvocate: "",
         reasoning:
-          "Score and corroboration both qualify for MALICE, but no devil's-advocate counter-argument was supplied. Degraded to SUSPICION rather than publish an unscrutinized verdict.",
+          `Score and corroboration both qualify for MALICE, but no devil's-advocate counter-argument was supplied. Degraded to SUSPICION rather than publish an unscrutinized verdict.${capNote}`,
       };
     }
+    // Gate D1 (Eco), ported from VIGIA: exculpatory text that itself
+    // screams attack vocabulary is a signal, not a refutation. VELO's
+    // devil's-advocate never reduces the score (verified against this
+    // file: its presence is what ENABLES MALICE under the Daubert
+    // scrutiny gate), so there is no reduction to block — the gate here
+    // is the pre-emission record that the counter-argument tripped the
+    // Eco filter, sealed into the reasoning so a reader weighs it.
+    const devilBait = obviousBaitHits(devilAdvocate);
+    const d1Note =
+      devilBait.length > 0
+        ? ` Gate D1 (Eco filter): the devil's-advocate text itself contains obvious-bait vocabulary (${devilBait.join(", ")}) — under the Eco filter an overly obvious refutation is a signal, not a refutation.`
+        : "";
     return {
       ...base,
       verdict: "MALICE",
       devilAdvocate,
-      reasoning: `${corroborationCount} independent sources corroborate (>= ${MIN_CORROBORATION_FOR_MALICE} required), score ${totalScore.toDisplayString()} exceeds ${MALICE_THRESHOLD.toDisplayString()}.`,
+      reasoning: `${corroborationCount} independent sources corroborate (>= ${MIN_CORROBORATION_FOR_MALICE} required), score ${totalScore.toDisplayString()} exceeds ${MALICE_THRESHOLD.toDisplayString()}.${d1Note}${capNote}`,
     };
   }
 
@@ -154,7 +189,7 @@ export function score(input: ScoreInput): ScoreResult {
       ...base,
       verdict: "SUSPICION",
       devilAdvocate: "",
-      reasoning: `Score ${totalScore.toDisplayString()} would qualify for MALICE, but only ${corroborationCount} independent source(s) corroborate — the Daubert corroboration gate requires at least ${MIN_CORROBORATION_FOR_MALICE}.`,
+      reasoning: `Score ${totalScore.toDisplayString()} would qualify for MALICE, but only ${corroborationCount} independent source(s) corroborate — the Daubert corroboration gate requires at least ${MIN_CORROBORATION_FOR_MALICE}.${capNote}`,
     };
   }
 
@@ -169,14 +204,14 @@ export function score(input: ScoreInput): ScoreResult {
         ...base,
         verdict: "ABSTAIN",
         devilAdvocate: "",
-        reasoning: `Nothing anomalous was found in what was examined, but ${coverageGaps.length} expected source(s) could not be examined: ${missing}. A negative finding is not supportable over evidence that was never available.`,
+        reasoning: `Nothing anomalous was found in what was examined, but ${coverageGaps.length} expected source(s) could not be examined: ${missing}. A negative finding is not supportable over evidence that was never available.${capNote}`,
       };
     }
     return {
       ...base,
       verdict: "NOISE",
       devilAdvocate: "",
-      reasoning: `Score ${totalScore.toDisplayString()} at or below the noise ceiling ${NOISE_CEILING.toDisplayString()}.`,
+      reasoning: `Score ${totalScore.toDisplayString()} at or below the noise ceiling ${NOISE_CEILING.toDisplayString()}.${capNote}`,
     };
   }
 
@@ -184,6 +219,6 @@ export function score(input: ScoreInput): ScoreResult {
     ...base,
     verdict: "SUSPICION",
     devilAdvocate: "",
-    reasoning: `Score ${totalScore.toDisplayString()} above the noise ceiling but below the MALICE threshold.`,
+    reasoning: `Score ${totalScore.toDisplayString()} above the noise ceiling but below the MALICE threshold.${capNote}`,
   };
 }

@@ -1,6 +1,7 @@
 import { runAllDetectors, type DetectorResult } from "../engine/detectors.js";
 import type { Artifact, CoverageGap } from "../engine/evidence.js";
 import { score, type ScoreResult } from "../engine/scorer.js";
+import { computeArtifactTrust, type ArtifactTrust } from "../engine/trust_fusion.js";
 import { sealBundle, verifyBundle, type BundleVerification, type SealedBundle } from "../seal/bundle.js";
 import {
   appendCustodyEvent,
@@ -10,6 +11,9 @@ import {
   type CustodyEventType,
 } from "../seal/custody.js";
 import { listBundles, loadBundle, saveBundle, toSummary, type CaseListing, type CaseSummary } from "../mcp/store.js";
+import { narrate, type NarrativeRecord, type NarratorBackend } from "../narrative/narrator.js";
+import { resolveNarrator } from "../narrative/backends.js";
+import { preAnalyze, type PreAnalysis } from "../analysis/pre_analysis.js";
 
 /**
  * The operations every interface calls.
@@ -47,6 +51,13 @@ export interface AnalysisResult {
   custodyChain: CustodyChain;
   custodyValid: boolean;
   custodyReason: string;
+  /**
+   * Per-artifact effective-trust audit (VIGIA trust_fusion port, exact
+   * Fractions serialized as strings). Reported BESIDE the verdict, never
+   * an input to it — see src/engine/trust_fusion.ts for why the VIGIA
+   * verdict gates were deliberately not adopted.
+   */
+  artifactTrust: ArtifactTrust[];
 }
 
 /**
@@ -70,10 +81,12 @@ export function analyzeCase(input: AnalyzeCaseInput): AnalysisResult {
 
   const detectorResults = runAllDetectors(artifacts);
   const scoreResult = score({ detectorResults, artifacts, devilAdvocate, custodyValid, coverageGaps });
+  const artifactTrust = computeArtifactTrust(artifacts, detectorResults);
 
   return {
     detectorResults,
     scoreResult,
+    artifactTrust,
     custodyChain,
     custodyValid,
     custodyReason: hasAcquisitionHistory
@@ -133,4 +146,56 @@ export function getCase(caseId: string): CaseSummary | null {
 export function verifyCase(caseId: string): BundleVerification | null {
   const bundle = loadBundle(caseId);
   return bundle ? verifyBundle(bundle) : null;
+}
+
+/**
+ * Run the pre-analysis signal producers over candidate evidence, BEFORE
+ * any analysis or seal. Advisory only: the caller reads the suggestions
+ * and decides which markers to apply to which artifacts — applied markers
+ * then enter the engine through the same door as analyst-declared ones.
+ * Nothing here feeds analyzeCase or sealCase automatically.
+ */
+export function preAnalyzeEvidence(artifacts: Artifact[], texts: string[] = []): PreAnalysis {
+  return preAnalyze(artifacts, texts);
+}
+
+export interface NarrateCaseResult {
+  narrative: NarrativeRecord | null;
+  /** Why the narrative is absent or flagged — honest degradation, stated. */
+  note: string;
+}
+
+/**
+ * Narrate an already-sealed case. STRICTLY POST-SEAL and read-only: the
+ * narrator can only be invoked on a bundle loaded from disk, after
+ * sealing, and nothing it returns feeds back into any sealed value. If no
+ * backend is configured or the backend fails, the case remains complete
+ * and valid — the narrative is a feature, never the core.
+ */
+export async function narrateCase(caseId: string, backend?: NarratorBackend | null): Promise<NarrateCaseResult | null> {
+  const bundle = loadBundle(caseId);
+  if (!bundle) return null;
+
+  const narrator = backend ?? resolveNarrator();
+  if (!narrator) {
+    return {
+      narrative: null,
+      note: "No narrator configured (set VELO_NARRATOR=ollama or VELO_NARRATOR=anthropic). The sealed analysis is complete without prose.",
+    };
+  }
+  try {
+    const narrative = await narrate(bundle, narrator);
+    return {
+      narrative,
+      note: narrative.proseConsistentWithVerdict
+        ? "Narrative generated beside the seal. The prose is decorative; the sealed verdict is authoritative."
+        : `Narrative generated but flagged: ${narrative.consistencyNote}`,
+    };
+  } catch (err) {
+    // A narrator failure must not destroy or degrade the sealed analysis.
+    return {
+      narrative: null,
+      note: `Narrator ${narrator.name} (${narrator.model}) failed: ${err instanceof Error ? err.message : String(err)}. The sealed analysis is unaffected.`,
+    };
+  }
 }

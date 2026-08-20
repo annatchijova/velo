@@ -1,3 +1,4 @@
+import { ecoOverinterpretation } from "./eco.js";
 import type { Artifact, Marker } from "./evidence.js";
 import { Fraction } from "./fraction.js";
 
@@ -29,6 +30,40 @@ function parseTimestamp(ts: string): number | null {
 }
 
 /**
+ * VIGIA R3-1 plausibility window for temporal comparisons. Below the floor
+ * live the classic unparsed-date sentinels (Unix epoch 1970, FILETIME
+ * 1601); the ceiling is the signed 32-bit Unix epoch overflow — a natural,
+ * well-understood forensic bound. A timestamp outside the window is bad
+ * data, not a usable event time. VIGIA logs it and gates the verdict;
+ * VELO fails closed with its own fracture, the same treatment the F6 fix
+ * gave unparseable timestamps — the conservative direction is identical,
+ * the mechanism is VELO's.
+ */
+const TCV_PLAUSIBLE_MIN_MS = Date.UTC(2000, 0, 1, 0, 0, 0);
+const TCV_PLAUSIBLE_MAX_MS = Date.UTC(2038, 0, 19, 3, 14, 7);
+
+function inPlausibleRange(ms: number): boolean {
+  return ms >= TCV_PLAUSIBLE_MIN_MS && ms <= TCV_PLAUSIBLE_MAX_MS;
+}
+
+/**
+ * Sub-second trailing-zero count, ported from VIGIA caie Rule 9
+ * (TIMESTAMP_PRECISION_ANOMALY): tools like Timestomp/nTimestomp truncate
+ * sub-seconds to a run of zeros, while legitimate OS timestamps carry
+ * scheduler jitter. Mirrors the Python exactly — take the fragment after
+ * the first dot, strip trailing "Z"/"+" characters, count the trailing
+ * zeros. Like the original, it does not understand "+HH:MM" offset
+ * suffixes; VELO timestamps are Z-suffixed ISO 8601 (see evidence.ts).
+ */
+function subSecondTrailingZeros(ts: string): number {
+  const parts = ts.split(".");
+  if (parts.length < 2) return 0;
+  const frac = (parts[1] ?? "").replace(/[Z+]+$/, "");
+  const stripped = frac.replace(/0+$/, "");
+  return frac.length - stripped.length;
+}
+
+/**
  * Effect-before-cause is checked for real (timestamp comparison), not just
  * marker presence — a case can carry a `cause_event`/`effect_event` pair
  * whose actual timestamps we can verify independently of what the artifact
@@ -46,8 +81,18 @@ export function detectTemporalViolation(artifacts: Artifact[]): DetectorResult {
   const contributors = new Set<string>();
 
   for (const a of artifacts) {
-    if (parseTimestamp(a.timestamp) === null) {
+    const ms = parseTimestamp(a.timestamp);
+    if (ms === null) {
       fractures.push("TIMESTAMP_UNPARSEABLE");
+      contributors.add(a.id);
+    } else if (!inPlausibleRange(ms)) {
+      // Epoch/FILETIME sentinels and overflow dates are bad data on
+      // forensic evidence — fail closed, like unparseable timestamps.
+      fractures.push("TIMESTAMP_OUT_OF_RANGE");
+      contributors.add(a.id);
+    }
+    if (subSecondTrailingZeros(a.timestamp) >= 5) {
+      fractures.push("TIMESTAMP_PRECISION_ANOMALY");
       contributors.add(a.id);
     }
   }
@@ -57,6 +102,9 @@ export function detectTemporalViolation(artifacts: Artifact[]): DetectorResult {
       const causeMs = parseTimestamp(cause.timestamp);
       const effectMs = parseTimestamp(effect.timestamp);
       if (causeMs === null || effectMs === null) continue; // already reported above
+      // R3-1: an implausible timestamp is missing data for the causality
+      // comparison, never a usable event time (already reported above).
+      if (!inPlausibleRange(causeMs) || !inPlausibleRange(effectMs)) continue;
       if (effectMs < causeMs) {
         fractures.push("TEMPORAL_CAUSALITY_VIOLATION");
         contributors.add(cause.id);
@@ -137,6 +185,12 @@ export function detectAntiForensicMarker(artifacts: Artifact[]): DetectorResult 
       ["usn_journal_gap", "USN_JOURNAL_GAP"],
       ["mft_entry_anomaly", "MFT_ENTRY_ANOMALY"],
       ["surgical_deletion", "SURGICAL_DELETION"],
+      // VIGIA caie Rule 13: shadow-copy deletion destroys the primary
+      // recovery path (the pathognomonic ransomware precursor) and a
+      // disabled host firewall removes perimeter controls — both map to
+      // the same fracture, exactly as in the Python source.
+      ["vsc_deleted", "DEFENSE_EVASION_ARTIFACT"],
+      ["firewall_disabled", "DEFENSE_EVASION_ARTIFACT"],
     ],
     artifacts,
   );
@@ -164,9 +218,52 @@ export function detectProcessMasquerade(artifacts: Artifact[]): DetectorResult {
       ["process_masquerade", "PROCESS_MASQUERADE"],
       ["unusual_path", "UNUSUAL_PATH"],
       ["parent_anomaly", "PARENT_ANOMALY"],
+      // VIGIA caie Rule 14: process hollowing/injection or a PID hidden
+      // from the userland process list — active manipulation of a running
+      // process with no benign generator. One fracture for both markers,
+      // as in the Python source.
+      ["process_injection", "PROCESS_INJECTION_ANTIFORENSIC"],
+      ["pid_hidden", "PROCESS_INJECTION_ANTIFORENSIC"],
     ],
     artifacts,
   );
+}
+
+/**
+ * Set-level Eco fracture, ported from VIGIA (`eco_overinterpretation_check`,
+ * wired as its D1 gate use (b)): when more than half of the artifact
+ * descriptions carry obvious-bait vocabulary, the scene itself is the
+ * anomaly — evidence that screams attack in the majority is more consistent
+ * with staging than with a competent adversary. The decision is the integer
+ * predicate `2 * hits > n`; the float ratio the Eco module also reports is
+ * narrative-only and never read here.
+ *
+ * This contributes a fracture like any other detector — it does not by
+ * itself force a verdict.
+ *
+ * contributingArtifactIds is deliberately EMPTY: this is a claim about
+ * the evidence SET, not about any artifact individually, and the inputs
+ * are analyst-written descriptions, not acquired evidence content.
+ * Counting the bait-carrying artifacts as corroborating sources would let
+ * vocabulary in prose (including negations like "no exploit found" and
+ * meta-commentary like "same provenance root") inflate the Daubert
+ * corroboration count — verified against the corpus, where it added a
+ * clean TPM reading as a fourth "corroborating source" because its
+ * description said "the attack is post-boot". The Daubert gate counts
+ * independent evidence of the finding; a set-level prose predicate is not
+ * that. Which texts tripped the filter remains available to the narrative
+ * layer via `ecoOverinterpretation` itself.
+ */
+export function detectSceneStaging(artifacts: Artifact[]): DetectorResult {
+  const eco = ecoOverinterpretation(artifacts.map((a) => a.description));
+  const fired = eco.staged;
+  return {
+    name: "scene_staging",
+    fired,
+    fractures: fired ? ["POSSIBLE_SCENE_STAGING"] : [],
+    weight: fired ? new Fraction(1, 4) : Fraction.zero(),
+    contributingArtifactIds: [],
+  };
 }
 
 export function runAllDetectors(artifacts: Artifact[]): DetectorResult[] {
@@ -176,5 +273,6 @@ export function runAllDetectors(artifacts: Artifact[]): DetectorResult[] {
     detectAntiForensicMarker(artifacts),
     detectNarrativePattern(artifacts),
     detectProcessMasquerade(artifacts),
+    detectSceneStaging(artifacts),
   ];
 }

@@ -63,6 +63,8 @@ interface SealedBundle {
   custodyChain: CustodyChain;
   bundleHash: string;
   analysisFingerprint: string;
+  /** Optional: bundles sealed before the evidence Merkle root existed do not carry it. */
+  evidenceRoot?: string;
 }
 
 /** Code-point ordering — must match canonical.ts. See F9 there for why. */
@@ -106,6 +108,34 @@ export function canonicalize(value: unknown): string {
 
 function sha256Hex(input: string): string {
   return createHash("sha256").update(input, "utf8").digest("hex");
+}
+
+/**
+ * Evidence Merkle root — a deliberate copy of src/seal/merkle.ts, same as
+ * the canonicalization above (the price of the no-dependencies property;
+ * tests/merkle.test.ts pins both implementations to the same vectors).
+ * Domain-separated SHA-256 (0x00 leaves, 0x01 nodes), odd node promoted
+ * unchanged, defined sentinel root for the empty tree.
+ */
+const MERKLE_VERSION = 1;
+const EMPTY_TREE_ROOT = sha256Hex(`velo:merkle:empty:v${MERKLE_VERSION}`);
+
+function merkleRootOfLeaves(leaves: Buffer[]): string {
+  if (leaves.length === 0) return EMPTY_TREE_ROOT;
+  let level: Buffer[] = leaves.map((l) => createHash("sha256").update(Buffer.concat([Buffer.from([0x00]), l])).digest());
+  while (level.length > 1) {
+    const next: Buffer[] = [];
+    for (let i = 0; i < level.length; i += 2) {
+      const right = level[i + 1];
+      next.push(
+        right === undefined
+          ? level[i]!
+          : createHash("sha256").update(Buffer.concat([Buffer.from([0x01]), level[i]!, right])).digest(),
+      );
+    }
+    level = next;
+  }
+  return level[0]!.toString("hex");
 }
 
 function genesisHash(caseId: string): string {
@@ -207,11 +237,25 @@ function assertLooksLikeBundle(value: unknown): asserts value is SealedBundle {
   }
 }
 
-export function verifyBundle(bundle: SealedBundle): { internallyConsistent: boolean; reasons: string[] } {
+export function verifyBundle(bundle: SealedBundle): { internallyConsistent: boolean; reasons: string[]; caveats: string[] } {
   const reasons: string[] = [];
+  const caveats: string[] = [];
 
   const custody = verifyCustodyChain(bundle.custodyChain);
   if (!custody.ok) reasons.push(...custody.reasons.map((r) => `Custody chain: ${r}`));
+
+  // Evidence Merkle root: recomputed from the manifest, absence is a
+  // caveat (legacy bundle), mismatch is tampering.
+  if (bundle.evidenceRoot === undefined) {
+    caveats.push("Bundle predates the evidence Merkle root; per-artifact inclusion proofs unavailable.");
+  } else {
+    const manifest = bundle.evidenceManifest as { artifacts?: unknown[] } | null;
+    const artifacts = Array.isArray(manifest?.artifacts) ? manifest.artifacts : [];
+    const recomputedRoot = merkleRootOfLeaves(artifacts.map((a) => Buffer.from(canonicalize(a), "utf8")));
+    if (recomputedRoot !== bundle.evidenceRoot) {
+      reasons.push("Evidence Merkle root mismatch — an artifact was altered, added or removed after sealing.");
+    }
+  }
 
   const deterministicCore = {
     caseId: bundle.caseId,
@@ -249,7 +293,7 @@ export function verifyBundle(bundle: SealedBundle): { internallyConsistent: bool
     reasons.push("MALICE without a devil's-advocate counter-argument.");
   }
 
-  return { internallyConsistent: reasons.length === 0, reasons };
+  return { internallyConsistent: reasons.length === 0, reasons, caveats };
 }
 
 function main() {
@@ -282,6 +326,9 @@ function main() {
   console.log(`internally consistent: ${result.internallyConsistent ? "YES" : "NO"}`);
   for (const reason of result.reasons) {
     console.log(`  - ${reason}`);
+  }
+  for (const caveat of result.caveats) {
+    console.log(`  ~ caveat: ${caveat}`);
   }
   console.log("");
   console.log("This does NOT establish who produced this bundle, or when.");

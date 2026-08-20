@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import type { EvidenceManifest } from "../engine/evidence.js";
+import type { Artifact, EvidenceManifest } from "../engine/evidence.js";
 import type { ScoreResult } from "../engine/scorer.js";
 import type { CoverageGap } from "../engine/evidence.js";
 import { canonicalize } from "./canonical.js";
 import { type CustodyChain, appendCustodyEvent, chainTip, verifyCustodyChain } from "./custody.js";
+import { inclusionProof, merkleRoot, verifyInclusion, type InclusionProof, type InclusionVerification } from "./merkle.js";
 
 /**
  * Two distinct hashes, on purpose (a lesson learned the hard way in an
@@ -32,6 +33,25 @@ export interface SealedBundle {
   custodyChain: CustodyChain;
   bundleHash: string;
   analysisFingerprint: string;
+  /**
+   * Merkle root over the canonical bytes of each artifact (src/seal/merkle.ts),
+   * enabling selective disclosure: prove one artifact was in the sealed set
+   * without revealing the others. DERIVED from evidenceManifest, so the
+   * verifier recomputes it and the fingerprint composition is unchanged —
+   * bundles sealed before this field existed still verify, with the absence
+   * reported as a caveat rather than a failure (continuum KL-009 doctrine:
+   * absence of a guarantee is a caveat, silence would be a lie).
+   */
+  evidenceRoot?: string;
+}
+
+/** Leaf bytes for the evidence Merkle tree: the canonical v2 encoding of each artifact. */
+function artifactLeaves(manifest: EvidenceManifest): Buffer[] {
+  return manifest.artifacts.map((a) => Buffer.from(canonicalize(a), "utf8"));
+}
+
+export function evidenceMerkleRoot(manifest: EvidenceManifest): string {
+  return merkleRoot(artifactLeaves(manifest));
 }
 
 function sha256Hex(input: string): string {
@@ -92,6 +112,7 @@ export function sealBundle(
     custodyChain,
     bundleHash,
     analysisFingerprint,
+    evidenceRoot: evidenceMerkleRoot(evidenceManifest),
   };
 }
 
@@ -106,6 +127,12 @@ export interface BundleVerification {
    */
   internallyConsistent: boolean;
   reasons: string[];
+  /**
+   * Degradations that do not make the bundle inconsistent but that the
+   * reader must know about — the WARN of a PASS/WARN/FAIL verdict. Today:
+   * a legacy bundle sealed before evidenceRoot existed.
+   */
+  caveats: string[];
   /** Stated in every result so the limitation travels with the answer, not just the docs. */
   doesNotEstablish: string;
 }
@@ -118,6 +145,16 @@ const DOES_NOT_ESTABLISH =
 /** Recomputes both hashes and the custody chain independently — trusts nothing stored in the bundle. */
 export function verifyBundle(bundle: SealedBundle): BundleVerification {
   const reasons: string[] = [];
+  const caveats: string[] = [];
+
+  if (bundle.evidenceRoot === undefined) {
+    caveats.push(
+      "Bundle predates the evidence Merkle root: per-artifact inclusion proofs are not available for it. " +
+        "The evidence manifest is still covered whole by the analysis fingerprint.",
+    );
+  } else if (bundle.evidenceRoot !== evidenceMerkleRoot(bundle.evidenceManifest)) {
+    reasons.push("Evidence Merkle root does not match the manifest — an artifact was altered, added or removed after sealing.");
+  }
 
   const custodyResult = verifyCustodyChain(bundle.custodyChain);
   if (!custodyResult.valid) {
@@ -155,7 +192,40 @@ export function verifyBundle(bundle: SealedBundle): BundleVerification {
     reasons.push("MALICE verdict without a devil's-advocate counter-argument.");
   }
 
-  return { internallyConsistent: reasons.length === 0, reasons, doesNotEstablish: DOES_NOT_ESTABLISH };
+  return { internallyConsistent: reasons.length === 0, reasons, caveats, doesNotEstablish: DOES_NOT_ESTABLISH };
+}
+
+/**
+ * Selective disclosure, producer side: the proof that ONE artifact was in
+ * the sealed evidence set. Hand a verifier { evidenceRoot, artifact, proof }
+ * and nothing else — the remaining artifacts stay undisclosed.
+ */
+export function artifactInclusionProof(
+  bundle: SealedBundle,
+  artifactId: string,
+): { evidenceRoot: string; artifact: Artifact; proof: InclusionProof } | null {
+  if (bundle.evidenceRoot === undefined) return null; // legacy bundle: no root to prove against
+  const index = bundle.evidenceManifest.artifacts.findIndex((a) => a.id === artifactId);
+  if (index === -1) return null;
+  const artifact = bundle.evidenceManifest.artifacts[index]!;
+  return {
+    evidenceRoot: bundle.evidenceRoot,
+    artifact,
+    proof: inclusionProof(artifactLeaves(bundle.evidenceManifest), index),
+  };
+}
+
+/**
+ * Selective disclosure, verifier side: needs only the root, the disclosed
+ * artifact and its proof. Canonicalizes the artifact itself — it never
+ * trusts pre-serialized bytes handed to it.
+ */
+export function verifyArtifactInclusion(
+  evidenceRoot: string,
+  artifact: Artifact,
+  proof: InclusionProof,
+): InclusionVerification {
+  return verifyInclusion(evidenceRoot, Buffer.from(canonicalize(artifact), "utf8"), proof);
 }
 
 /**

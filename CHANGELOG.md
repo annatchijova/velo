@@ -28,6 +28,99 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **VIGIA port, phases 1-3** (`docs/PORT-FROM-VIGIA.md`). Deterministic
+  forensic capabilities ported from the VIGIA Python engine into the sealed
+  decision path, parity-tested against live runs of the Python originals:
+  - Eco overinterpretation filter (`src/engine/eco.ts`): the verbatim
+    50-term obvious-bait vocabulary, word-boundary search, and the integer
+    predicate `2*hits > n`. Wired as the set-level `scene_staging` detector
+    (fracture `POSSIBLE_SCENE_STAGING`, weight 1/4, deliberately
+    contributing no corroborating sources — prose vocabulary must not
+    inflate the Daubert independent-source count) and as scorer gate D1 (a
+    bait-laden devil's advocate is recorded in the sealed reasoning as a
+    signal, not a refutation).
+  - caie fracture predicates: new markers `vsc_deleted` /
+    `firewall_disabled` (fracture `DEFENSE_EVASION_ARTIFACT`, Rule 13) and
+    `process_injection` / `pid_hidden` (`PROCESS_INJECTION_ANTIFORENSIC`,
+    Rule 14); the R3-1 timestamp plausibility window (epoch/FILETIME
+    sentinels and post-2038 dates raise `TIMESTAMP_OUT_OF_RANGE`, fail
+    closed, and never enter the causality comparison); the Timestomp
+    sub-second signature (`TIMESTAMP_PRECISION_ANOMALY`, >= 5 trailing
+    zeros, Rule 9).
+  - vigia_scorer B-151a: a score built on fewer than two contributing
+    artifacts is capped at 65/100, with an auditable trace in the sealed
+    reasoning. Verdict-neutral (the Daubert gate already blocks
+    single-source MALICE).
+  - Abductive intent engine (`src/inference/abductive.ts`), inform-only:
+    Peirce hypothesis ranking by integer Ockham cost and coverage, 32
+    templates across 12 IR phases extracted mechanically from the live
+    Python, result hashes byte-identical to the Python engine. A
+    regression test enforces that no decision-path module imports it.
+  - Not ported, deliberately: canonicalize/custody (already at parity),
+    B-068 three-branch corroboration (needs spoofability/domain taxonomy
+    VELO lacks), hard-MALICE B-172 (would bypass the corroboration gate),
+    the UNKNOWN verdict band (fixed scale), Grice/stylometry/entropy/
+    likelihood-ratio floats (non-sealable, narrative-layer only),
+    trust-fusion decay (deferred until cases carry evidence age).
+- **Agent skills.** `.claude/skills/abductive-engineering` and
+  `.claude/skills/red-team-auditing` now ship with the repository, and
+  `AGENTS.md` documents how they bind for any agent working here.
+- **Pre-analysis signal producers** (`src/analysis/pre_analysis.ts`),
+  executing the portable subset of VIGIA port phase 4 under the
+  non-sealable adapter pattern: timing-regularity analysis (VIGIA jitter
+  thresholds, verified against the live Python — variance < 0.1s,
+  CV < 0.05, absence of human pauses, per-source grouping) SUGGESTS the
+  existing `temporal_entropy_null` marker with its evidence; the caller
+  decides whether to apply it, and an applied marker enters the engine
+  through the same sealed input path as an analyst-declared one. Grice
+  quantity maxims (saturation/scarcity, integer thresholds) emit narrative
+  signals. Floats live only in narrative fields; producers never mutate
+  artifacts; a regression test pins that engine/seal/inference never
+  import the analysis layer, and a behavioral test pins the doctrine:
+  the verdict changes only when the caller applies a suggestion. Skipped
+  with stated input-gap reasons: shannon entropy, Grice relation-maxim
+  evasion, likelihood ratio, stylometry. Exposed as `preAnalyzeEvidence`
+  and the `pre_analyze` MCP tool.
+- **LLM narrative layer with swappable backends** (`src/narrative/`). A
+  narrator puts an ALREADY-SEALED case into prose: `narrate()` only accepts
+  a `SealedBundle`, so the type system enforces that the model runs after
+  the seal; it receives a compressed read-only summary whose prompt states
+  every figure is fixed, and its prose is stored beside the seal with a
+  deterministic consistency flag (a narration contradicting the sealed
+  verdict is flagged for review, never corrected — the seal wins). Two
+  interchangeable backends: Ollama (local, `VELO_NARRATOR=ollama`) and the
+  Anthropic API via the official SDK (`VELO_NARRATOR=anthropic`, default
+  model claude-opus-4-8). The swap test pins the doctrine: changing
+  backends changes wording only, never a verdict or hash. No narrator
+  configured or a narrator failure degrades the feature honestly — the
+  sealed analysis is complete without prose. Exposed through
+  `narrateCase` in the shared operations backend and the `narrate_case`
+  MCP tool; a regression test asserts no engine/seal/inference module
+  imports the narrative layer.
+- **Per-artifact effective-trust audit** (`src/engine/trust_fusion.ts`),
+  completing item 5 of the VIGIA port with its recon premise corrected: the
+  live Python decays trust by temporal-violation severity, not by evidence
+  age, and only its lookup tables are sealable. VELO ports the
+  Fraction-exact tables from the canonical scorer (bucketed exp(-2x),
+  provenance-chain depth factor 0.95^k, empty chain 1/10) and reports
+  effectiveTrust per artifact in `AnalysisResult.artifactTrust` — exact
+  Fraction strings, beside the verdict, never an input to it. VIGIA's
+  trust-gated verdict caps were deliberately not adopted: one is
+  unreachable without an external prior-trust input, and the other
+  counterbalances a hard-MALICE gate VELO does not have.
+- **Evidence Merkle tree with selective disclosure** (`src/seal/merkle.ts`).
+  Sealed bundles now carry `evidenceRoot`, a domain-separated SHA-256 Merkle
+  root (RFC 6962-style prefixes; odd nodes promoted, never duplicated — the
+  CVE-2012-2459 guard) over the canonical bytes of each artifact.
+  `artifactInclusionProof` / `verifyArtifactInclusion` let a prover disclose
+  ONE artifact plus an O(log n) proof against the root without revealing the
+  rest of the evidence set. Verification accumulates the complete damage map
+  instead of stopping at the first error, and states what a passing proof
+  does and does not establish (patterns adopted from continuum's
+  `legacy/core/hash_chain.py` and its KL-008b/KL-009 postmortems). The root
+  is derived and recomputed by both verifiers — the library one and the
+  standalone judge's tool, pinned to each other by test — and bundles sealed
+  before the field existed verify with a caveat, not a failure.
 - **MVP Phase 4 — attestation linkage + verification panel (AC-J3.*, AC-J4.*).**
   - `POST /api/attestations` (frontend): the local CLI links an on-chain
     attestation to a persisted sealed case. Authenticated by the expert API

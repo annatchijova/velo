@@ -23,10 +23,11 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.23.0",
+    "@anthropic-ai/sdk": "^0.117.1",
     "@effectstream/midnight-contracts": "0.103.2",
-    "@midnightntwrk/wallet-sdk-abstractions": "2.1.0"
+    "@midnightntwrk/wallet-sdk-abstractions": "2.1.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
