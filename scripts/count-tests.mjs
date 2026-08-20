@@ -38,13 +38,34 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /* 1. Measure                                                          */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Strip SGR colour escapes.
+ *
+ * This is not cosmetic. Vitest colourises its summary when it detects CI, so
+ * `Tests  116 passed` arrives as `Tests \x1b[22m \x1b[1m\x1b[32m116 passed` and
+ * a pattern written against local (uncoloured) output does not match. That is
+ * exactly how the first CI run of this script failed. NO_COLOR is set on the
+ * child as well, but a runner is free to ignore it, so the parse side is
+ * hardened rather than trusting the request.
+ */
+export function stripAnsi(s) {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/\u001b\[[0-9;]*[A-Za-z]/g, "");
+}
+
+export const ROOT_PATTERN = /^# pass (\d+)$/m;
+export const FRONTEND_PATTERN = /Tests\s+(\d+) passed/;
+
 function run(cmd, args, cwd) {
+  // NO_COLOR / FORCE_COLOR=0 ask the runner for plain output; stripAnsi below
+  // handles the case where it declines.
+  const env = { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" };
   try {
-    return execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return stripAnsi(execFileSync(cmd, args, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }));
   } catch (err) {
     // A failing suite still prints its totals; a suite that could not start
     // does not. Distinguishing the two matters — see parse() below.
-    return `${err.stdout ?? ""}${err.stderr ?? ""}`;
+    return stripAnsi(`${err.stdout ?? ""}${err.stderr ?? ""}`);
   }
 }
 
@@ -53,8 +74,8 @@ function run(cmd, args, cwd) {
  * an unparseable run means we do not know the number, and "we do not know"
  * must not be reported as a number.
  */
-function parse(output, pattern, runner) {
-  const m = output.match(pattern);
+export function parse(output, pattern, runner) {
+  const m = stripAnsi(output).match(pattern);
   if (!m) {
     throw new Error(
       `could not read a test count from the ${runner} runner.\n` +
@@ -65,16 +86,12 @@ function parse(output, pattern, runner) {
   return Number.parseInt(m[1], 10);
 }
 
-function measure() {
+export function measure() {
   process.stderr.write("measuring root suite (npm test)...\n");
-  const root = parse(run("npm", ["test"], REPO), /^# pass (\d+)$/m, "root (node:test)");
+  const root = parse(run("npm", ["test"], REPO), ROOT_PATTERN, "root (node:test)");
 
   process.stderr.write("measuring frontend suite (vitest run)...\n");
-  const frontend = parse(
-    run("npx", ["vitest", "run"], resolve(REPO, "frontend")),
-    /Tests\s+(\d+) passed/,
-    "frontend (vitest)",
-  );
+  const frontend = parse(run("npx", ["vitest", "run"], resolve(REPO, "frontend")), FRONTEND_PATTERN, "frontend (vitest)");
 
   return { root, frontend, total: root + frontend };
 }
@@ -96,7 +113,7 @@ function measure() {
  * changed, not an assertion about the present; its "58 engine + 47 frontend"
  * line correctly records what that commit did at the time.
  */
-const CLAIMS = [
+export const CLAIMS = [
   // --- README.md -----------------------------------------------------
   { file: "README.md", key: "root", re: /npm test          # (\d+) engine tests/ },
   { file: "README.md", key: "frontend", re: /npx vitest run   # (\d+) more/ },
@@ -116,6 +133,10 @@ const CLAIMS = [
   { file: "README.es.md", key: "frontend", re: /del motor \(`npm test`\) \+ (\d+) del frontend/ },
 
   // --- docs/TECHNICAL_STATUS.md --------------------------------------
+  // The progression line ends at the current count, so it is a claim too.
+  { file: "docs/TECHNICAL_STATUS.md", key: "root", re: /→ 58\/58 → (\d+)\/\d+\*\*/ },
+  { file: "docs/TECHNICAL_STATUS.md", key: "root", re: /→ 58\/58 → \d+\/(\d+)\*\*/ },
+  { file: "docs/TECHNICAL_STATUS.md", key: "root", re: /own count gate to (\d+)\)/ },
   { file: "docs/TECHNICAL_STATUS.md", key: "total", re: /the runners report \*\*(\d+)\npassing tests/ },
   { file: "docs/TECHNICAL_STATUS.md", key: "root", re: /passing tests: (\d+) in the engine/ },
   { file: "docs/TECHNICAL_STATUS.md", key: "frontend", re: /in the engine \(`npm test`\) and (\d+) in the frontend/ },
@@ -129,6 +150,9 @@ const CLAIMS = [
   { file: "docs/TECHNICAL_STATUS.md", key: "frontend", re: /The runners report \*\*\d+\*\* and\s+\*\*(\d+)\*\*/ },
 
   // --- docs/ESTADO_TECNICO.md ----------------------------------------
+  { file: "docs/ESTADO_TECNICO.md", key: "root", re: /→ 58\/58 → (\d+)\/\d+\*\*/ },
+  { file: "docs/ESTADO_TECNICO.md", key: "root", re: /→ 58\/58 → \d+\/(\d+)\*\*/ },
+  { file: "docs/ESTADO_TECNICO.md", key: "root", re: /gate de conteo de este documento a (\d+)\)/ },
   { file: "docs/ESTADO_TECNICO.md", key: "total", re: /los runners informan \*\*(\d+)\ntests pasando/ },
   { file: "docs/ESTADO_TECNICO.md", key: "root", re: /tests pasando: (\d+) en el motor/ },
   { file: "docs/ESTADO_TECNICO.md", key: "frontend", re: /en el motor \(`npm test`\) y (\d+) en el frontend/ },
@@ -171,7 +195,7 @@ function lineOf(text, index) {
   return text.slice(0, index).split("\n").length;
 }
 
-function check(counts, { fix }) {
+export function check(counts, { fix }) {
   const cache = new Map();
   const read = (f) => {
     if (!cache.has(f)) cache.set(f, readFileSync(resolve(REPO, f), "utf8"));
@@ -186,7 +210,13 @@ function check(counts, { fix }) {
   for (const claim of CLAIMS) {
     const text = read(claim.file);
     const expected = counts[claim.key];
-    const m = claim.re.exec(text);
+    // The `d` flag gives exact capture-group offsets. Locating the number by
+    // searching the match text instead is wrong whenever the same digits
+    // appear twice in one match: `| Root suite | 115/115 green |` has two
+    // claims over it, and a search-based fixer rewrote the denominator for
+    // both, leaving `115/123`. Offsets are not ambiguous.
+    const re = claim.re.flags.includes("d") ? claim.re : new RegExp(claim.re.source, `${claim.re.flags}d`);
+    const m = re.exec(text);
 
     if (!m) {
       problems.push(
@@ -203,10 +233,9 @@ function check(counts, { fix }) {
 
     const line = lineOf(text, m.index);
     if (fix) {
-      // Replace only the captured digits, keeping the rest of the match.
-      const head = m[0].slice(0, m[0].lastIndexOf(m[1]));
-      const tail = m[0].slice(m[0].lastIndexOf(m[1]) + m[1].length);
-      cache.set(claim.file, text.replace(m[0], `${head}${expected}${tail}`));
+      // Replace exactly the captured digits, by offset. Nothing else moves.
+      const [start, end] = m.indices[1];
+      cache.set(claim.file, text.slice(0, start) + String(expected) + text.slice(end));
       dirty.add(claim.file);
       fixed.push(`${claim.file}:${line}  ${claim.key} ${found} -> ${expected}`);
     } else {
@@ -225,6 +254,13 @@ function check(counts, { fix }) {
 /* 4. Main                                                             */
 /* ------------------------------------------------------------------ */
 
+// Only when run directly. Importing this module (tests/count-tests.test.ts
+// exercises the parsers against captured runner output) must not spawn the
+// suites, which would recurse.
+const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) main();
+
+function main() {
 const argv = process.argv.slice(2);
 const has = (flag) => argv.includes(flag);
 
@@ -273,3 +309,4 @@ if (problems.length) {
 }
 
 console.log("\nOK — every documented test count matches the runners.");
+}

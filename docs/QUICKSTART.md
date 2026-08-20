@@ -63,8 +63,8 @@ of it — a green `npm test` says nothing about `frontend/`:
 cd frontend && npx vitest run
 ```
 
-Expected: `Tests  116 passed (116)`. **231 across both**, which is the number to
-quote: 115 engine + 116 frontend. Quoting only the root suite makes the frontend
+Expected: `Tests  116 passed (116)`. **241 across both**, which is the number to
+quote: 125 engine + 116 frontend. Quoting only the root suite makes the frontend
 look untested when it is not.
 
 ---
@@ -551,7 +551,7 @@ npm install && npm run build
 **1. The engine is deterministic and the corpus agrees with it.**
 
 ```bash
-npm test                      # -> # pass 115 / # fail 0
+npm test                      # -> # pass 125 / # fail 0
 node scripts/run-case.mjs     # -> all 14 reproduce their documented verdict
 ```
 
@@ -917,8 +917,8 @@ incluido — un `npm test` en verde no dice nada sobre `frontend/`:
 cd frontend && npx vitest run
 ```
 
-Esperado: `Tests  116 passed (116)`. **231 entre las dos**, que es el número a
-citar: 115 del motor + 116 del frontend. Citar solo la suite raíz hace parecer
+Esperado: `Tests  116 passed (116)`. **241 entre las dos**, que es el número a
+citar: 125 del motor + 116 del frontend. Citar solo la suite raíz hace parecer
 que el frontend no tiene tests, y sí los tiene.
 
 ## 2. Los 14 casos

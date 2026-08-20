@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   every place a document states a count. A mismatch fails; so does a claim
   site whose sentence was reworded, because a check that silently stops
   checking is worse than no check. Wired into CI after both suites run.
+- **`tests/count-tests.test.ts` — the gate is itself tested.** Its first CI
+  run failed on its own blind spot: vitest colourises its summary under CI, so
+  `Tests  116 passed` arrived wrapped in SGR escapes and the pattern missed.
+  It refused to report a number it could not read rather than guessing — the
+  right failure — but a gate nobody tests is a gate that finds its blind spots
+  in production. The suite now parses the actual colourised bytes from the
+  failing CI log, asserts every registry pattern still matches its document,
+  and covers the fixer's capture-offset arithmetic.
 
 ### Fixed
 
