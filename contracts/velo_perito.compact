@@ -1,10 +1,11 @@
-// VELO — Layer 6: the perito (forensic examiner) anonymous credential.
+// VELO — Layer 6 (perito anonymous credential) + Layer 7 (blind second opinion).
 //
 // COMPILE STATUS (honest, mirroring velo.compact): COMPILED with compact
-// 0.5.1 on 2026-08-28 — both circuits (registerCredential, proveCredential),
-// prover and verifier keys and zkir generated under contracts/managed/velo_perito,
-// exit 0, on a CPU with AVX2 (the zkir backend needs it; without AVX2 it dies
-// with SIGILL after type-checking, a hardware limit, not a contract bug).
+// 0.5.1 on 2026-08-28 — four circuits (registerCredential, proveCredential,
+// commitOpinion, revealOpinion), prover and verifier keys and zkir generated
+// under contracts/managed/velo_perito, exit 0, on a CPU with AVX2 (the zkir
+// backend needs it; without AVX2 it dies with SIGILL after type-checking, a
+// hardware limit, not a contract bug).
 // Reproduce with:
 //   compact compile contracts/velo_perito.compact contracts/managed/velo_perito
 //
@@ -56,12 +57,38 @@
 // `persistentHash` encoding, which is not exported (the same caveat
 // witnesses.ts records for the attestation commitment).
 //
-// OUT OF SCOPE this iteration: Layer 7 (blind second opinion — two examiners
-// attesting the same case_commitment independently). Not modeled here.
+// LAYER 7 — BLIND SECOND OPINION (commitOpinion / revealOpinion). Two
+// accredited examiners independently attest the same case_commitment; the
+// contract records only AGREEMENT or CONTRADICTION of the verdicts, never
+// identities or analyses. Blindness is enforced by commit-reveal: each commits
+// a HIDING verdict commitment, and nothing is revealable until BOTH have
+// committed (commitCount == 2), so the second examiner cannot copy the first.
+// A per-(examiner, case) nullifier — a DIFFERENT domain separator from the
+// credential leaf and the verdict commitment — stops one examiner opining
+// twice, so two opinions are provably two distinct credentials. commitOpinion
+// reuses the exact Layer 6 credential proof (assertValidCredential).
 
 pragma language_version >= 0.22;
 
 import CompactStandardLibrary;
+
+// Verdict space, matching src/engine/scorer.ts and velo.compact. Local to this
+// contract (a separate compilation unit from velo.compact).
+export enum Verdict { NOISE, SUSPICION, MALICE, ABSTAIN }
+
+// Per-case blind-second-opinion state (Layer 7). Exactly two opinions per case.
+// Commitments are hiding until revealed; revealed<N> tracks which slot has been
+// opened so a slot cannot be revealed twice.
+struct CaseOpinions {
+  commitCount: Uint<0..3>,
+  commitment0: Bytes<32>,
+  commitment1: Bytes<32>,
+  revealCount: Uint<0..3>,
+  verdict0: Verdict,
+  verdict1: Verdict,
+  revealed0: Boolean,
+  revealed1: Boolean
+}
 
 // The tree of accredited examiners. Depth 16 is a ceiling with headroom for
 // the synthetic corpus, not a claimed real maximum. Each leaf is a
@@ -74,6 +101,12 @@ export ledger accreditedPeritos: MerkleTree<16, Bytes<32>>;
 // Also keeps the circuit above the minimum size (k >= 6) noted in the skill.
 export ledger credentialAttestations: Counter;
 
+// Layer 7 — blind second opinion. Opinions per case, and the nullifiers that
+// stop one examiner opining twice on the same case.
+export ledger caseOpinions: Map<Bytes<32>, CaseOpinions>;
+export ledger usedOpinionNullifiers: Set<Bytes<32>>;
+export ledger secondOpinionCommits: Counter;
+
 // Private inputs — bodies live in src/witness/perito_witnesses.ts, never
 // on-chain. The leaf secret key never leaves the examiner's machine; the
 // circuit proves statements ABOUT it.
@@ -81,6 +114,12 @@ witness peritoLeafKey(): Bytes<32>;
 witness findCredentialPath(leaf: Bytes<32>): MerkleTreePath<16, Bytes<32>>;
 witness credentialValidFrom(): Uint<0..4294967296>;
 witness credentialValidUntil(): Uint<0..4294967296>;
+
+// Layer 7 commit-phase private inputs. The verdict is SECRET at commit time —
+// that is what makes the commitment hiding — and the nonce is its per-opinion
+// blinding factor (CSPRNG, persisted so its owner can reveal later).
+witness opinionVerdict(): Verdict;
+witness opinionNonce(): Bytes<32>;
 
 // The leaf key derivation. Domain-separated so a perito credential leaf can
 // never collide with a hash computed for another purpose. Recomputed inside
@@ -118,7 +157,10 @@ export circuit registerCredential(leaf: Bytes<32>): [] {
  * `attestationDate` is public (the date being attested is not secret); the
  * examiner's identity and window bounds are private witnesses.
  */
-export circuit proveCredential(attestationDate: Uint<0..4294967296>): [] {
+// The credential proof, factored out so Layer 7's commitOpinion reuses the
+// exact same membership + validity checks Layer 6 proves. Internal (no export):
+// callable only from other circuits in this contract.
+circuit assertValidCredential(attestationDate: Uint<0..4294967296>): [] {
   const validFrom = credentialValidFrom();
   const validUntil = credentialValidUntil();
 
@@ -142,6 +184,110 @@ export circuit proveCredential(attestationDate: Uint<0..4294967296>): [] {
   // window contains 2026-04-10.
   assert(validFrom <= attestationDate, "credential was not yet valid at the attestation date");
   assert(attestationDate <= validUntil, "credential had expired at the attestation date");
+}
 
+/**
+ * Prove: "some accredited, currently-valid examiner attests as of
+ * attestationDate" — without revealing which one.
+ */
+export circuit proveCredential(attestationDate: Uint<0..4294967296>): [] {
+  assertValidCredential(attestationDate);
   credentialAttestations.increment(1);
+}
+
+// ===========================================================================
+// Layer 7 — blind second opinion (commit-reveal + nullifier).
+// ===========================================================================
+
+// Deterministic nullifier for (examiner, case). A DIFFERENT domain separator
+// from the credential leaf and the verdict commitment, so these hashes can
+// never collide across purposes (compact skill: commitment vs nullifier).
+pure circuit opinionNullifier(leafKey: Bytes<32>, caseCommitment: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "velo:perito:opinion-nullifier:v1"),
+    leafKey,
+    caseCommitment
+  ]);
+}
+
+// Hiding + binding commitment to a verdict. The 32-byte nonce is the blinding
+// factor: a verdict has only four values, so without the nonce the commitment
+// would be brute-forcible. Domain-separated distinctly from the nullifier.
+pure circuit verdictCommitment(verdict: Verdict, nonce: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "velo:perito:opinion-commit:v1"),
+    verdict as Field as Bytes<32>,
+    nonce
+  ]);
+}
+
+/**
+ * COMMIT phase. An accredited, currently-valid examiner publishes a HIDING
+ * commitment to their verdict on `caseCommitment`, without revealing the
+ * verdict or which examiner they are. The nullifier stops the same examiner
+ * committing twice on this case, so the two opinions are provably two
+ * distinct examiners.
+ */
+export circuit commitOpinion(caseCommitment: Bytes<32>, attestationDate: Uint<0..4294967296>): [] {
+  // (1) Same credential proof as Layer 6 — membership + validity.
+  assertValidCredential(attestationDate);
+
+  // (2) Distinct-examiner nullifier.
+  const nul = opinionNullifier(peritoLeafKey(), caseCommitment);
+  assert(!usedOpinionNullifiers.member(disclose(nul)), "this examiner has already opined on this case");
+  usedOpinionNullifiers.insert(disclose(nul));
+
+  // (3) Record the hiding commitment in the next free slot. The verdict is a
+  // secret witness at commit time; only its commitment becomes public.
+  const commitment = verdictCommitment(opinionVerdict(), opinionNonce());
+  const cc = disclose(caseCommitment);
+  const prior = caseOpinions.member(cc) ? caseOpinions.lookup(cc) : default<CaseOpinions>;
+  assert(prior.commitCount < 2, "this case already has two opinions — a blind second opinion is exactly a pair");
+  const first = prior.commitCount == 0;
+  caseOpinions.insert(cc, CaseOpinions {
+    commitCount: (prior.commitCount + 1) as Uint<0..3>,
+    commitment0: first ? disclose(commitment) : prior.commitment0,
+    commitment1: first ? prior.commitment1 : disclose(commitment),
+    revealCount: prior.revealCount,
+    verdict0: prior.verdict0,
+    verdict1: prior.verdict1,
+    revealed0: prior.revealed0,
+    revealed1: prior.revealed1
+  });
+  secondOpinionCommits.increment(1);
+}
+
+/**
+ * REVEAL phase. Allowed ONLY once both opinions are committed — this is where
+ * blindness is enforced: the second examiner could not have seen the first's
+ * verdict, because nothing is revealable until both commitments are in. Opens
+ * the committed, not-yet-revealed slot whose commitment matches (verdict,
+ * nonce). `verdict` and `nonce` are public here (the reveal).
+ */
+export circuit revealOpinion(caseCommitment: Bytes<32>, verdict: Verdict, nonce: Bytes<32>): [] {
+  // verdict and nonce are public in the reveal (this IS the opening), so they
+  // are disclosed at the source; everything derived from them is then clean.
+  const cc = disclose(caseCommitment);
+  const revealedVerdict = disclose(verdict);
+  const revealedNonce = disclose(nonce);
+
+  assert(caseOpinions.member(cc), "no opinions committed for this case");
+  const state = caseOpinions.lookup(cc);
+  assert(state.commitCount == 2, "cannot reveal until both opinions are committed — that is what keeps the second opinion blind");
+
+  const commitment = verdictCommitment(revealedVerdict, revealedNonce);
+  const matches0 = (state.commitment0 == commitment) && !state.revealed0;
+  const matches1 = (state.commitment1 == commitment) && !state.revealed1;
+  assert(matches0 || matches1, "no committed, unrevealed opinion opens to this (verdict, nonce)");
+
+  caseOpinions.insert(cc, CaseOpinions {
+    commitCount: state.commitCount,
+    commitment0: state.commitment0,
+    commitment1: state.commitment1,
+    revealCount: (state.revealCount + 1) as Uint<0..3>,
+    verdict0: matches0 ? revealedVerdict : state.verdict0,
+    verdict1: matches0 ? state.verdict1 : revealedVerdict,
+    revealed0: matches0 ? true : state.revealed0,
+    revealed1: matches0 ? state.revealed1 : true
+  });
 }

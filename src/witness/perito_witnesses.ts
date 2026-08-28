@@ -36,8 +36,20 @@ import { randomBytes } from "node:crypto";
 import type { WitnessContext } from "@midnight-ntwrk/compact-runtime";
 import { bytes32ToHex, hexToBytes32, WitnessError, type Bytes32 } from "./witnesses.js";
 import type { ValiditySpan } from "../perito/credential.js";
+import type { Verdict } from "../engine/scorer.js";
 
 const LEAF_SECRET_BYTES = 32;
+const OPINION_NONCE_BYTES = 32;
+
+/**
+ * Numeric codes for the on-chain `Verdict` enum, in its declared order
+ * (contracts/velo_perito.compact: NOISE, SUSPICION, MALICE, ABSTAIN). Compact
+ * enums cross into TypeScript as small integers; the generated binding types
+ * `opinionVerdict` as returning the enum. Kept as a local map rather than
+ * importing the generated enum into source (the same no-build-output-in-src
+ * rule the ledger typing follows).
+ */
+const VERDICT_CODE: Record<Verdict, number> = { NOISE: 0, SUSPICION: 1, MALICE: 2, ABSTAIN: 3 };
 
 /** Exclusive upper bound of the circuit's `Uint<0..4294967296>` epoch type. */
 const MAX_EPOCH_EXCLUSIVE = 4294967296; // 2^32 — ~year 2106, a ceiling with headroom.
@@ -48,10 +60,12 @@ const MAX_EPOCH_EXCLUSIVE = 4294967296; // 2^32 — ~year 2106, a ceiling with h
  */
 export interface PeritoPrivateState {
   leafSecretKeys: Record<string, string>;
+  /** Layer 7 commit nonces, keyed by "<peritoId>:<caseCommitment>". */
+  opinionNonces: Record<string, string>;
 }
 
 export function emptyPeritoPrivateState(): PeritoPrivateState {
-  return { leafSecretKeys: {} };
+  return { leafSecretKeys: {}, opinionNonces: {} };
 }
 
 /**
@@ -127,4 +141,52 @@ export interface PeritoWitnesses {
   credentialValidFrom(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, bigint];
   credentialValidUntil(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, bigint];
   findCredentialPath(context: WitnessContext<any, PeritoPrivateState>, leaf: Uint8Array): [PeritoPrivateState, unknown];
+}
+
+// ===========================================================================
+// Layer 7 — commit-phase witnesses (commitOpinion).
+// ===========================================================================
+
+/**
+ * Get the per-(examiner, case) opinion nonce, generating and recording one on
+ * first use. Same "generate once, persist, never regenerate" doctrine as the
+ * leaf key and the attestation salt — if the nonce is lost, the committer can
+ * never reveal, because they cannot reproduce the commitment.
+ */
+export function getOrCreateOpinionNonce(state: PeritoPrivateState, opinionKey: string): { state: PeritoPrivateState; nonce: Bytes32 } {
+  const existing = state.opinionNonces[opinionKey];
+  if (existing) {
+    return { state, nonce: hexToBytes32(existing, `opinion nonce for ${opinionKey}`) };
+  }
+  const nonce = new Uint8Array(randomBytes(OPINION_NONCE_BYTES));
+  return {
+    state: { ...state, opinionNonces: { ...state.opinionNonces, [opinionKey]: bytes32ToHex(nonce) } },
+    nonce,
+  };
+}
+
+/**
+ * The full witness set commitOpinion needs: the Layer 6 credential witnesses
+ * plus the secret verdict and its blinding nonce. The verdict is private at
+ * commit time (that is what makes the commitment hiding); it crosses as the
+ * on-chain enum's integer code. Reveal needs no witnesses — verdict and nonce
+ * are public arguments there.
+ */
+export function makeOpinionWitnesses(peritoId: string, span: ValiditySpan, caseCommitment: string, verdict: Verdict): OpinionWitnesses {
+  const credential = makePeritoWitnesses(peritoId, span);
+  const opinionKey = `${peritoId}:${caseCommitment}`;
+  const verdictCode = VERDICT_CODE[verdict];
+  return {
+    ...credential,
+    opinionVerdict: ({ privateState }: WitnessContext<any, PeritoPrivateState>) => [privateState, verdictCode],
+    opinionNonce: ({ privateState }: WitnessContext<any, PeritoPrivateState>) => {
+      const { state, nonce } = getOrCreateOpinionNonce(privateState, opinionKey);
+      return [state, nonce];
+    },
+  };
+}
+
+export interface OpinionWitnesses extends PeritoWitnesses {
+  opinionVerdict(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, number];
+  opinionNonce(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, Uint8Array];
 }

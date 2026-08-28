@@ -40,6 +40,71 @@
         "types": [
         ]
       }
+    },
+    {
+      "name": "commitOpinion",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "caseCommitment",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "attestationDate",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "revealOpinion",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "caseCommitment",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "verdict",
+          "type": {
+            "type-name": "Enum",
+            "name": "Verdict",
+            "elements": [
+              "NOISE",
+              "SUSPICION",
+              "MALICE",
+              "ABSTAIN"
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
     }
   ],
   "witnesses": [
@@ -128,6 +193,30 @@
         "type-name": "Uint",
         "maxval": 4294967295
       }
+    },
+    {
+      "name": "opinionVerdict",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Enum",
+        "name": "Verdict",
+        "elements": [
+          "NOISE",
+          "SUSPICION",
+          "MALICE",
+          "ABSTAIN"
+        ]
+      }
+    },
+    {
+      "name": "opinionNonce",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
     }
   ],
   "contracts": [
@@ -147,6 +236,104 @@
     {
       "name": "credentialAttestations",
       "index": 1,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "caseOpinions",
+      "index": 2,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "CaseOpinions",
+        "elements": [
+          {
+            "name": "commitCount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 2
+            }
+          },
+          {
+            "name": "commitment0",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "commitment1",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "revealCount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 2
+            }
+          },
+          {
+            "name": "verdict0",
+            "type": {
+              "type-name": "Enum",
+              "name": "Verdict",
+              "elements": [
+                "NOISE",
+                "SUSPICION",
+                "MALICE",
+                "ABSTAIN"
+              ]
+            }
+          },
+          {
+            "name": "verdict1",
+            "type": {
+              "type-name": "Enum",
+              "name": "Verdict",
+              "elements": [
+                "NOISE",
+                "SUSPICION",
+                "MALICE",
+                "ABSTAIN"
+              ]
+            }
+          },
+          {
+            "name": "revealed0",
+            "type": {
+              "type-name": "Boolean"
+            }
+          },
+          {
+            "name": "revealed1",
+            "type": {
+              "type-name": "Boolean"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "usedOpinionNullifiers",
+      "index": 3,
+      "exported": true,
+      "storage": "Set",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "secondOpinionCommits",
+      "index": 4,
       "exported": true,
       "storage": "Counter"
     }
