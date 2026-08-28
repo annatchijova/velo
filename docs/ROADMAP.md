@@ -32,11 +32,14 @@ All four phases are merged. **Next up, in order:**
    the strongest product story in the port and are invisible today.
 
 Landed since: **Layer 6 — the perito anonymous credential** (membership +
-validity, one leaf per validity span). The off-chain deterministic engine
-(`src/perito/`), the encrypted-at-rest vault, and the Compact circuit
-(`contracts/velo_perito.compact`, compiled with keys generated) are done and
-tested; the transaction write path is not wired to a wallet yet, and Layer 7
-(blind second opinion) is not started. See `docs/layer6-perito-credential.md`.
+validity, one leaf per validity span) and **Layer 7 — the blind second opinion**
+(commit-reveal for real blindness + a distinct-examiner nullifier; two peritos
+converge on a verdict for the same case_commitment without revealing identity or
+analysis). The off-chain deterministic engines (`src/perito/`), the
+encrypted-at-rest vault, and the Compact circuit (`contracts/velo_perito.compact`,
+four circuits compiled with keys generated) are done and tested; the transaction
+write path is not wired to a wallet yet. See `docs/layer6-perito-credential.md`
+and `docs/layer7-blind-second-opinion.md`.
 
 Deferred hardening from red team rounds: F15 (MCP prompt injection, an open
 architectural gap) and F21 (seed redaction matches a single token, so a
@@ -103,12 +106,14 @@ Las cuatro fases están mergeadas. **Lo que sigue, en orden:**
    inclusión son la mejor historia de producto del port y hoy son invisibles.
 
 Ya aterrizó: **Capa 6 — la credencial anónima del perito** (membresía +
-validez, una hoja por período de validez). El motor determinista off-chain
-(`src/perito/`), el vault cifrado al reposo, y el circuito Compact
-(`contracts/velo_perito.compact`, compilado con claves generadas) están hechos
-y testeados; el camino de escritura de la transacción aún no está cableado a una
-wallet, y la Capa 7 (segunda opinión ciega) no está empezada. Ver
-`docs/layer6-perito-credential.md`.
+validez, una hoja por período de validez) y **Capa 7 — la segunda opinión ciega**
+(commit-reveal para ceguera real + nullifier de perito distinto; dos peritos
+convergen en un veredicto sobre el mismo case_commitment sin revelar identidad ni
+análisis). Los motores deterministas off-chain (`src/perito/`), el vault cifrado
+al reposo, y el circuito Compact (`contracts/velo_perito.compact`, cuatro
+circuitos compilados con claves generadas) están hechos y testeados; el camino de
+escritura de la transacción aún no está cableado a una wallet. Ver
+`docs/layer6-perito-credential.md` y `docs/layer7-blind-second-opinion.md`.
 
 Endurecimiento diferido de las rondas de red team: F15 (prompt injection en
 MCP, hueco arquitectónico abierto) y F21 (la redacción matchea un solo token,

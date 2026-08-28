@@ -229,8 +229,8 @@ finding. It is an inadmissible one.
 
 ```bash
 npm install
-npm test          # 161 engine tests, including adversarial ones
-cd frontend && npx vitest run   # 116 more — 277 across both suites
+npm test          # 170 engine tests, including adversarial ones
+cd frontend && npx vitest run   # 116 more — 286 across both suites
 npm run simulate  # full end-to-end story, both refusals
 ```
 
@@ -423,8 +423,8 @@ the failure mode this whole system exists to prevent.
 
 | Layer | State |
 |---|---|
-| Deterministic engine + Daubert gate | **Working**, 161 tests |
-| Test coverage across both suites | **277 green** — 161 engine (`npm test`) + 116 frontend (`vitest run` in `frontend/`). Counted by the runners, not estimated — `node scripts/count-tests.mjs` re-measures and fails if this line drifts |
+| Deterministic engine + Daubert gate | **Working**, 170 tests |
+| Test coverage across both suites | **286 green** — 170 engine (`npm test`) + 116 frontend (`vitest run` in `frontend/`). Counted by the runners, not estimated — `node scripts/count-tests.mjs` re-measures and fails if this line drifts |
 | Local sealing, custody chain, canonical hashing | **Working** |
 | Standalone offline verifier | **Working** |
 | MCP server (local tools) | **Working**, tested over real JSON-RPC |

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **Layer 7 — the blind second opinion.** Two accredited peritos independently
+  attest the same `case_commitment`; the system records only whether they AGREE
+  or CONTRADICT — never either identity or analysis. Blindness is cryptographic,
+  not policy: commit-reveal, where each examiner publishes a hiding verdict
+  commitment and nothing is revealable until BOTH have committed, so the second
+  cannot copy the first. A per-(examiner, case) nullifier (a distinct domain
+  separator from the credential leaf) stops one examiner opining twice, so two
+  opinions are provably two distinct credentials. `commitOpinion` reuses the
+  exact Layer 6 credential proof. The corpus fixture VELO-PERITO-003 +
+  VELO-PERITO-004 on VELO-005 both reach MALICE → AGREE. Off-chain engine
+  `src/perito/second_opinion.ts`; `contracts/velo_perito.compact` now compiles
+  four circuits (added `commitOpinion` / `revealOpinion`, keys generated); MCP
+  `second_opinion_demo` (live) plus PENDING `commit_opinion` / `reveal_opinion`.
+  Write path not wired. See `docs/layer7-blind-second-opinion.md`.
 - **Layer 6 — the perito (examiner) anonymous credential.** A ZK proof that
   *some* accredited examiner held a currently-valid license at the exact date
   of an attestation, without revealing which examiner. Two deliberately
