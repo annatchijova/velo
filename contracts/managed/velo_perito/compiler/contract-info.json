@@ -8,13 +8,6 @@
       "pure": false,
       "proof": true,
       "arguments": [
-        {
-          "name": "leaf",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
       ],
       "result-type": {
         "type-name": "Tuple",

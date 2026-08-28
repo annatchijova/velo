@@ -194,38 +194,25 @@ export class Contract {
     this.witnesses = witnesses_0;
     this.circuits = {
       registerCredential: (...args_1) => {
-        if (args_1.length !== 2) {
-          throw new __compactRuntime.CompactError(`registerCredential: expected 2 arguments (as invoked from Typescript), received ${args_1.length}`);
+        if (args_1.length !== 1) {
+          throw new __compactRuntime.CompactError(`registerCredential: expected 1 argument (as invoked from Typescript), received ${args_1.length}`);
         }
         const contextOrig_0 = args_1[0];
-        const leaf_0 = args_1[1];
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('registerCredential',
                                      'argument 1 (as invoked from Typescript)',
-                                     'velo_perito.compact line 149 char 1',
+                                     'velo_perito.compact line 158 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
-        if (!(leaf_0.buffer instanceof ArrayBuffer && leaf_0.BYTES_PER_ELEMENT === 1 && leaf_0.length === 32)) {
-          __compactRuntime.typeError('registerCredential',
-                                     'argument 1 (argument 2 as invoked from Typescript)',
-                                     'velo_perito.compact line 149 char 1',
-                                     'Bytes<32>',
-                                     leaf_0)
-        }
         const context = { ...contextOrig_0, gasCost: __compactRuntime.emptyRunningCost() };
         const partialProofData = {
-          input: {
-            value: _descriptor_0.toValue(leaf_0),
-            alignment: _descriptor_0.alignment()
-          },
+          input: { value: [], alignment: [] },
           output: undefined,
           publicTranscript: [],
           privateTranscriptOutputs: []
         };
-        const result_0 = this._registerCredential_0(context,
-                                                    partialProofData,
-                                                    leaf_0);
+        const result_0 = this._registerCredential_0(context, partialProofData);
         partialProofData.output = { value: [], alignment: [] };
         return { result: result_0, context: context, proofData: partialProofData, gasCost: context.gasCost };
       },
@@ -238,14 +225,14 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('proveCredential',
                                      'argument 1 (as invoked from Typescript)',
-                                     'velo_perito.compact line 193 char 1',
+                                     'velo_perito.compact line 203 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(attestationDate_0) === 'bigint' && attestationDate_0 >= 0n && attestationDate_0 <= 4294967295n)) {
           __compactRuntime.typeError('proveCredential',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'velo_perito.compact line 193 char 1',
+                                     'velo_perito.compact line 203 char 1',
                                      'Uint<0..4294967296>',
                                      attestationDate_0)
         }
@@ -275,21 +262,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('commitOpinion',
                                      'argument 1 (as invoked from Typescript)',
-                                     'velo_perito.compact line 231 char 1',
+                                     'velo_perito.compact line 241 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(caseCommitment_0.buffer instanceof ArrayBuffer && caseCommitment_0.BYTES_PER_ELEMENT === 1 && caseCommitment_0.length === 32)) {
           __compactRuntime.typeError('commitOpinion',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'velo_perito.compact line 231 char 1',
+                                     'velo_perito.compact line 241 char 1',
                                      'Bytes<32>',
                                      caseCommitment_0)
         }
         if (!(typeof(attestationDate_0) === 'bigint' && attestationDate_0 >= 0n && attestationDate_0 <= 4294967295n)) {
           __compactRuntime.typeError('commitOpinion',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'velo_perito.compact line 231 char 1',
+                                     'velo_perito.compact line 241 char 1',
                                      'Uint<0..4294967296>',
                                      attestationDate_0)
         }
@@ -321,28 +308,28 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('revealOpinion',
                                      'argument 1 (as invoked from Typescript)',
-                                     'velo_perito.compact line 267 char 1',
+                                     'velo_perito.compact line 277 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(caseCommitment_0.buffer instanceof ArrayBuffer && caseCommitment_0.BYTES_PER_ELEMENT === 1 && caseCommitment_0.length === 32)) {
           __compactRuntime.typeError('revealOpinion',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'velo_perito.compact line 267 char 1',
+                                     'velo_perito.compact line 277 char 1',
                                      'Bytes<32>',
                                      caseCommitment_0)
         }
         if (!(typeof(verdict_0) === 'number' && verdict_0 >= 0 && verdict_0 <= 3)) {
           __compactRuntime.typeError('revealOpinion',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'velo_perito.compact line 267 char 1',
+                                     'velo_perito.compact line 277 char 1',
                                      'Enum<Verdict, NOISE, SUSPICION, MALICE, ABSTAIN>',
                                      verdict_0)
         }
         if (!(nonce_0.buffer instanceof ArrayBuffer && nonce_0.BYTES_PER_ELEMENT === 1 && nonce_0.length === 32)) {
           __compactRuntime.typeError('revealOpinion',
                                      'argument 3 (argument 4 as invoked from Typescript)',
-                                     'velo_perito.compact line 267 char 1',
+                                     'velo_perito.compact line 277 char 1',
                                      'Bytes<32>',
                                      nonce_0)
         }
@@ -627,7 +614,13 @@ export class Contract {
                                                                         validUntil_0,
                                                                         'velo_perito.compact line 134 char 5')]);
   }
-  _registerCredential_0(context, partialProofData, leaf_0) {
+  _registerCredential_0(context, partialProofData) {
+    const leaf_0 = this._credentialLeaf_0(this._peritoLeafKey_0(context,
+                                                                partialProofData),
+                                          this._credentialValidFrom_0(context,
+                                                                      partialProofData),
+                                          this._credentialValidUntil_0(context,
+                                                                       partialProofData));
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
                                       [
@@ -737,7 +730,7 @@ export class Contract {
     return this._persistentHash_2([new Uint8Array([118, 101, 108, 111, 58, 112, 101, 114, 105, 116, 111, 58, 111, 112, 105, 110, 105, 111, 110, 45, 99, 111, 109, 109, 105, 116, 58, 118, 49, 0, 0, 0]),
                                    __compactRuntime.convertFieldToBytes(32,
                                                                         BigInt(verdict_0),
-                                                                        'velo_perito.compact line 219 char 5'),
+                                                                        'velo_perito.compact line 229 char 5'),
                                    nonce_0]);
   }
   _commitOpinion_0(context,
@@ -831,7 +824,7 @@ export class Contract {
     const tmp_0 = { commitCount:
                       ((t1) => {
                         if (t1 > 2n) {
-                          throw new __compactRuntime.CompactError('velo_perito.compact line 248 char 18: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 2');
+                          throw new __compactRuntime.CompactError('velo_perito.compact line 258 char 18: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 2');
                         }
                         return t1;
                       })(prior_0.commitCount + 1n),
@@ -939,7 +932,7 @@ export class Contract {
                     revealCount:
                       ((t1) => {
                         if (t1 > 2n) {
-                          throw new __compactRuntime.CompactError('velo_perito.compact line 287 char 18: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 2');
+                          throw new __compactRuntime.CompactError('velo_perito.compact line 297 char 18: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 2');
                         }
                         return t1;
                       })(state_0.revealCount + 1n),

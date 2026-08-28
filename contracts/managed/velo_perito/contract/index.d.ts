@@ -18,8 +18,7 @@ export type Witnesses<PS> = {
 }
 
 export type ImpureCircuits<PS> = {
-  registerCredential(context: __compactRuntime.CircuitContext<PS>,
-                     leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  registerCredential(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, []>;
   proveCredential(context: __compactRuntime.CircuitContext<PS>,
                   attestationDate_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   commitOpinion(context: __compactRuntime.CircuitContext<PS>,
@@ -32,8 +31,7 @@ export type ImpureCircuits<PS> = {
 }
 
 export type ProvableCircuits<PS> = {
-  registerCredential(context: __compactRuntime.CircuitContext<PS>,
-                     leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  registerCredential(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, []>;
   proveCredential(context: __compactRuntime.CircuitContext<PS>,
                   attestationDate_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   commitOpinion(context: __compactRuntime.CircuitContext<PS>,
@@ -49,8 +47,7 @@ export type PureCircuits = {
 }
 
 export type Circuits<PS> = {
-  registerCredential(context: __compactRuntime.CircuitContext<PS>,
-                     leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  registerCredential(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, []>;
   proveCredential(context: __compactRuntime.CircuitContext<PS>,
                   attestationDate_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   commitOpinion(context: __compactRuntime.CircuitContext<PS>,

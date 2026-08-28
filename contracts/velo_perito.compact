@@ -136,17 +136,27 @@ pure circuit credentialLeaf(leafKey: Bytes<32>, validFrom: Uint<0..4294967296>, 
 }
 
 /**
- * Register an accredited examiner's credential leaf.
+ * Register an accredited examiner's credential leaf. One call per validity span.
  *
- * The leaf is computed by the examiner off-chain (from their private
- * leafSecretKey and window) and handed to the accreditation authority, which
- * inserts it. The authority learns only the leaf commitment, never the
- * secret key. One call per validity span.
+ * The leaf is COMPUTED IN-CIRCUIT from the same witnesses proveCredential uses
+ * (peritoLeafKey, credentialValidFrom, credentialValidUntil), NOT taken as an
+ * argument. This is the fix that makes register/prove consistent: the on-chain
+ * leaf is a persistentHash whose encoding is not reproducible off-chain (the
+ * generated PureCircuits is empty, and witnesses.ts records the same caveat for
+ * the attestation commitment), so a caller could never compute the correct leaf
+ * to pass in. Computing it here guarantees the registered leaf equals the leaf
+ * proveCredential later recomputes.
+ *
+ * Self-registration model: whoever holds the leafSecretKey registers. The
+ * registration transaction is public and linkable to the submitting wallet, but
+ * it does not reveal the secret key, and anonymity is preserved at PROOF time —
+ * proveCredential never reveals WHICH leaf validated.
  *
  * Insertion requires disclose() (the taint checker), but a MerkleTree insert
  * does not publish the leaf's preimage — only the root advances.
  */
-export circuit registerCredential(leaf: Bytes<32>): [] {
+export circuit registerCredential(): [] {
+  const leaf = credentialLeaf(peritoLeafKey(), credentialValidFrom(), credentialValidUntil());
   accreditedPeritos.insert(disclose(leaf));
 }
 
