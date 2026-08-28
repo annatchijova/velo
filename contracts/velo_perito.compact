@@ -1,0 +1,147 @@
+// VELO — Layer 6: the perito (forensic examiner) anonymous credential.
+//
+// COMPILE STATUS (honest, mirroring velo.compact): COMPILED with compact
+// 0.5.1 on 2026-08-28 — both circuits (registerCredential, proveCredential),
+// prover and verifier keys and zkir generated under contracts/managed/velo_perito,
+// exit 0, on a CPU with AVX2 (the zkir backend needs it; without AVX2 it dies
+// with SIGILL after type-checking, a hardware limit, not a contract bug).
+// Reproduce with:
+//   compact compile contracts/velo_perito.compact contracts/managed/velo_perito
+//
+// RESOLVED AT COMPILE TIME (2026-08-28, compact 0.5.1): the membership check
+// required the witness Merkle path to be `disclose()`d where it feeds
+// merkleTreePathRoot (line in proveCredential) — the compiler traces that
+// `checkRoot` over a witness path leaks a boolean about the witness and
+// forces the disclosure to be declared. `disclose()` is a compile-time
+// annotation, not publication: the path stays a witness and is never written
+// to a ledger cell, so anonymity holds — only the fact that the assert passed
+// is public. `Uint<0..4294967296>` comparisons, `persistentHash<Vector<4,
+// Bytes<32>>>`, and the `x as Field as Bytes<32>` cast on a bounded int all
+// compiled without further change.
+//
+// NOT YET DONE (stated plainly): the write path is not wired to a wallet or a
+// deployment — registerCredential/proveCredential compile and have keys, but
+// nothing in this build submits a transaction (same status as velo.compact's
+// attest path). The off-chain TS engine (src/perito/) is what the tests and
+// MCP exercise today.
+//
+// SEPARATE CONTRACT, ON PURPOSE. velo.compact (Layer 2, attestation) is
+// already compiled, key-generated and red-teamed; its witnesses feed the
+// generated bindings byte-for-byte. Layer 6 is a distinct proof (credential
+// membership + validity) that composes with, but is separable from, the
+// attestation. It gets its own contract and its own managed output so the
+// Layer 2 artifact is never disturbed.
+//
+// WHAT THIS PROVES:
+//   1. The prover's credential leaf is a member of the on-chain tree of
+//      accredited examiners (MEMBERSHIP) — without revealing WHICH leaf, so
+//      the examiner stays anonymous.
+//   2. The leaf's validity window covers the attestation date (VALIDITY):
+//      validFrom <= attestationDate <= validUntil.
+// Membership and validity are TWO separate asserts, on purpose — the corpus
+// (peritos-syntetic/) requires them to be distinguishable. VELO-PERITO-005
+// is a member of the tree for all three of its attestations, but its
+// VELO-006 attestation (2026-04-10) falls in a licensing gap: whichever span
+// leaf the prover supplies, the validity asserts reject it, because no leaf
+// exists whose window covers that date. Same examiner, three dates, three
+// outcomes — decided by which span (if any) covers the date.
+//
+// LEAF RECONCILIATION (stated plainly): the on-chain leaf is a
+// `persistentHash` value (this file). The off-chain registry (src/perito/
+// registry.ts) builds a PARALLEL SHA-256 tree for the frontend/MCP to answer
+// "accredited + valid at date" without the chain. The two roots are NOT
+// required to be equal — the repo already keeps the off-chain evidence
+// Merkle root separate from the on-chain attestation commitment. If a single
+// shared root is ever wanted, the off-chain side must adopt the runtime's
+// `persistentHash` encoding, which is not exported (the same caveat
+// witnesses.ts records for the attestation commitment).
+//
+// OUT OF SCOPE this iteration: Layer 7 (blind second opinion — two examiners
+// attesting the same case_commitment independently). Not modeled here.
+
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+// The tree of accredited examiners. Depth 16 is a ceiling with headroom for
+// the synthetic corpus, not a claimed real maximum. Each leaf is a
+// domain-separated persistentHash of (leafSecretKey, validFrom, validUntil):
+// one leaf per validity SPAN, so a lapsed-and-re-licensed examiner
+// (VELO-PERITO-005) occupies two leaves.
+export ledger accreditedPeritos: MerkleTree<16, Bytes<32>>;
+
+// How many credential-gated proofs have been produced. Public, monotonic.
+// Also keeps the circuit above the minimum size (k >= 6) noted in the skill.
+export ledger credentialAttestations: Counter;
+
+// Private inputs — bodies live in src/witness/perito_witnesses.ts, never
+// on-chain. The leaf secret key never leaves the examiner's machine; the
+// circuit proves statements ABOUT it.
+witness peritoLeafKey(): Bytes<32>;
+witness findCredentialPath(leaf: Bytes<32>): MerkleTreePath<16, Bytes<32>>;
+witness credentialValidFrom(): Uint<0..4294967296>;
+witness credentialValidUntil(): Uint<0..4294967296>;
+
+// The leaf key derivation. Domain-separated so a perito credential leaf can
+// never collide with a hash computed for another purpose. Recomputed inside
+// the circuit rather than taken as an argument — the same "recompute, don't
+// accept" discipline as velo.compact's commitment: a leaf passed in could
+// mismatch the window the proof actually range-checks.
+pure circuit credentialLeaf(leafKey: Bytes<32>, validFrom: Uint<0..4294967296>, validUntil: Uint<0..4294967296>): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "velo:perito:credential:v1"),
+    leafKey,
+    validFrom as Field as Bytes<32>,
+    validUntil as Field as Bytes<32>
+  ]);
+}
+
+/**
+ * Register an accredited examiner's credential leaf.
+ *
+ * The leaf is computed by the examiner off-chain (from their private
+ * leafSecretKey and window) and handed to the accreditation authority, which
+ * inserts it. The authority learns only the leaf commitment, never the
+ * secret key. One call per validity span.
+ *
+ * Insertion requires disclose() (the taint checker), but a MerkleTree insert
+ * does not publish the leaf's preimage — only the root advances.
+ */
+export circuit registerCredential(leaf: Bytes<32>): [] {
+  accreditedPeritos.insert(disclose(leaf));
+}
+
+/**
+ * Prove: "some accredited, currently-valid examiner attests as of
+ * attestationDate" — without revealing which one.
+ *
+ * `attestationDate` is public (the date being attested is not secret); the
+ * examiner's identity and window bounds are private witnesses.
+ */
+export circuit proveCredential(attestationDate: Uint<0..4294967296>): [] {
+  const validFrom = credentialValidFrom();
+  const validUntil = credentialValidUntil();
+
+  // Recompute the leaf from the private key + window, then prove membership
+  // of THAT leaf. Binding the window into the leaf is what makes the two
+  // validity asserts below meaningful: the prover cannot range-check one
+  // window while proving membership of a leaf built from another.
+  const leaf = credentialLeaf(peritoLeafKey(), validFrom, validUntil);
+
+  // (1) MEMBERSHIP — the leaf is in the accredited tree. Reveals only that
+  // SOME leaf validated, never which (that is the anonymity property).
+  assert(
+    accreditedPeritos.checkRoot(merkleTreePathRoot<16, Bytes<32>>(disclose(findCredentialPath(leaf)))),
+    "not an accredited examiner"
+  );
+
+  // (2) VALIDITY — the window covers the attestation date. Two separate
+  // asserts so the failure reason distinguishes "before the window" from
+  // "after the window", and so membership and validity are visibly two
+  // checks. The VELO-PERITO-005 gap fails HERE for VELO-006: no span leaf's
+  // window contains 2026-04-10.
+  assert(validFrom <= attestationDate, "credential was not yet valid at the attestation date");
+  assert(attestationDate <= validUntil, "credential had expired at the attestation date");
+
+  credentialAttestations.increment(1);
+}

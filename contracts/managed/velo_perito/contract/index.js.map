@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["contracts/velo_perito.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EA6CA;;;;;;;;;;;;;;;;;;;;;;MAgDA,AAAA,kBAEC;;;;;cAFiC,MAAe;;;;;;;;;;;;;;;;;;yCAAf,MAAe;;;;;;;;;oDAAf,MAAe;;;OAEhD;MASD,AAAA,eA0BC;;;;;cA1B8B,iBAAoC;;;;;;;;;;;;;;;;;;yCAApC,iBAAoC;;;;;;;;;iDAApC,iBAAoC;;;OA0BlE;;;;;;;;;;GACA;EAtFD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IASA;;;;;;;;;;;;;yEAA2D;IAI3D;;;;;;;;;yEAA8C;;;;;;;GAyE7C;ECjED,AAAA,sBAAyC;;;;;;;oFAG8E;8BAChG;;EAYvB,AAAA,2BACE,mBACA;UAEM,SAAO,oBAAkB,oBAAkB;UAC3C,UAAQ;oBAAkB;oBAAsB;kCACd,QAAM;;EAxFhD,AAAA,iBAAA;oEAAA;;;EAAA,AAAA,kBAAA;qEAAA;;;EAAA,AAAA,kBAAA;qEAAA;;;EAAA,AAAA,sBAAA;yDAAA;;;ED+DA,AAAA,gBAAmC;;0DAAnC,aAAmC;;;;;;;;;;;;;;GAAA;EACnC,AAAA,qBAA2E,4BAAhD,MAAe;;0DAA1C,kBAA2E;6EAAhD,MAAe;;;;;;;;;;;;;;GAAiC;EAC3E,AAAA,sBAAmD;;0DAAnD,mBAAmD;;;;;;;;;;;;;;GAAA;EACnD,AAAA,uBAAoD;;0DAApD,oBAAoD;;;;;;;;;;;;;;GAAA;EAOpD,AAAA,iBAOC,CAP2B,SAAkB,EAAE,WAA8B,EAAE,YAA+B;;mCAG3G,SAAO;;wEACP,WAAS;;;wEACT,YAAU;;GAEb;EAaD,AAAA,qBAEC,4BAFiC,MAAe;IAC/C;;;;;;;;;;;;;;;;;;;;;;;;6HAAkC,MAAI;;;;;;;;;;;;wEAArB;;GAClB;EASD,AAAA,kBA0BC,4BA1B8B,iBAAoC;UAC3D,WAAiC;UACjC,YAAmC;UAMnC,MAA6D;;0CAAtB,WAAS;0CAAE,YAAU;QAKhE,KAAiB;;;2FAAyE,MAAI;qDAA9F;;;;;;;;;;;;;;;;;;4KAAA,KAAiB;;;;0HAAA;;4BASZ,WAAS,IAAI,iBAAe;;4BAC5B,iBAAe,IAAI,YAAU;;UAEpC,KAAsB;IAAtB;;;;;;;;;;6FAAA,KAAsB;;;;wEAAA;;GACvB;;;;;;;;;;;;;;;;;;;;IA5ED;;;;;uCAAA;;;;;;;;;;;;;;;;;;;;;;4GAA2D;;;;;;;;;;;;;;uCAA3D;;;;;;;;;;;;;;;;;;;;;;4GAA2D;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;KAAA;IAI3D;sCAAA;;;;;;;;;;;2GAA8C;KAAA;;;;;;;;;;;;;;;"
+}
