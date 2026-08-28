@@ -342,7 +342,7 @@ const pendingChainTool = (name: string, title: string, description: string) => {
 };
 
 pendingChainTool("attest_case", "Attest case", "Publish commitment + ZK proof to Midnight. The contract IS deployed (see chain_status) but this write path is not wired yet.");
-pendingChainTool("prove_credential", "Prove perito credential (Layer 6)", "Publish a ZK proof that some accredited, currently-valid examiner attests this case, without revealing which. contracts/velo_perito.compact IS compiled (prover/verifier keys generated) but, like attest_case, the transaction write path is not wired to a wallet yet.");
+pendingChainTool("prove_credential", "Prove perito credential (Layer 6)", "Publish a ZK proof that some accredited, currently-valid examiner attests this case, without revealing which. The write path IS wired as a Bun CLI (deploy/prove-credential.ts, after deploy/deploy-perito-contract.ts + deploy/register-credential.ts) — it needs a wallet + seed + dust, so it is not driven from this MCP server, which has no wallet.");
 pendingChainTool("commit_opinion", "Commit a blind second opinion (Layer 7)", "On-chain commit phase: publish a hiding verdict commitment + credential proof + nullifier. The commitOpinion circuit is compiled (keys generated); the wallet write path is not wired yet. Use second_opinion_demo to see the protocol off-chain.");
 pendingChainTool("reveal_opinion", "Reveal a blind second opinion (Layer 7)", "On-chain reveal phase: open a previously committed verdict once both opinions are in. The revealOpinion circuit is compiled (keys generated); the wallet write path is not wired yet.");
 pendingChainTool("list_disclosure_requests", "List disclosure requests", "List pending judge disclosure requests for my cases.");

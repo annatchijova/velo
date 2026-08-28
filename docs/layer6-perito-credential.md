@@ -151,6 +151,39 @@ corpus is the fixture set that defines the acceptance criteria. `IDENTITY.md`
 was left unchanged rather than rewritten on inference — reconciling the two
 schemes into one canonical numbering is a maintainer decision, flagged here.
 
+## On-chain runbook (Midnight preview)
+
+The write path is wired as Bun CLIs under `deploy/`, mirroring the Layer 2
+`attest-case.ts`. Each needs the wallet env (`MIDNIGHT_NETWORK_ID=preview`,
+`MIDNIGHT_STORAGE_PASSWORD`, the wallet mnemonic) and DUST. The seed is never
+logged (`deploy/redact-seed.ts`). In order:
+
+```
+# 1. Deploy the velo_perito contract (writes deploy/managed-shim/velo_perito-contract.preview.json)
+MIDNIGHT_NETWORK_ID=preview MIDNIGHT_STORAGE_PASSWORD=… MIDNIGHT_WALLET_MNEMONIC="…" \
+  bun run deploy/deploy-perito-contract.ts
+
+# 2. If the wallet has no dust:
+… bun run deploy/register-dust.ts
+
+# 3. Register a credential leaf (one call per validity span; spanIndex defaults to 0)
+… bun run deploy/register-credential.ts VELO-PERITO-001
+
+# 4. Prove a credential for a case (needs the covering span registered first)
+… bun run deploy/prove-credential.ts VELO-PERITO-001 VELO-001
+
+# Negative check — the licensing-gap case must be REFUSED up front (not a proof failure):
+… bun run deploy/register-credential.ts VELO-PERITO-005 0
+… bun run deploy/register-credential.ts VELO-PERITO-005 1
+… bun run deploy/prove-credential.ts VELO-PERITO-005 VELO-006   # -> refused: INVALID (gap)
+… bun run deploy/prove-credential.ts VELO-PERITO-005 VELO-009   # -> proves (period 1)
+```
+
+`registerCredential` computes the leaf in-circuit from the perito's
+leafSecretKey + window (see the contract header), so the registered leaf is
+exactly the one `proveCredential` recomputes; the key is generated once and
+persisted in the contract-scoped private state, so register and prove share it.
+
 ## Files
 
 - `src/perito/credential.ts` — parse/normalize profiles; single/multi-span → `NormalizedPerito`.
