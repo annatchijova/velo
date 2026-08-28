@@ -133,6 +133,14 @@ export function makePeritoWitnesses(peritoId: string, span: ValiditySpan): Perit
       }
       return [context.privateState, path];
     },
+    // The compiled Contract constructor requires EVERY declared witness to be
+    // present as a function-valued field, even for circuits that never call it.
+    // registerCredential and proveCredential never invoke the Layer 7 opinion
+    // witnesses, so these are inert placeholders — present so the constructor
+    // accepts the witness object, never actually executed on the Layer 6 path.
+    // makeOpinionWitnesses overrides both with real bodies for commitOpinion.
+    opinionVerdict: ({ privateState }: WitnessContext<any, PeritoPrivateState>) => [privateState, 0],
+    opinionNonce: ({ privateState }: WitnessContext<any, PeritoPrivateState>) => [privateState, new Uint8Array(32)],
   };
 }
 
@@ -141,6 +149,8 @@ export interface PeritoWitnesses {
   credentialValidFrom(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, bigint];
   credentialValidUntil(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, bigint];
   findCredentialPath(context: WitnessContext<any, PeritoPrivateState>, leaf: Uint8Array): [PeritoPrivateState, unknown];
+  opinionVerdict(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, number];
+  opinionNonce(context: WitnessContext<any, PeritoPrivateState>): [PeritoPrivateState, Uint8Array];
 }
 
 // ===========================================================================
