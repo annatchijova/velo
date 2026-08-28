@@ -16,6 +16,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import type { Artifact } from "../engine/evidence.js";
 import { getCase, listCases, narrateCase, preAnalyzeEvidence, sealCase, verifyCase } from "../core/operations.js";
+import { buildSyntheticRegistry, checkCredentialAtCase, listPeritoCasesOp } from "../core/perito_operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 import { lookupCommitment, readOnChainLedger } from "../chain/read.js";
 
@@ -32,6 +33,11 @@ const caseIdSchema = z
   .min(1)
   .max(128)
   .regex(/^[A-Za-z0-9._-]+$/, "caseId may only contain letters, digits, dot, underscore and hyphen");
+
+/** Layer 6: perito identifiers are constrained at the boundary too. */
+const peritoIdSchema = z
+  .string()
+  .regex(/^VELO-PERITO-\d{3}$/, "peritoId must look like VELO-PERITO-001");
 
 /**
  * Red team F6: an unparseable timestamp used to silence the temporal
@@ -258,6 +264,56 @@ server.registerTool(
   },
 );
 
+// --- Layer 6: perito credential (membership + validity) ---
+server.registerTool(
+  "check_credential_validity",
+  {
+    title: "Check perito credential validity at a case's attestation date",
+    description:
+      "Layer 6 validity half: given a perito and a case, decide whether that examiner's credential was VALID at the case's " +
+      "attestation date (the ANALYZED custody event). Returns three states — VALID / INVALID / ABSTAIN (unknown date). " +
+      "This is the check the synthetic corpus exercises: VELO-PERITO-005 is INVALID for VELO-006 (licensing gap) but VALID " +
+      "for VELO-009 and VELO-010. Membership (that the examiner is accredited at all) is a separate check — see build_perito_registry.",
+    inputSchema: { peritoId: peritoIdSchema, caseId: caseIdSchema },
+  },
+  async ({ peritoId, caseId }) => {
+    const result = checkCredentialAtCase(peritoId, caseId);
+    const isError = "error" in result;
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], isError };
+  },
+);
+
+server.registerTool(
+  "build_perito_registry",
+  {
+    title: "Build the accredited-examiners registry",
+    description:
+      "Layer 6 membership half: build the off-chain deterministic Merkle registry over the synthetic accredited peritos and " +
+      "return its root and leaf count (one leaf per validity span). Contains NO secrets. This is a parallel audit structure to " +
+      "the on-chain MerkleTree, not the same root — see docs/layer6-perito-credential.md. Per-perito secrets here are synthetic " +
+      "and deterministic (demo only); a real deployment holds each secret in the encrypted vault.",
+    inputSchema: {},
+  },
+  async () => ({ content: [{ type: "text", text: JSON.stringify(buildSyntheticRegistry(), null, 2) }] }),
+);
+
+server.registerTool(
+  "list_perito_cases",
+  {
+    title: "List a perito's cases (own-vs-others visibility)",
+    description:
+      "The perito 'my cases' surface: cases the examiner attested with a VALID credential are shown in full; anyone else's case " +
+      "is reduced to {case_id, name, expected_verdict, expected_corroboration_count} with no artifacts, devil_advocate, peirce_chain " +
+      "or attesting alias; unclaimed cases appear in no examiner's list and are returned separately without a verdict.",
+    inputSchema: { peritoId: peritoIdSchema },
+  },
+  async ({ peritoId }) => {
+    const result = listPeritoCasesOp(peritoId);
+    const isError = "error" in result;
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], isError };
+  },
+);
+
 // --- Pending on-chain integration (Capa 2) — registered honestly, not simulated ---
 const pendingChainTool = (name: string, title: string, description: string) => {
   server.registerTool(
@@ -271,6 +327,7 @@ const pendingChainTool = (name: string, title: string, description: string) => {
 };
 
 pendingChainTool("attest_case", "Attest case", "Publish commitment + ZK proof to Midnight. The contract IS deployed (see chain_status) but this write path is not wired yet.");
+pendingChainTool("prove_credential", "Prove perito credential (Layer 6)", "Publish a ZK proof that some accredited, currently-valid examiner attests this case, without revealing which. contracts/velo_perito.compact IS compiled (prover/verifier keys generated) but, like attest_case, the transaction write path is not wired to a wallet yet.");
 pendingChainTool("list_disclosure_requests", "List disclosure requests", "List pending judge disclosure requests for my cases.");
 pendingChainTool("approve_disclosure", "Approve disclosure", "Grant a specific judge's request for specific fields.");
 pendingChainTool("deny_disclosure", "Deny disclosure", "Reject a judge's disclosure request.");
