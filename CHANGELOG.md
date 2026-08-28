@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **Layer 6 — the perito (examiner) anonymous credential.** A ZK proof that
+  *some* accredited examiner held a currently-valid license at the exact date
+  of an attestation, without revealing which examiner. Two deliberately
+  separate checks: membership (a leaf in the accredited-examiners tree) and
+  validity at the attestation date. The adversarial fixture VELO-PERITO-005 is
+  a member of the tree for all three of its attestations, but its VELO-006
+  attestation (2026-04-10) falls in a licensing gap and is rejected on
+  validity, not membership — same examiner, three dates, three outcomes.
+  Design: one Merkle leaf per validity span (a lapse-and-re-licensing appends
+  a leaf); the off-chain SHA-256 registry (`src/perito/registry.ts`, reusing
+  `src/seal/merkle.ts`) is a parallel audit structure to the on-chain
+  `MerkleTree`, not the same root. The perito secret is kept two ways that
+  never cross: a deterministic commitment enters the tree, and an AES-256-GCM
+  encrypted-at-rest vault (`src/perito/vault.ts`, ported from continuum's
+  `dbcrypto.py`) holds the plaintext — the non-deterministic vault ciphertext
+  never enters a seal or a leaf. `contracts/velo_perito.compact` compiled with
+  compact 0.5.1 (both circuits, keys generated); the transaction write path is
+  not wired yet. New MCP tools: `check_credential_validity`,
+  `build_perito_registry`, `list_perito_cases`, and a PENDING `prove_credential`.
+  See `docs/layer6-perito-credential.md`. Layer 7 (blind second opinion) is out
+  of scope this iteration.
 - **`scripts/count-tests.mjs` — documented test counts are now measured and
   enforced.** The script runs both suites with their own runners, then checks
   every place a document states a count. A mismatch fails; so does a claim
