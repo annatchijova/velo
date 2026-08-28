@@ -114,6 +114,39 @@ Both commitments land before either reveal — the proof that neither verdict wa
 visible when the other committed — ending in AGREE / MALICE for
 VELO-PERITO-003 + VELO-PERITO-004, without either identity in the output.
 
+## On-chain runbook (Midnight preview)
+
+Wired as Bun CLIs, mirroring the Layer 6 write path. Each opinion is one commit
+tx now and one reveal tx later; the reveal is refused by the contract until both
+opinions are committed. Both examiners must first have a registered credential
+(commitOpinion reuses the Layer 6 proof). Needs the wallet env + DUST + the local
+proof server, and preview wallet-sync is intermittently slow (re-run promptly).
+
+```
+# Both examiners need a registered credential covering the case's date:
+… bun run deploy/register-credential.ts VELO-PERITO-003
+… bun run deploy/register-credential.ts VELO-PERITO-004
+
+# Commit phase — hidden verdicts (both MALICE on VELO-005):
+… bun run deploy/commit-opinion.ts VELO-PERITO-003 VELO-005 MALICE
+… bun run deploy/commit-opinion.ts VELO-PERITO-004 VELO-005 MALICE
+
+# Reveal phase — allowed only now that both are committed:
+… bun run deploy/reveal-opinion.ts VELO-PERITO-003 VELO-005 MALICE
+… bun run deploy/reveal-opinion.ts VELO-PERITO-004 VELO-005 MALICE
+# -> both verdicts open to MALICE: AGREE, without either identity revealed.
+
+# Blindness/nullifier guards, observable:
+#  - reveal before both commit -> "cannot reveal until both opinions are committed"
+#  - same examiner committing twice on one case -> "this examiner has already opined"
+```
+
+The `case_commitment` is a demo-deterministic hash of the caseId
+(`syntheticCaseCommitment`), so commit and reveal agree; a real deployment binds
+the Layer 2 commitment. The blinding nonce is generated at commit time and
+persisted in the contract-scoped private state, so reveal reproduces the
+commitment. Verdicts are secret at commit (hidden witness) and public at reveal.
+
 ## Files
 
 - `src/perito/second_opinion.ts` — commit/nullifier/board (off-chain engine).

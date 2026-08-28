@@ -16,33 +16,17 @@
 // span covers that date — the VELO-PERITO-005 licensing gap on VELO-006 — this
 // REFUSES up front with a sentence, rather than letting proof generation fail:
 // membership would hold, but no covering span exists, so validity cannot pass.
-import { resolve } from "node:path";
-import { readFileSync, readdirSync } from "node:fs";
 import { CompiledContract } from "@midnight-ntwrk/compact-js";
 import { submitCallTx } from "@midnight-ntwrk/midnight-js-contracts";
 import * as VeloPerito from "../contracts/managed/velo_perito/contract/index.js";
 import { checkValidity } from "../src/perito/validity.js";
-import { attestationEpochForCase, type CaseWithTimestamps } from "../src/perito/case_adapter.js";
+import { attestationEpochForCase } from "../src/perito/case_adapter.js";
 import { makePeritoWitnesses, type PeritoPrivateState } from "../src/witness/perito_witnesses.js";
-import { buildPeritoProviders, loadPeritoProfile, peritoContractAddress, REPO_ROOT, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
+import { buildPeritoProviders, loadCaseById, loadPeritoProfile, peritoContractAddress, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
 import { midnightNetworkConfig, storagePassword } from "./network-config.js";
 import { safeNetworkConfigForLogging, withSeedRedaction } from "./redact-seed.js";
 
 process.env.MIDNIGHT_STORAGE_PASSWORD ??= storagePassword;
-
-/** Find a case JSON by its case_id field (filenames carry descriptive suffixes). */
-function loadCase(caseId: string): CaseWithTimestamps & { case_id: string } {
-  const dir = resolve(REPO_ROOT, "cases");
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-    try {
-      const obj = JSON.parse(readFileSync(resolve(dir, file), "utf8")) as { case_id?: string };
-      if (obj.case_id === caseId) return obj as CaseWithTimestamps & { case_id: string };
-    } catch {
-      /* skip non-case JSON */
-    }
-  }
-  throw new Error(`No case with case_id ${JSON.stringify(caseId)} under cases/`);
-}
 
 async function main(): Promise<void> {
   const peritoId = process.argv[2];
@@ -52,7 +36,7 @@ async function main(): Promise<void> {
   }
 
   const profile = loadPeritoProfile(peritoId);
-  const caseObj = loadCase(caseId);
+  const caseObj = loadCaseById(caseId);
   const attestationEpoch = attestationEpochForCase(caseObj);
 
   const validity = checkValidity(profile.spans, attestationEpoch);

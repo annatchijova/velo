@@ -8,13 +8,16 @@
 // raw .ts that plain tsc/node cannot resolve.
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
 import type { NetworkId } from "@midnightntwrk/wallet-sdk-abstractions";
 import {
   buildWalletAndWaitForFunds,
   configureMidnightNodeProviders,
 } from "@effectstream/midnight-contracts";
+import { readdirSync } from "node:fs";
 import { normalizePerito, type NormalizedPerito } from "../src/perito/credential.js";
+import type { CaseWithTimestamps } from "../src/perito/case_adapter.js";
 import { midnightNetworkConfig } from "./network-config.js";
 
 export const REPO_ROOT = resolve(new URL("..", import.meta.url).pathname);
@@ -39,6 +42,18 @@ export function peritoContractAddress(networkId: string): string {
   return parsed.contractAddress;
 }
 
+/**
+ * DEMO-ONLY deterministic case_commitment for a corpus case. On-chain, Layer 7
+ * takes any Bytes<32>; a real deployment would bind the Layer 2 commitment.
+ * Here commit-opinion and reveal-opinion derive the SAME value from the caseId
+ * so the two phases agree. Returns both the hex (for the opinion-nonce key) and
+ * the 32 bytes (for the circuit argument).
+ */
+export function syntheticCaseCommitment(caseId: string): { hex: string; bytes: Uint8Array } {
+  const digest = createHash("sha256").update(`velo:SYNTHETIC-case-commitment:v1:${caseId}`).digest();
+  return { hex: digest.toString("hex"), bytes: new Uint8Array(digest) };
+}
+
 /** Load and normalize a synthetic perito profile. */
 export function loadPeritoProfile(peritoId: string): NormalizedPerito {
   if (!/^VELO-PERITO-\d{3}$/.test(peritoId)) {
@@ -46,6 +61,20 @@ export function loadPeritoProfile(peritoId: string): NormalizedPerito {
   }
   const path = resolve(REPO_ROOT, "peritos-syntetic", `${peritoId}.json`);
   return normalizePerito(JSON.parse(readFileSync(path, "utf8")));
+}
+
+/** Find a case JSON by its case_id field (filenames carry descriptive suffixes). */
+export function loadCaseById(caseId: string): CaseWithTimestamps & { case_id: string } {
+  const dir = resolve(REPO_ROOT, "cases");
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+    try {
+      const obj = JSON.parse(readFileSync(resolve(dir, file), "utf8")) as { case_id?: string };
+      if (obj.case_id === caseId) return obj as CaseWithTimestamps & { case_id: string };
+    } catch {
+      /* skip non-case JSON */
+    }
+  }
+  throw new Error(`No case with case_id ${JSON.stringify(caseId)} under cases/`);
 }
 
 export interface PeritoProviders {
