@@ -16,7 +16,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import type { Artifact } from "../engine/evidence.js";
 import { getCase, listCases, narrateCase, preAnalyzeEvidence, sealCase, verifyCase } from "../core/operations.js";
-import { buildSyntheticRegistry, checkCredentialAtCase, listPeritoCasesOp } from "../core/perito_operations.js";
+import { buildSyntheticRegistry, checkCredentialAtCase, listPeritoCasesOp, secondOpinionDemo } from "../core/perito_operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
 import { lookupCommitment, readOnChainLedger } from "../chain/read.js";
 
@@ -314,6 +314,21 @@ server.registerTool(
   },
 );
 
+// --- Layer 7: blind second opinion (commit-reveal + nullifier) ---
+server.registerTool(
+  "second_opinion_demo",
+  {
+    title: "Blind second opinion — run the commit-reveal protocol (demo)",
+    description:
+      "Run Layer 7 end to end off-chain over the corpus: VELO-PERITO-003 and VELO-PERITO-004 independently opine on VELO-005. " +
+      "The timeline shows BOTH verdict commitments land before either is revealed (so neither examiner could copy the other), " +
+      "ending in AGREE / MALICE. Never reveals identities — only the anonymous timeline and the agreement. Synthetic keys and " +
+      "case_commitment (demo); the on-chain path is commit_opinion / reveal_opinion (compiled, write path pending).",
+    inputSchema: { caseId: caseIdSchema.default("VELO-005") },
+  },
+  async ({ caseId }) => ({ content: [{ type: "text", text: JSON.stringify(secondOpinionDemo(caseId), null, 2) }] }),
+);
+
 // --- Pending on-chain integration (Capa 2) — registered honestly, not simulated ---
 const pendingChainTool = (name: string, title: string, description: string) => {
   server.registerTool(
@@ -328,6 +343,8 @@ const pendingChainTool = (name: string, title: string, description: string) => {
 
 pendingChainTool("attest_case", "Attest case", "Publish commitment + ZK proof to Midnight. The contract IS deployed (see chain_status) but this write path is not wired yet.");
 pendingChainTool("prove_credential", "Prove perito credential (Layer 6)", "Publish a ZK proof that some accredited, currently-valid examiner attests this case, without revealing which. contracts/velo_perito.compact IS compiled (prover/verifier keys generated) but, like attest_case, the transaction write path is not wired to a wallet yet.");
+pendingChainTool("commit_opinion", "Commit a blind second opinion (Layer 7)", "On-chain commit phase: publish a hiding verdict commitment + credential proof + nullifier. The commitOpinion circuit is compiled (keys generated); the wallet write path is not wired yet. Use second_opinion_demo to see the protocol off-chain.");
+pendingChainTool("reveal_opinion", "Reveal a blind second opinion (Layer 7)", "On-chain reveal phase: open a previously committed verdict once both opinions are in. The revealOpinion circuit is compiled (keys generated); the wallet write path is not wired yet.");
 pendingChainTool("list_disclosure_requests", "List disclosure requests", "List pending judge disclosure requests for my cases.");
 pendingChainTool("approve_disclosure", "Approve disclosure", "Grant a specific judge's request for specific fields.");
 pendingChainTool("deny_disclosure", "Deny disclosure", "Reject a judge's disclosure request.");
