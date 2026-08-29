@@ -8,7 +8,6 @@
 // raw .ts that plain tsc/node cannot resolve.
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
 import type { NetworkId } from "@midnightntwrk/wallet-sdk-abstractions";
 import {
@@ -18,6 +17,7 @@ import {
 import { readdirSync } from "node:fs";
 import { normalizePerito, type NormalizedPerito } from "../src/perito/credential.js";
 import type { CaseWithTimestamps } from "../src/perito/case_adapter.js";
+import { evidenceCaseCommitment, type CaseCommitment } from "../src/perito/second_opinion.js";
 import { midnightNetworkConfig } from "./network-config.js";
 
 export const REPO_ROOT = resolve(new URL("..", import.meta.url).pathname);
@@ -43,15 +43,14 @@ export function peritoContractAddress(networkId: string): string {
 }
 
 /**
- * DEMO-ONLY deterministic case_commitment for a corpus case. On-chain, Layer 7
- * takes any Bytes<32>; a real deployment would bind the Layer 2 commitment.
- * Here commit-opinion and reveal-opinion derive the SAME value from the caseId
- * so the two phases agree. Returns both the hex (for the opinion-nonce key) and
- * the 32 bytes (for the circuit argument).
+ * The case_commitment for a case: the REAL Layer 2 evidence Merkle root over the
+ * case's artifacts (src/perito/second_opinion.ts `evidenceCaseCommitment`), so
+ * commit-opinion and reveal-opinion bind to genuine sealed evidence — the same
+ * value two independent examiners on the same evidence share. Returns the hex
+ * (for the opinion-nonce key) and the 32 bytes (for the circuit argument).
  */
-export function syntheticCaseCommitment(caseId: string): { hex: string; bytes: Uint8Array } {
-  const digest = createHash("sha256").update(`velo:SYNTHETIC-case-commitment:v1:${caseId}`).digest();
-  return { hex: digest.toString("hex"), bytes: new Uint8Array(digest) };
+export function caseCommitmentFor(caseId: string): CaseCommitment {
+  return evidenceCaseCommitment(loadCaseById(caseId));
 }
 
 /** Load and normalize a synthetic perito profile. */

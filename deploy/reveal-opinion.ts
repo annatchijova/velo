@@ -19,7 +19,7 @@ import { attestationEpochForCase } from "../src/perito/case_adapter.js";
 import { makePeritoWitnesses, type PeritoPrivateState } from "../src/witness/perito_witnesses.js";
 import { hexToBytes32 } from "../src/witness/witnesses.js";
 import type { Verdict } from "../src/engine/scorer.js";
-import { buildPeritoProviders, loadCaseById, loadPeritoProfile, peritoContractAddress, syntheticCaseCommitment, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
+import { buildPeritoProviders, loadCaseById, loadPeritoProfile, peritoContractAddress, caseCommitmentFor, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
 import { midnightNetworkConfig, storagePassword } from "./network-config.js";
 import { safeNetworkConfigForLogging, withSeedRedaction } from "./redact-seed.js";
 
@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   // itself invokes no witness. Fall back to the first span if (unexpectedly)
   // no span covers the date.
   const span = profile.spans[validity.coveringSpanIndex ?? 0]!;
-  const caseCommitment = syntheticCaseCommitment(caseId);
+  const caseCommitment = caseCommitmentFor(caseId);
 
   console.log("Revealing opinion on Midnight:", safeNetworkConfigForLogging(midnightNetworkConfig));
   console.log(`perito          : ${peritoId}`);

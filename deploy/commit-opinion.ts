@@ -27,7 +27,7 @@ import {
   type PeritoPrivateState,
 } from "../src/witness/perito_witnesses.js";
 import type { Verdict } from "../src/engine/scorer.js";
-import { buildPeritoProviders, loadPeritoProfile, loadCaseById, peritoContractAddress, syntheticCaseCommitment, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
+import { buildPeritoProviders, loadPeritoProfile, loadCaseById, peritoContractAddress, caseCommitmentFor, ZK_ASSETS, PRIVATE_STATE_ID } from "./perito-common.js";
 import { midnightNetworkConfig, storagePassword } from "./network-config.js";
 import { safeNetworkConfigForLogging, withSeedRedaction } from "./redact-seed.js";
 
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
     );
   }
   const span = profile.spans[validity.coveringSpanIndex]!;
-  const caseCommitment = syntheticCaseCommitment(caseId);
+  const caseCommitment = caseCommitmentFor(caseId);
 
   console.log("Committing blind opinion on Midnight:", safeNetworkConfigForLogging(midnightNetworkConfig));
   console.log(`perito          : ${peritoId}`);
