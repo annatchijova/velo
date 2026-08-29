@@ -180,8 +180,8 @@ Paso a paso, en una máquina nueva: **[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
 ```bash
 npm install
-npm test          # 170 tests del motor, incluidos los adversariales
-cd frontend && npx vitest run   # 116 más — 286 entre las dos suites
+npm test          # 173 tests del motor, incluidos los adversariales
+cd frontend && npx vitest run   # 116 más — 289 entre las dos suites
 npm run simulate  # historia completa, las dos negativas
 ```
 
@@ -226,8 +226,8 @@ uso.
 
 | Capa | Estado |
 |---|---|
-| Motor determinista + gate de Daubert | **Funciona**, 170 tests |
-| Cobertura de tests entre las dos suites | **286 en verde** — 170 del motor (`npm test`) + 116 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados — `node scripts/count-tests.mjs` vuelve a medir y falla si esta línea se desactualiza |
+| Motor determinista + gate de Daubert | **Funciona**, 173 tests |
+| Cobertura de tests entre las dos suites | **289 en verde** — 173 del motor (`npm test`) + 116 del frontend (`vitest run` en `frontend/`). Contados por los runners, no estimados — `node scripts/count-tests.mjs` vuelve a medir y falla si esta línea se desactualiza |
 | Sellado local, cadena de custodia, hashing canónico | **Funciona** |
 | Verificador offline sin dependencias | **Funciona** |
 | Servidor MCP | **Funciona**, probado sobre JSON-RPC real |

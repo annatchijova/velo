@@ -6,13 +6,26 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import path from "node:path";
 import {
   SecondOpinionBoard,
   SecondOpinionError,
   makeVerdictCommitment,
   opinionNullifier,
   generateOpinionNonce,
+  evidenceCaseCommitment,
 } from "../src/perito/second_opinion.js";
+import { analyzeCase, sealAnalysis } from "../src/core/operations.js";
+import { artifactSchema, type Artifact } from "../src/engine/evidence.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CASES_DIR = path.join(__dirname, "..", "..", "cases");
+function loadCaseFile(file: string): any {
+  return JSON.parse(readFileSync(path.join(CASES_DIR, file), "utf8"));
+}
 
 // Stand-in case_commitment and two distinct examiner leaf secret keys standing
 // for VELO-PERITO-003 and VELO-PERITO-004.
@@ -115,4 +128,36 @@ test("determinism boundary: nullifier byte-stable, verdict commitment nonce-vary
   const a = makeVerdictCommitment("MALICE", generateOpinionNonce());
   const b = makeVerdictCommitment("MALICE", generateOpinionNonce());
   assert.notEqual(a, b, "hiding commitment must not be reproducible without the nonce");
+});
+
+// --- case_commitment is the REAL Layer 2 evidence root, not a synthetic hash ---
+
+test("case_commitment equals the evidence root a GENUINE seal produces (not a string hash)", () => {
+  const caseObj = loadCaseFile("VELO-005-convergencia.json");
+  // Seal the case through the real Layer 2 pipeline, parsing artifacts at the
+  // same boundary the MCP server does (so _es fields are stripped identically).
+  const artifacts = caseObj.artifacts.map((a: unknown) => artifactSchema.parse(a)) as unknown as Artifact[];
+  const custodyEvents = (caseObj.custodyEvents ?? []).map((e: any) => ({ eventType: e.eventType, timestamp: e.timestamp, detail: e.detail ?? "" }));
+  const analysis = analyzeCase({ caseId: caseObj.case_id, artifacts, devilAdvocate: caseObj.devil_advocate ?? "", custodyEvents, coverageGaps: [] });
+  const bundle = sealAnalysis(caseObj.case_id, artifacts, analysis);
+
+  const cc = evidenceCaseCommitment(caseObj);
+  assert.equal(cc.hex, bundle.evidenceRoot, "the case_commitment must be the sealed bundle's evidence root");
+  assert.match(cc.hex, /^[0-9a-f]{64}$/);
+  assert.equal(cc.bytes.length, 32, "32 bytes, a drop-in Bytes<32>");
+  // And decidedly NOT the old synthetic hash of the caseId string.
+  const synthetic = createHash("sha256").update(`velo:SYNTHETIC-case-commitment:v1:${caseObj.case_id}`).digest("hex");
+  assert.notEqual(cc.hex, synthetic, "must no longer be sha256 of the caseId string");
+});
+
+test("two examiners on the same case share the commitment; different cases differ", () => {
+  const v005 = evidenceCaseCommitment(loadCaseFile("VELO-005-convergencia.json"));
+  const v005again = evidenceCaseCommitment(loadCaseFile("VELO-005-convergencia.json"));
+  const v006 = evidenceCaseCommitment(loadCaseFile("VELO-006-vacio-quirurgico.json"));
+  assert.equal(v005.hex, v005again.hex, "same evidence -> same commitment (shared by both examiners)");
+  assert.notEqual(v005.hex, v006.hex, "different evidence -> different commitment");
+});
+
+test("a case with no artifacts is rejected, not committed to an empty set", () => {
+  assert.throws(() => evidenceCaseCommitment({ case_id: "EMPTY", artifacts: [] }), SecondOpinionError);
 });

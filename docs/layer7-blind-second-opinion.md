@@ -141,9 +141,14 @@ proof server, and preview wallet-sync is intermittently slow (re-run promptly).
 #  - same examiner committing twice on one case -> "this examiner has already opined"
 ```
 
-The `case_commitment` is a demo-deterministic hash of the caseId
-(`syntheticCaseCommitment`), so commit and reveal agree; a real deployment binds
-the Layer 2 commitment. The blinding nonce is generated at commit time and
+The `case_commitment` is the **real Layer 2 evidence Merkle root**
+(`evidenceCaseCommitment` -> `evidenceMerkleRoot` over the case's artifacts — the
+same `evidenceRoot` a sealed bundle carries), NOT a hash of the caseId string.
+This is the shared, evidence-level identity: two examiners on the same evidence
+derive the same commitment, even though their verdicts may differ — which is
+exactly what a second opinion is. It is bound to genuine sealed evidence, and
+`tests/perito-second-opinion.test.ts` asserts it equals the evidence root of a
+genuinely sealed bundle. The blinding nonce is generated at commit time and
 persisted in the contract-scoped private state, so reveal reproduces the
 commitment. Verdicts are secret at commit (hidden witness) and public at reveal.
 

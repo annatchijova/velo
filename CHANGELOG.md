@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- **Layer 7's `case_commitment` is now the real Layer 2 evidence Merkle root.**
+  It was a synthetic `sha256(caseId)` stand-in; it is now
+  `evidenceCaseCommitment` -> `evidenceMerkleRoot` over the case's artifacts (the
+  same `evidenceRoot` a sealed bundle carries), so a blind second opinion binds
+  to genuine sealed evidence. This is the shared, evidence-level identity two
+  examiners agree on even when their verdicts differ. `artifactSchema` moved from
+  `src/mcp/server.ts` to `src/engine/evidence.ts` so the commitment derivation
+  and the MCP seal path strip artifacts identically (no two-root drift). A test
+  asserts the commitment equals a genuinely sealed bundle's evidence root.
+
 ### Added
 
 - **Layer 7 — the blind second opinion.** Two accredited peritos independently

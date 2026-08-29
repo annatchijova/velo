@@ -407,12 +407,12 @@ AA contrast, 44×44 px touch targets, `:focus-visible` order,
 `prefers-reduced-motion`.
 
 Suite progression through the audit rounds, as recorded at the time:
-**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58 → 170/170** (the one drop is the
+**9/9 → 14/14 → 34/34 → 41/41 → 38/38 → 53/53 → 58/58 → 173/173** (the one drop is the
 retirement of the loopback HTTP server after F14, not a regression; the
 coverage-gap and on-chain-read work took it to 58, the VIGÍA port to 115, and
-this document's own count gate to 170).
-Across both suites the runners report **286
-passing tests: 170 in the engine (`npm test`) and 116 in the frontend
+this document's own count gate to 173).
+Across both suites the runners report **289
+passing tests: 173 in the engine (`npm test`) and 116 in the frontend
 (`vitest run` in `frontend/`)**. The two are separate runners, so a green root
 suite says nothing about the frontend and vice versa — both numbers are given
 because either alone understates the coverage. Earlier versions of this
@@ -569,15 +569,15 @@ examiner at the moment of analysis.**
 | Marker-pair monotonicity sweep | 19×19, 0 violations | round 1, experiment E14e |
 | npm advisories cleared by the Next patch bump | ~30 | `DEPENDENCY_SECURITY.md` |
 | Advisories consciously deferred | 2 | same, with dated reasoning |
-| Root suite | 170/170 green | `npm test`, 2026-08-20 |
+| Root suite | 173/173 green | `npm test`, 2026-08-20 |
 | Frontend suite | 116/116 green | `vitest run` in `frontend/`, 2026-08-20 |
-| **Both suites** | **286/286 green** | measured, not derived — `node scripts/count-tests.mjs` |
+| **Both suites** | **289/289 green** | measured, not derived — `node scripts/count-tests.mjs` |
 
 **Caveat on the test count, withdrawn — and then enforced.** Earlier versions
 of this document reported "roughly 83 runtime cases", a figure derived by hand
 because the engine corpus test declares one `test(...)` inside a loop over the
 case fixtures and several frontend tests use `it.each`. That estimate is no
-longer needed: both suites are run and counted. The runners report **170** and
+longer needed: both suites are run and counted. The runners report **173** and
 **116**, which is what the table says.
 
 Measuring once was not enough. Between 2026-08-08 and 2026-08-20 this document
