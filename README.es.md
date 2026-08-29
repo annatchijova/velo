@@ -293,7 +293,9 @@ escondió.
 Cada atestación es una transacción desde una wallet. Si un perito atesta siempre
 desde la misma dirección, todos sus commitments son enlazables entre sí — sin
 revelar ningún contenido de caso, pero sí su cantidad de casos, distribución de
-veredictos y cadencia. Lo mitiga la credencial ZK anónima, que no está construida.
+veredictos y cadencia. Lo mitiga la credencial ZK anónima (Capa 6), que ahora
+está construida y viva en `preview`: la prueba `proveCredential` atesta sin
+revelar qué perito la produjo.
 
 **Metadata del propio ledger** *(G4)*
 El commitment, el veredicto y un timestamp **sí** salen, por diseño. Alguien
@@ -326,9 +328,23 @@ derivada de seed en la máquina del perito. Arquitectónicamente es el equivalen
 de la wallet del perito, pero **no** es la UI conectada a 1AM: `POST /api/attest`
 sigue calculando un commitment local.
 
-**Divulgación selectiva, credencial ZK del perito, segunda opinión ciega** — Están
-diseñadas ([`docs/IDENTITY.md`](./docs/IDENTITY.md),
-[`docs/ROADMAP.md`](./docs/ROADMAP.md)) y no implementadas.
+**Credencial ZK del perito (Capa 6) y segunda opinión ciega (Capa 7)** — Ya
+construidas y **vivas en `preview`**, en un contrato aparte `velo_perito`
+([`de474e0d…`](https://preview.midnightexplorer.com/contracts/0xde474e0da03488e3c32d2a8730cb26a2daad51f659d32d83283838c2ac4bdbe5)).
+Capa 6 prueba on-chain que detrás de una atestación hay un perito acreditado y
+vigente, sin revelar cuál (el caso del hueco de licencia `VELO-006` se rechaza).
+Capa 7 hace que dos peritos converjan en una segunda opinión sobre la misma
+evidencia sin que ninguno vea el veredicto del otro primero (commit-reveal +
+nullifier), con el `case_commitment` atado a la raíz Merkle de evidencia real de
+Capa 2. Demostradas end-to-end con pruebas ZK reales (seis transacciones). Lo que
+sigue siendo por CLI y no por navegador es la firma (misma advertencia que el
+camino de `attest`), y lo que aún no está en la UI es la compuerta de validez y el
+flujo de segunda opinión — hoy `/peritos` muestra el **perfil** del corpus. Ver
+[`docs/layer6-perito-credential.md`](./docs/layer6-perito-credential.md) y
+[`docs/layer7-blind-second-opinion.md`](./docs/layer7-blind-second-opinion.md).
+
+**Divulgación selectiva** — Las pruebas de inclusión Merkle sobre la evidencia
+(`evidenceRoot`) existen en el bundle sellado; todavía no expuestas en la UI.
 
 ### Y lo que explícitamente no resuelve
 

@@ -434,11 +434,26 @@ the failure mode this whole system exists to prevent.
 | Reading the ledger from the app | **Working** — `GET /api/chain` and the MCP tools `chain_status` / `lookup_commitment` read the deployed contract's real state. No wallet, no proving keys, no fees |
 | Writing (`attest`) on-chain | **Working** — `bun run deploy/attest-case.ts <caseId>` proves and submits a real `attest()` call. **Two attestations are live on preview**, both `MALICE`. The circuit's replay guard (red team G2) verified against the real network: re-attesting the same analysis is refused, not double-counted |
 | Writing from the browser UI | **Not wired** — `POST /api/attest` still computes a local commitment; the 1AM-signed path does not exist yet |
-| Selective disclosure, ZK expert credential, blind second opinion | **Not built** |
+| ZK perito credential (Layer 6) — membership + validity | **Live on `preview`** — contract `velo_perito` at [`de474e0da03488e3c32d2a8730cb26a2daad51f659d32d83283838c2ac4bdbe5`](https://preview.midnightexplorer.com/contracts/0xde474e0da03488e3c32d2a8730cb26a2daad51f659d32d83283838c2ac4bdbe5). `registerCredential` + `proveCredential` proven on-chain: an accredited, currently-valid examiner attested `VELO-001` **without revealing which one**; the `VELO-006` licensing-gap case is refused up front. `contracts/velo_perito.compact` (4 circuits, keys generated). Driven by `deploy/register-credential.ts` / `deploy/prove-credential.ts` |
+| Blind second opinion (Layer 7) — commit-reveal + nullifier | **Live on `preview`** — two examiners (`VELO-PERITO-003`, `-004`) independently committed HIDDEN verdicts and then revealed `MALICE` → **AGREE** on the same case, without revealing identities. Commit-reveal enforces blindness (nothing revealable until both commit); a per-`(examiner, case)` nullifier enforces two distinct examiners. The `case_commitment` is the real Layer 2 evidence Merkle root, not a synthetic hash. `deploy/commit-opinion.ts` / `deploy/reveal-opinion.ts` |
+| Selective disclosure (evidence Merkle proofs) | **Working off-chain** — `evidenceRoot` + per-artifact inclusion proofs are in the sealed bundle; not yet surfaced in the browser UI |
 
 The honest bottom line: the loop closes. A case is sealed locally, attested
 on-chain with a real ZK proof, and read back from the ledger by anyone — all
 three steps run against Midnight `preview`, not a simulation.
+
+And the perito layers now close on-chain too: a separate `velo_perito` contract
+proves an accredited, currently-valid examiner is behind an attestation without
+revealing which one (Layer 6), and lets two examiners reach an agreed second
+opinion on the same evidence without either seeing the other's verdict first
+(Layer 7). Both were demonstrated end-to-end on `preview` with real ZK proofs —
+six transactions across register, commit and reveal. What is still CLI-driven,
+not browser-driven, is the signing: these run through `deploy/*.ts` with a
+seed-derived wallet, the same honest caveat as the `attest` path above. The
+perito credential surfaced in the browser today is the corpus **profile**
+(`/peritos`); the validity gate and the blind-second-opinion flow are not yet in
+the UI. See `docs/layer6-perito-credential.md` and
+`docs/layer7-blind-second-opinion.md`.
 
 What does **not** yet exist is the browser-signed path: `POST /api/attest`
 still computes a commitment locally rather than having the analyst's own 1AM
@@ -598,7 +613,9 @@ verdict and a timestamp do leave, by design. Anyone watching the chain learns an
 investigation existed, roughly when, and its outcome category. And attestations from
 the same wallet are linkable to each other by address — revealing an expert's case
 count, verdict distribution and cadence, though never case content. The anonymous
-accredited-expert credential would mitigate that; it is not built.
+accredited-expert credential (Layer 6) now exists and proves accreditation without
+revealing which examiner; the wallet that *submits* the transaction is still
+linkable, so closing this fully still needs the browser-signed / rotating path.
 
 **What depends on something else existing first** *(G7, G8)* — No rule-version
 binding: the `>= 2` threshold is fixed in the circuit, and older attestations carry
@@ -615,9 +632,11 @@ different model, could go the other way.
 
 **What is not built** — The browser-signed path: attesting today goes through the
 CLI with a seed-derived wallet on the analyst's own machine, not the analyst's 1AM
-wallet signing from the UI. Selective disclosure, the ZK expert credential and the
-blind second opinion are designed ([`IDENTITY`](./docs/IDENTITY.md),
-[`ROADMAP`](./docs/ROADMAP.md)) and unimplemented.
+wallet signing from the UI. The ZK expert credential (Layer 6) and the blind second
+opinion (Layer 7) *are* now built and live on `preview` (see the status table), but
+CLI-driven, not browser-driven, and not yet surfaced in the UI beyond the corpus
+`/peritos` profile. Selective disclosure of evidence exists in the sealed bundle but
+is likewise not in the UI.
 
 **And what it explicitly does not solve** — VELO does **not** stop an expert who
 lies from the start. It removes post-hoc tampering and unverifiable claims of
