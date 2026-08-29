@@ -3,6 +3,8 @@
  * event is 100% synthetic — no real PII, no copyrighted material.
  */
 
+import { z } from "zod";
+
 export type ArtifactType = "file" | "process" | "log" | "network" | "registry" | "dns_record";
 
 export type Marker =
@@ -66,6 +68,32 @@ export interface EvidenceManifest {
   caseId: string;
   artifacts: Artifact[];
 }
+
+/**
+ * The validated shape of an artifact at the trust boundary. Unknown keys
+ * (e.g. `description_es` on a corpus case) are stripped, so a parsed artifact is
+ * exactly the engine's decision-relevant fields — which is also precisely what
+ * the seal canonicalizes and the evidence Merkle root commits to. Shared by the
+ * MCP boundary (src/mcp/server.ts) and the Layer 7 case_commitment derivation
+ * (src/perito/second_opinion.ts) so both strip identically and can never drift
+ * into two roots for one evidence set (F8).
+ *
+ * Red team F6: an unparseable timestamp used to silence the temporal detector
+ * (NaN comparisons are always false). Rejected at the edge here; the detector
+ * also fails closed independently.
+ */
+export const artifactSchema = z.object({
+  id: z.string(),
+  type: z.enum(["file", "process", "log", "network", "registry", "dns_record"]),
+  timestamp: z.string().datetime({ offset: true }),
+  source: z.string(),
+  process: z.string(),
+  path: z.string(),
+  entropyMilliBits: z.number().int().safe(),
+  markers: z.array(z.string()),
+  description: z.string(),
+  provenanceChain: z.array(z.string()),
+});
 
 /**
  * A source that should have been examined and was not.

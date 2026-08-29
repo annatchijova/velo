@@ -33,6 +33,8 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { canonicalizeToBytes } from "../seal/canonical.js";
+import { evidenceMerkleRoot } from "../seal/bundle.js";
+import { artifactSchema, type Artifact } from "../engine/evidence.js";
 import type { Verdict } from "../engine/scorer.js";
 
 export const SECOND_OPINION_VERSION = 1;
@@ -48,6 +50,40 @@ export class SecondOpinionError extends Error {
     super(message);
     this.name = "SecondOpinionError";
   }
+}
+
+export interface CaseCommitment {
+  hex: string;
+  bytes: Uint8Array;
+}
+
+/**
+ * The case_commitment two blind opinions bind to: the REAL Layer 2 evidence
+ * Merkle root over the case's artifacts — the same `evidenceRoot` a sealed
+ * bundle carries (src/seal/bundle.ts) — NOT a synthetic hash of the caseId.
+ *
+ * Why the evidence root and not the analysis fingerprint: the fingerprint
+ * includes the verdict/devil_advocate/reasoning, so two independent peritos
+ * would differ; the evidence root is over the ARTIFACTS only, so two peritos
+ * examining the same evidence share it. Their verdicts may diverge — the
+ * evidence they opine on does not. That is exactly what a second opinion is.
+ *
+ * The artifacts are parsed through the SHARED artifactSchema first, so unknown
+ * corpus fields (description_es, ...) are stripped identically to how the MCP
+ * seal path parses them — otherwise the root computed here would not match a
+ * real seal. Returns the 64-hex root and its 32 bytes (a drop-in Bytes<32>).
+ */
+export function evidenceCaseCommitment(caseObj: { case_id?: string; caseId?: string; artifacts?: unknown }): CaseCommitment {
+  const caseId = caseObj.case_id ?? caseObj.caseId ?? "";
+  const rawArtifacts = Array.isArray(caseObj.artifacts) ? caseObj.artifacts : [];
+  if (rawArtifacts.length === 0) {
+    throw new SecondOpinionError(
+      `case ${JSON.stringify(caseId)} has no artifacts — refusing to bind a case_commitment to an empty evidence set`,
+    );
+  }
+  const artifacts = rawArtifacts.map((a) => artifactSchema.parse(a)) as unknown as Artifact[];
+  const hex = evidenceMerkleRoot({ caseId, artifacts });
+  return { hex, bytes: Uint8Array.from(Buffer.from(hex, "hex")) };
 }
 
 function assertHex64(value: string, field: string): void {

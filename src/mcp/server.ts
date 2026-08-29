@@ -14,7 +14,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import type { Artifact } from "../engine/evidence.js";
+import { artifactSchema, type Artifact } from "../engine/evidence.js";
 import { getCase, listCases, narrateCase, preAnalyzeEvidence, sealCase, verifyCase } from "../core/operations.js";
 import { buildSyntheticRegistry, checkCredentialAtCase, listPeritoCasesOp, secondOpinionDemo } from "../core/perito_operations.js";
 import { CUSTODY_EVENT_TYPES } from "../seal/custody.js";
@@ -39,23 +39,8 @@ const peritoIdSchema = z
   .string()
   .regex(/^VELO-PERITO-\d{3}$/, "peritoId must look like VELO-PERITO-001");
 
-/**
- * Red team F6: an unparseable timestamp used to silence the temporal
- * detector (NaN comparisons are always false). Rejected at the edge now;
- * the detector also fails closed independently.
- */
-const artifactSchema = z.object({
-  id: z.string(),
-  type: z.enum(["file", "process", "log", "network", "registry", "dns_record"]),
-  timestamp: z.string().datetime({ offset: true }),
-  source: z.string(),
-  process: z.string(),
-  path: z.string(),
-  entropyMilliBits: z.number().int().safe(),
-  markers: z.array(z.string()),
-  description: z.string(),
-  provenanceChain: z.array(z.string()),
-});
+// artifactSchema now lives in src/engine/evidence.ts (shared with the Layer 7
+// case_commitment derivation so both strip identically — F6/F8).
 
 // --- Wallet "balance view" ---
 server.registerTool(

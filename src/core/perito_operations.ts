@@ -22,7 +22,7 @@ import { attestationEpochForCase } from "../perito/case_adapter.js";
 import { peritoSecretCommitment } from "../perito/secret.js";
 import { buildRegistry, type PeritoRegistryEntry } from "../perito/registry.js";
 import { listPeritoCases, unclaimedQueue, type CaseObject, type ShapedCase, type UnclaimedCaseEntry } from "../perito/visibility.js";
-import { SecondOpinionBoard, makeVerdictCommitment, opinionNullifier, generateOpinionNonce } from "../perito/second_opinion.js";
+import { SecondOpinionBoard, makeVerdictCommitment, opinionNullifier, generateOpinionNonce, evidenceCaseCommitment } from "../perito/second_opinion.js";
 import type { Verdict } from "../engine/scorer.js";
 
 // dist/src/core/perito_operations.js -> repo root is three levels up.
@@ -163,11 +163,6 @@ export function listPeritoCasesOp(peritoId: string): PeritoCasesView | { error: 
   };
 }
 
-/** DEMO-ONLY deterministic case_commitment for a corpus case (no Layer 2 wiring). */
-function syntheticCaseCommitment(caseId: string): string {
-  return createHash("sha256").update(`velo:SYNTHETIC-case-commitment:v1:${caseId}`).digest("hex");
-}
-
 export interface SecondOpinionDemo {
   synthetic: true;
   caseId: string;
@@ -187,20 +182,24 @@ export interface SecondOpinionDemo {
  * commitment and holds each nonce in the vault.
  */
 export function secondOpinionDemo(caseId: string = "VELO-005"): SecondOpinionDemo {
-  const caseCommitment = syntheticCaseCommitment(caseId);
+  const caseObj = loadCaseMap().get(caseId);
+  if (!caseObj) throw new Error(`No case found with id ${caseId}`);
+  // The case_commitment is the REAL Layer 2 evidence Merkle root, not a synthetic
+  // hash — the shared, evidence-level identity both examiners bind to.
+  const caseCommitment = evidenceCaseCommitment(caseObj as { case_id?: string; artifacts?: unknown });
   const keyA = syntheticLeafSecretKey("VELO-PERITO-003");
   const keyB = syntheticLeafSecretKey("VELO-PERITO-004");
   const verdict: Verdict = "MALICE";
 
-  const board = new SecondOpinionBoard(caseCommitment);
+  const board = new SecondOpinionBoard(caseCommitment.hex);
   const nonceA = generateOpinionNonce();
   const nonceB = generateOpinionNonce();
   const timeline: SecondOpinionDemo["timeline"] = [];
 
-  board.commit(makeVerdictCommitment(verdict, nonceA), opinionNullifier(keyA, caseCommitment));
+  board.commit(makeVerdictCommitment(verdict, nonceA), opinionNullifier(keyA, caseCommitment.hex));
   timeline.push({ step: "commit A", note: "first examiner commits a HIDDEN verdict — nothing about it is public", status: board.status() });
 
-  board.commit(makeVerdictCommitment(verdict, nonceB), opinionNullifier(keyB, caseCommitment));
+  board.commit(makeVerdictCommitment(verdict, nonceB), opinionNullifier(keyB, caseCommitment.hex));
   timeline.push({ step: "commit B", note: "second examiner commits without having seen the first's verdict (blindness)", status: board.status() });
 
   board.reveal(verdict, nonceA);
@@ -209,5 +208,5 @@ export function secondOpinionDemo(caseId: string = "VELO-005"): SecondOpinionDem
   board.reveal(verdict, nonceB);
   timeline.push({ step: "reveal B", note: "both open — agreement is now decidable", status: board.status() });
 
-  return { synthetic: true, caseId, caseCommitment, examinerA: "VELO-PERITO-003", examinerB: "VELO-PERITO-004", timeline };
+  return { synthetic: true, caseId, caseCommitment: caseCommitment.hex, examinerA: "VELO-PERITO-003", examinerB: "VELO-PERITO-004", timeline };
 }
