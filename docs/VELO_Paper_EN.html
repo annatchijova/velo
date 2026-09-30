@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><title>VELO — Zero-Knowledge Attestation of Forensic Verdicts</title>
+<style>
+@page{size:letter;margin:0.78in 0.72in 0.7in 0.72in}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Georgia,'Times New Roman',Times,serif;font-size:9.3pt;line-height:1.38;text-align:justify;hyphens:auto}
+.titleblock{text-align:center;margin:0 0 4pt}
+.title{font-size:17pt;font-weight:700;line-height:1.25;margin:0 0 8pt;letter-spacing:.2px}
+.authors{font-size:10.5pt;margin:0 0 2pt}
+.authors sup{font-size:7pt}
+.affil{font-size:8.6pt;color:#333;font-style:italic;margin:0 0 10pt}
+.abstract-block{max-width:92%;margin:6pt auto 4pt;text-align:left}
+.abstract-label{font-weight:700;font-size:9.3pt}
+.abstract-label i{font-weight:400}
+.keywords{font-size:8.6pt;margin:6pt auto 0;max-width:92%;text-align:left}
+.keywords b{font-weight:700}
+hr.rule{border:none;border-top:0.75pt solid #000;margin:10pt 0 8pt}
+.cols{column-count:2;column-gap:0.32in;column-fill:auto}
+h1.sec{font-size:10.3pt;font-weight:700;margin:11pt 0 4pt;break-after:avoid;letter-spacing:.2px}
+h2.sub{font-size:9.6pt;font-weight:700;font-style:italic;margin:8pt 0 3pt;break-after:avoid}
+p{margin:0 0 7pt;text-indent:11pt}
+p:first-of-type, .no-indent{text-indent:0}
+.cols p{text-indent:11pt}
+.cols > h1.sec + p, .cols > h2.sub + p{text-indent:0}
+figure{margin:6pt 0 8pt;break-inside:avoid}
+figure table{width:100%;border-collapse:collapse;font-size:8.2pt;margin:0 0 3pt}
+figure th{background:#eee;border:0.75pt solid #999;padding:3pt 5pt;text-align:left;font-weight:700}
+figure td{border:0.75pt solid #ccc;padding:3pt 5pt;vertical-align:top}
+figcaption{font-size:7.8pt;color:#222}
+figcaption b{font-weight:700}
+.code{background:#f4f4f2;border:0.75pt solid #ccc;border-radius:2pt;padding:5pt 7pt;font-family:'SF Mono',Consolas,monospace;font-size:7.6pt;line-height:1.42;white-space:pre-wrap;margin:4pt 0 7pt;break-inside:avoid;text-indent:0}
+.list{margin:2pt 0 7pt 15pt;padding:0;text-indent:0}
+.list li{margin:0 0 4pt;padding-left:2pt}
+sup.cite{font-size:7.3pt;vertical-align:super}
+.footnote{font-size:7.6pt;color:#333}
+.refs{font-size:8.3pt;line-height:1.35}
+.refs ol{margin:2pt 0 0 0;padding-left:14pt}
+.refs li{margin:0 0 5pt;padding-left:2pt;text-indent:0}
+.boxhon{background:#f7f6f1;border:0.75pt solid #999;border-radius:2pt;padding:6pt 8pt;margin:4pt 0 8pt;font-size:8.7pt;break-inside:avoid;text-indent:0}
+.boxhon p{text-indent:0;margin:0 0 5pt}
+.footer{font-size:7.3pt;color:#555;text-align:center;margin-top:10pt;border-top:0.5pt solid #ccc;padding-top:4pt}
+</style></head>
+<body>
+
+<div class="titleblock">
+<div class="title">VELO: Zero-Knowledge Attestation of Forensic Verdicts<br>on a Dual-Ledger Blockchain</div>
+<div class="authors">Anna Tchijova<sup>1</sup>, Olga Vasilieva<sup>1</sup>, Dahgoth<sup>1</sup></div>
+<div class="affil"><sup>1</sup>Independent Research — VELO Project · github.com/annatchijova/velo · Apache License 2.0</div>
+</div>
+
+<div class="abstract-block">
+<p class="no-indent"><span class="abstract-label">Abstract — </span><i>A forensic expert who wants a verdict trusted today faces two options, and both are bad: publish the raw evidence — exposing a victim, a private conversation, or a seized device to everyone in the process who did not need to see it — or publish nothing and ask a court, a regulator, or the public to take the expert's word for it. Every production digital-forensics workflow we are aware of picks one of these. This paper presents VELO, a system that separates what must be provable from what must be private, using a deterministic forensic-analysis engine, a hash-chained custody log, and a zero-knowledge circuit deployed on Midnight, a blockchain with an explicit public/private ledger split. The circuit enforces a Daubert-inspired admissibility rule — a verdict of </i>MALICE<i> cannot be attested without at least two independently-provenanced corroborating sources — as a cryptographic constraint rather than a policy convention: an attestation that violates it cannot be produced at all. We describe the architecture, report six rounds of adversarial red-teaming against a live deployment on Midnight's </i>preview<i> network — including two real, on-chain </i>MALICE<i> attestations — and state precisely, rather than by omission, what the resulting proof does and does not establish about the analysis behind it.</i></p>
+</div>
+<div class="keywords no-indent"><b>Keywords —</b> zero-knowledge proofs, digital forensics, chain of custody, Daubert standard, verifiable credentials, Midnight, dual-ledger blockchains, anonymous accreditation</div>
+
+<hr class="rule">
+
+<div class="cols">
+
+<h1 class="sec">1. Introduction</h1>
+<p>Digital forensic evidence occupies an uncomfortable epistemic position. The only way to fully justify a conclusion built on it is to show the evidence itself — and showing it is frequently the harm the entire process exists to prevent. A memory image from an abuse case contains the abuse material. A fraud investigation's log bundle contains private financial records of people who are not parties to the case. A leak investigation's evidence is, definitionally, the thing that was not supposed to be published. In each of these, the verdict is the deliverable a court or the public actually needs; the evidence is a liability that happens to travel with it.</p>
+<p>Two responses to this are in production use today, and neither resolves the tension. The first is full disclosure: publish or hand over the raw evidence so the verdict can be checked. This re-exposes the victim to every reviewer, clerk, or opposing party who did not need to see the material to evaluate whether the <em>process</em> that produced the verdict was sound. The second is authority without evidence: a signed report, a credential, an expert's word. This asks the reader to trust a person rather than verify a process — precisely the failure mode admissibility standards such as Daubert<sup class="cite">[1]</sup> were written to close for expert testimony in general, and one digital forensics has so far addressed only by choosing one of the two bad options above.</p>
+<p>VELO removes the tradeoff rather than picking a side of it. A deterministic engine produces a verdict from evidence that never leaves the examiner's machine; the verdict, a cryptographic commitment to the analysis, and a zero-knowledge proof that an admissibility rule was satisfied are the only things that reach a public, immutable ledger. Anyone — a judge, opposing counsel, an auditor, the public — can verify that the rule held, without any of them ever holding the evidence that triggered it.</p>
+<p>This paper makes the following contributions:</p>
+<ul class="list">
+<li>A deterministic forensic-analysis engine with a fixed four-state verdict scale (<span class="code" style="display:inline;padding:0;border:none;background:none">NOISE/SUSPICION/MALICE/ABSTAIN</span>) computed in exact rational arithmetic, so a threshold comparison gives the same answer on every machine, forever (§3.2).</li>
+<li>A canonical sealing scheme that separates a <em>bundle hash</em> (identifies this specific sealing event) from an <em>analysis fingerprint</em> (identifies the analysis itself, invariant under re-sealing) over a hash-chained custody log (§3.3).</li>
+<li>A Compact<sup class="cite">[4]</sup> zero-knowledge circuit, deployed on Midnight's <span style="font-style:italic">preview</span> network, that enforces a Daubert-inspired corroboration gate as a circuit constraint — not a convention an application layer could skip — together with a replay guard verified against the live contract (§3.4, §4).</li>
+<li>Two further zero-knowledge layers: an anonymous accredited-expert credential that proves licensure without identifying the examiner, and a commit-reveal blind-second-opinion protocol that lets two examiners agree on a verdict without either seeing the other's opinion first (§3.5–3.6), both demonstrated on-chain.</li>
+<li>Six rounds of adversarial red-teaming, and an explicit, itemized account of what the resulting proof does <em>not</em> establish — because a system built specifically to avoid overclaiming has to start by not overclaiming about itself (§5).</li>
+</ul>
+
+<h1 class="sec">2. Background</h1>
+<h2 class="sub">2.1 The disclosure dilemma and the Daubert standard</h2>
+<p>The Daubert standard<sup class="cite">[1]</sup> asks whether an expert's method is testable, has a known error rate, has been subject to peer review, and is generally accepted — a test for the <em>process</em> behind a conclusion, not the conclusion's plausibility. A structural requirement that follows from it in practice is corroboration: a finding resting on one source collapses if that source is wrong or fabricated, so a serious verdict conventionally requires independent support from more than one. Jurisdictions outside the United States apply doctrinally similar requirements without a single codified rule of the same name. Digital forensics has generally satisfied this by disclosure — the evidence itself is the only artifact detailed enough for a second expert to audit the reasoning — which is exactly what collides with cases where the evidence cannot be shared.</p>
+<h2 class="sub">2.2 Zero-knowledge proofs as a structural solution</h2>
+<p>A zero-knowledge proof<sup class="cite">[2]</sup> lets a prover convince a verifier that a statement about some private data is true, without revealing the data. Applied here, the statement is not "the evidence shows abuse" — a zero-knowledge circuit does not adjudicate forensic conclusions — but a narrower, sufficient one: <em>the published verdict is bound to a specific analysis, and if that verdict is the most severe category, at least two independently-provenanced sources support it.</em> This is the precise sense in which VELO's claims are structural rather than evidentiary: the circuit does not decide whether the forensic conclusion is correct, only that a stated procedural constraint on how the conclusion may be published was satisfied.</p>
+<h2 class="sub">2.3 Midnight's dual-ledger model</h2>
+<p>Midnight exposes an explicit public/private ledger split at the language level: a Compact<sup class="cite">[4]</sup> contract's <span class="code" style="display:inline;padding:0;border:none;background:none">disclose()</span> construct is the only path by which a value computed from private <em>witness</em> data may cross into the public ledger, and the compiler — not a convention — enforces that nothing else does. This is the specific primitive VELO's architecture depends on: a chain where "public" and "private" are a boundary the language draws, not a policy the application layer promises to respect. Alternative zero-knowledge platforms were considered and rejected for this reason specifically — Aztec targets general smart-contract privacy without an equivalently explicit dual-ledger split, and Aleo is private by default with disclosure as the exception, the inverse of VELO's requirement that the verdict be public and only the witness be private.</p>
+
+<h1 class="sec">3. System Architecture</h1>
+<h2 class="sub">3.1 Threat model: two ledgers, one boundary</h2>
+<p>The design principle is a single boundary, enforced once, rather than many ad hoc redactions: everything an examiner's machine computes is private by default, and only a small, named set of values is deliberately disclosed.</p>
+<figure>
+<table>
+<tr><th></th><th>Public (on-chain ledger)</th><th>Private (witness, examiner's machine)</th></tr>
+<tr><td>Contains</td><td><span class="code" style="display:inline;padding:0;border:none;background:none">commitment</span>, declared <span class="code" style="display:inline;padding:0;border:none;background:none">verdict</span>, attestation count</td><td>bundle fingerprint, custody tip, corroboration count, secret salt</td></tr>
+<tr><td>Who sees it</td><td>Anyone, forever, immutable</td><td>Nobody but the examiner; never transmitted</td></tr>
+<tr><td>Proves</td><td>An attestation exists and follows the rules</td><td>Nothing directly — it is the proof's input</td></tr>
+</table>
+<figcaption><b>Table 1.</b> The compiler-enforced boundary between what the ledger records and what never leaves the examiner's machine.</figcaption>
+</figure>
+<h2 class="sub">3.2 The deterministic engine and verdict scale</h2>
+<p>A small set of detectors runs over evidence — disk images, logs, captures — on the examiner's own machine, and produces a verdict on a fixed four-state scale: <span class="code" style="display:inline;padding:0;border:none;background:none">NOISE</span>, <span class="code" style="display:inline;padding:0;border:none;background:none">SUSPICION</span>, <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span>, or <span class="code" style="display:inline;padding:0;border:none;background:none">ABSTAIN</span>. Every comparison inside the decision path uses exact rational arithmetic — never a native float — so the same evidence produces the same verdict on any machine, indefinitely; this is a precondition for a zero-knowledge proof about the analysis to mean anything at all, since a proof about a non-reproducible computation proves nothing reproducible. A <span class="code" style="display:inline;padding:0;border:none;background:none">devil_advocate</span> field is mandatory on any <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span> verdict — the strongest innocent explanation considered and why it was rejected — and an empty field blocks sealing.</p>
+<h2 class="sub">3.3 Canonical sealing and the custody chain</h2>
+<p>The verdict, score, which detectors fired, and a custody chain are canonicalized — type-tagged, sorted keys, no floats, a versioned encoder — and hashed into a sealed bundle. Two distinct hashes are kept deliberately apart: a <em>bundle hash</em> that includes the sealing timestamp, identifying this specific sealing event, and an <em>analysis fingerprint</em> that excludes it, identifying the analysis itself so that a deterministic replay reproduces the same fingerprint. The fingerprint and the custody chain's tip — not the raw bundle — are among the values folded into the on-chain commitment: the fingerprint so a later replay of the same analysis still matches, the tip so the custody history is anchored to something published rather than left mutable on disk.</p>
+<h2 class="sub">3.4 The Compact circuit: the Daubert gate as a constraint</h2>
+<p>The contract publishes <span class="code" style="display:inline;padding:0;border:none;background:none">commitment = hash(domain, fingerprint, custody_tip, verdict, corroboration_count, salt)</span> — every value the attestation asserts is folded into the hash — and enforces the corroboration rule inside the circuit itself: a <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span> verdict requires <span class="code" style="display:inline;padding:0;border:none;background:none">corroboration_count &gt;= 2</span>, checked by an <span class="code" style="display:inline;padding:0;border:none;background:none">assert</span> the prover cannot satisfy otherwise. We confirmed this adversarially against the deployed contract, submitting a hand-crafted single-source witness directly to the circuit, bypassing the engine and every application-level check:</p>
+<div class="code">failed assert: MALICE requires at least 2
+independent corroborating sources — the
+Daubert gate</div>
+<p>No proof is produced under that condition, so nothing reaches the ledger. The guarantee is cryptographic — a property of what the circuit will and will not accept — rather than a promise made by application code that a different code path could bypass.</p>
+<h2 class="sub">3.5 Anonymous accredited-expert credentials (Layer 6)</h2>
+<p>A second contract, <span class="code" style="display:inline;padding:0;border:none;background:none">velo_perito</span>, lets an examiner prove membership in an accredited set and current (non-lapsed) licensure without revealing which member they are. <span class="code" style="display:inline;padding:0;border:none;background:none">registerCredential</span> and <span class="code" style="display:inline;padding:0;border:none;background:none">proveCredential</span> were exercised on Midnight <span style="font-style:italic">preview</span>: an accredited, currently-valid examiner attested a case without disclosing identity, while a credential with a documented licensing gap was refused before any proof could be produced.</p>
+<h2 class="sub">3.6 Blind second opinion (Layer 7)</h2>
+<p>A commit-reveal protocol with a per-<span class="code" style="display:inline;padding:0;border:none;background:none">(examiner, case)</span> nullifier lets two independent examiners each commit a hidden verdict on the same evidence root, then reveal — enforcing that neither could see the other's opinion before both had committed, and that the same examiner cannot vote twice on one case. Demonstrated live on <span style="font-style:italic">preview</span>: two distinct examiners independently committed and revealed <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span> on the same Layer-2 evidence Merkle root, reaching <span class="code" style="display:inline;padding:0;border:none;background:none">AGREE</span> without either identity or either interim opinion becoming visible to the other party.</p>
+
+<h1 class="sec">4. Adversarial Evaluation</h1>
+<p>The methodology throughout is adversarial-first: a claim is not accepted because the intended path succeeds, but because the system was specifically pushed to fail and either refused correctly or the failure was named as a limitation rather than hidden. Six rounds of red-teaming are recorded in full (<span class="code" style="display:inline;padding:0;border:none;background:none">docs/RED_TEAM_ROUND_1</span> through <span class="code" style="display:inline;padding:0;border:none;background:none">_6.md</span>), covering the engine, the sealing layer, the contract, and the deployment scripts.</p>
+<h2 class="sub">4.1 Refusal 1 — insufficient corroboration</h2>
+<p>Evidence engineered to score high enough for <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span> but traceable to a single acquisition was submitted end-to-end:</p>
+<div class="code">[ATTEMPTED VERDICT] SUSPICION
+[WHY] Score 0.3000 above the noise ceiling
+      but below the MALICE threshold.
+Correctly refused. The Daubert corroboration
+gate held — this is not a promise, it's a
+constraint.</div>
+<h2 class="sub">4.2 Refusal 2 — broken chain of custody</h2>
+<p>The byte-for-byte same artifacts that had produced <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span>, with only the acquisition record removed, were resubmitted:</p>
+<div class="code">[VERDICT WITH CUSTODY]     MALICE
+[VERDICT WITHOUT CUSTODY]  ABSTAIN
+Identical evidence, opposite outcome.
+Admissibility is a property of the process,
+not of how incriminating the evidence looks.</div>
+<p>A finding nobody can trace to a lawful acquisition is not, in this design, a weaker finding — it is an inadmissible one, and the system is built to treat the two as the same thing rather than let strong-looking content override a broken process.</p>
+<h2 class="sub">4.3 Coverage and live-network evidence</h2>
+<p>289 tests pass across two independently-run suites (173 engine, 116 frontend), counted by the test runners rather than estimated. The contract is deployed and live on Midnight <span style="font-style:italic">preview</span> (address <span class="code" style="display:inline;padding:0;border:none;background:none">46cac58c…023d9d</span>); two real <span class="code" style="display:inline;padding:0;border:none;background:none">MALICE</span> attestations exist on-chain today, each independently re-verifiable by a script sharing no state with the one that wrote them, and by a third-party block explorer under nobody's control. The circuit's replay guard was verified against the live network: re-attesting an already-published analysis is refused by the contract, not merely discouraged by the client.</p>
+
+<h1 class="sec">5. What the Proof Does and Does Not Establish</h1>
+<p>A system built specifically to avoid overclaiming has an obligation to state its own boundary precisely rather than by omission. In one sentence: <em>VELO proves that a specific verdict was produced by a specific process, under specified constraints, and that the resulting attestation cannot be altered afterward. It does not replace forensic judgment; it makes forensic judgment auditable.</em></p>
+<div class="boxhon">
+<p><b>Witness provenance (G1, G3).</b> The circuit proves relationships <em>between the witness values it is handed</em> — that a verdict is bound to a fingerprint, that a count clears the gate — not that those values describe a real engine run on real evidence. That binding exists today only in the calling code, which is precisely the part a zero-knowledge proof does not cover. Likewise, the corroboration count is supplied by the prover and checked to be <span class="code" style="display:inline;padding:0;border:none;background:none">&gt;= 2</span>, not cryptographically proven independent — independence is analyst-declared, verified off-chain from distinct provenance roots. This is not specific to VELO: it is what a zero-knowledge proof means for any system attesting to real-world facts rather than pure computation, and closing it requires a witness-provenance mechanism — an engine signature, an accreditation credential, or an environment attestation — that does not yet exist.</p>
+<p><b>Metadata leakage (G4, G5).</b> A commitment, the declared verdict, and a timestamp leave by design. Anyone watching the chain learns that an investigation existed, roughly when, and its outcome category — and attestations from one wallet are linkable to each other, revealing an examiner's case volume, verdict distribution, and cadence, though never case content. The anonymous credential (§3.5) proves accreditation without identifying the examiner; the wallet that <em>submits</em> the transaction is still linkable, so closing this fully still needs a browser-signed, rotating-address path.</p>
+<p><b>Dependent and unbuilt pieces.</b> There is no rule-version binding yet — the threshold is fixed in the circuit, with no marker of which rule version checked an older attestation — and no revocation model for a lapsed credential, deferred as meaningless to design before the credential it would revoke. The browser-signed attestation path does not exist: attesting today runs through a CLI using a seed-derived wallet on the examiner's own machine, architecturally equivalent but not identical to a wallet-connected UI. The server does not verify that a submitted <span class="code" style="display:inline;padding:0;border:none;background:none">devil_advocate</span> field is anchored to the actual evidence — one prompt-injection attempt against an LLM-driven client was tested and refused, but by the model's judgment, not a server-side check.</p>
+<p><b>What VELO explicitly does not solve.</b> It does not stop an examiner who is dishonest from the start of the analysis. It removes the possibility of post-hoc tampering with an already-sealed verdict and the possibility of an unverifiable claim of process; it does not remove the possibility of a corrupt examiner at the moment of analysis, which remains a human and judicial responsibility exactly as with any forensic report today.</p>
+</div>
+
+<h1 class="sec">6. Why This Matters Beyond One Tool</h1>
+<p>The disclosure dilemma this paper opens with is not specific to digital forensics. Any pipeline that produces an adjudicated decision from sensitive material — a medical-malpractice review built on patient records, a content-moderation verdict built on the reported content itself, a credential-verification process built on personal documents — faces the identical binary: publish the sensitive input to justify the output, or ask for trust in the output alone. VELO's pattern — seal first, prove second, disclose the least sufficient statement — is a transferable architecture for that entire class of problem, not a forensics-specific trick.</p>
+<p>The economic argument sharpens this beyond ethics. A forensic expert's reputation today is almost entirely social: certificates, testimonials, years of practice, asserted rather than demonstrated. A verifiable, privacy-preserving track record — "143 sealed cases, 98 accepted under the admissibility rule, zero invalidated attestations," provable without revealing a single victim, client, or case file — changes what an expert-witness market can verify about a candidate before hiring them, and what a court can verify about a witness before crediting their testimony. Where a professional profile today says "I claim expertise," a sealed, provable case history says "cryptographic proof exists that I participated in analyses satisfying specific, checkable rules" — a categorically stronger claim, and one that does not require anyone to trust the platform making it, only the proof.</p>
+
+<h1 class="sec">7. Related Work and Provenance</h1>
+<p>VELO's cryptographic and blockchain layer is original to this project; several of its conceptual patterns are deliberate adaptations, in a different language and a different trust model, from prior work by the same research group. The deterministic verdict scale and the corroboration-count gate adapt threshold logic from VIGÍA<sup class="cite">[6]</sup>, a Python deterministic forensic-intentionality engine; the two-hash sealing pattern (bundle identity versus analysis identity) and the hash-chained, anti-truncation custody log adapt the same distinction from VIGÍA's bundle builder and tool-execution-log chain. The confidence-ceiling-by-corroboration-diversity principle adapts from an audit-chain project, <span style="font-style:italic">cronos</span>; the adversarial test taxonomy (forge, truncate, tamper) adapts from a sealing-and-audit project, <span style="font-style:italic">forge</span>; consent-gated selective disclosure and the local-first, loopback-only frontend pattern adapt from a digital-legacy project, <span style="font-style:italic">continuum</span>. None of this is copy-pasted — the prior work is Python, VELO is TypeScript and a zero-knowledge circuit language, and no file from any prior repository was opened for copy-paste during VELO's construction. What transfers is the shape of the solution: which invariant to enforce, not which line of code enforces it.</p>
+
+<h1 class="sec">8. Conclusion and Future Work</h1>
+<p>VELO demonstrates that the publish-the-evidence-or-ask-for-trust binary is not architecturally necessary: a deterministic engine, a canonical seal, and a zero-knowledge circuit on a dual-ledger chain are sufficient to make a forensic verdict publicly verifiable while its evidence stays sealed, and sufficient to make an admissibility rule a cryptographic constraint rather than a policy that a careless implementation could skip. The system is deployed and operating against a live network, not a simulation: two real attestations exist on Midnight <span style="font-style:italic">preview</span> today, independently re-verifiable by a third party.</p>
+<p>The gap that remains is exactly the one named in §5, not a different one discovered later: proof of witness provenance. Future work is the witness-provenance mechanism itself — binding a proof to a specific, attested engine execution rather than to whatever bytes a caller supplies — together with the browser-signed attestation path, rule-versioning inside the circuit, and a revocation model for the credential built in §3.5. Each is a closable, specific gap rather than an open-ended one, which is itself the point: a system that names its remaining boundary precisely is one whose remaining work can be verified as done, rather than merely claimed.</p>
+
+<h1 class="sec">References</h1>
+<div class="refs no-indent">
+<ol>
+<li><i>Daubert v. Merrell Dow Pharmaceuticals, Inc.</i>, 509 U.S. 579 (1993).</li>
+<li>Goldwasser, S., Micali, S., Rackoff, C. "The Knowledge Complexity of Interactive Proof Systems." <i>SIAM Journal on Computing</i>, 18(1), 1989.</li>
+<li>Midnight Network. Technical documentation. <span style="font-family:monospace">docs.midnight.network</span>, 2026.</li>
+<li>Midnight Network. Compact language reference and compiler, v0.31.1. <span style="font-family:monospace">docs.midnight.network/relnotes</span>, 2026.</li>
+<li>Camenisch, J., Lysyanskaya, A. "An Efficient System for Non-transferable Anonymous Credentials with Optional Anonymity Revocation." <i>EUROCRYPT 2001</i>.</li>
+<li>Tchijova, A. VIGÍA: A Deterministic Forensic Intentionality Engine for the SANS SIFT Workstation. <span style="font-family:monospace">github.com/annatchijova/vigia-intent-analysis</span>, 2026.</li>
+<li>Tchijova, A., Vasilieva, O., Dahgoth. VELO Red Team Reports, Rounds 1–6. <span style="font-family:monospace">github.com/annatchijova/velo/docs/RED_TEAM_ROUND_{1..6}.md</span>, 2026.</li>
+<li>Tchijova, A., Vasilieva, O., Dahgoth. VELO source repository and live Midnight <i>preview</i> deployment. <span style="font-family:monospace">github.com/annatchijova/velo</span>, 2026. Contract: <span style="font-family:monospace">0x46cac58c…023d9d</span>.</li>
+</ol>
+</div>
+
+</div>
+
+<div class="footer">VELO — Zero-Knowledge Attestation of Forensic Verdicts on a Dual-Ledger Blockchain · Tchijova, Vasilieva, Dahgoth · Apache 2.0 · github.com/annatchijova/velo</div>
+
+</body></html>
