@@ -109,29 +109,12 @@ export function measure() {
  * rather than silently stop checking it — the honest-degradation rule the
  * repo applies to its own loaders applies to its own tooling too.
  *
- * CHANGELOG.md is deliberately absent. A changelog is a dated log of what
- * changed, not an assertion about the present; its "58 engine + 47 frontend"
- * line correctly records what that commit did at the time.
+ * The primary README files are deliberately absent. They link to the measured
+ * technical status instead of duplicating mutable test counts in two languages.
+ * CHANGELOG.md is also absent because it records what a commit did at the time,
+ * not an assertion about the present.
  */
 export const CLAIMS = [
-  // --- README.md -----------------------------------------------------
-  { file: "README.md", key: "root", re: /npm test          # (\d+) engine tests/ },
-  { file: "README.md", key: "frontend", re: /npx vitest run   # (\d+) more/ },
-  { file: "README.md", key: "total", re: /# \d+ more — (\d+) across both suites/ },
-  { file: "README.md", key: "root", re: /\| Deterministic engine \+ Daubert gate \| \*\*Working\*\*, (\d+) tests \|/ },
-  { file: "README.md", key: "total", re: /\| \*\*(\d+) green\*\* — \d+ engine/ },
-  { file: "README.md", key: "root", re: /\*\*\d+ green\*\* — (\d+) engine \(`npm test`\)/ },
-  { file: "README.md", key: "frontend", re: /engine \(`npm test`\) \+ (\d+) frontend/ },
-
-  // --- README.es.md --------------------------------------------------
-  { file: "README.es.md", key: "root", re: /npm test          # (\d+) tests del motor/ },
-  { file: "README.es.md", key: "frontend", re: /npx vitest run   # (\d+) más/ },
-  { file: "README.es.md", key: "total", re: /# \d+ más — (\d+) entre las dos suites/ },
-  { file: "README.es.md", key: "root", re: /\| Motor determinista \+ gate de Daubert \| \*\*Funciona\*\*, (\d+) tests \|/ },
-  { file: "README.es.md", key: "total", re: /\| \*\*(\d+) en verde\*\* — \d+ del motor/ },
-  { file: "README.es.md", key: "root", re: /\*\*\d+ en verde\*\* — (\d+) del motor \(`npm test`\)/ },
-  { file: "README.es.md", key: "frontend", re: /del motor \(`npm test`\) \+ (\d+) del frontend/ },
-
   // --- docs/TECHNICAL_STATUS.md --------------------------------------
   // The progression line ends at the current count, so it is a claim too.
   { file: "docs/TECHNICAL_STATUS.md", key: "root", re: /→ 58\/58 → (\d+)\/\d+\*\*/ },
