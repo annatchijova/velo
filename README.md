@@ -13,7 +13,7 @@
 
 ## ▶ [Open the VELO Hub — the whole project on one page](https://velo-hub-zeta.vercel.app/)
 
-[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
+[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/) https://velo-1048644120951.us-central1.run.app/
 
 </div>
 
