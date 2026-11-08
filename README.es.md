@@ -1,9 +1,3 @@
-<div align="center">
-
-<img src="./visual/logo.jpg" alt="VELO logo — a brushed-steel V forming a checkmark inside an open circle, the tick stroke rendered in red. Below it the wordmark VELO and the line: the verdict is visible, the victim is not." width="320">
-
-</div>
-
 # VELO
 
 > **El veredicto se ve, la víctima no.**
@@ -25,13 +19,16 @@ evidencia de la que salió**.
 📄 **[English README](./README.md)** — versión completa, con diagramas, la API y las
 instrucciones de deploy.
 
+**[README técnico](./TECHNICAL_README.md)** — arquitectura, invariantes,
+protocolos, modelo de amenazas, limitaciones y operación.
+
 ⚡ **[Inicio rápido (EN/ES)](./docs/QUICKSTART.md)** — instalación para copiar y pegar,
 los 14 casos de a uno, las demos, y cada script adversarial con qué prueba.
 
 🔗 **[Verificalo en el explorer de Midnight](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)** — el contrato desplegado y sus
 atestaciones en un explorador de bloques que no controlamos. Sin instalar nada.
 
-**Demo en vivo: [velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
+**Demo en vivo: [velo-1048644120951.us-central1.run.app](https://velo-1048644120951.us-central1.run.app/)** — leyendo el contrato real desplegado en Midnight preview. Sin wallet, claves ni instalación para navegarla.
 
 **Video demo: [youtu.be/AHBEUcrzf48](https://youtu.be/AHBEUcrzf48)** — un recorrido del flujo, de punta a punta.
 
@@ -41,7 +38,7 @@ atestaciones en un explorador de bloques que no controlamos. Sin instalar nada.
 
 Cada página es bilingüe (EN/ES).
 
-- **[App en vivo](https://velo-1028999311218.us-central1.run.app)** — el frontend corriendo en Google Cloud Run, leyendo el ledger real on-chain.
+- **[App en vivo](https://velo-1048644120951.us-central1.run.app/)** — el frontend corriendo en Google Cloud Run, leyendo el ledger real on-chain.
 - **[Pitch deck](https://annatchijova.github.io/vigia/velo-pitch-deck.html)** — el deck de slides bilingüe.
 - **[Diagrama de arquitectura](https://annatchijova.github.io/vigia/veloarchitecture-diagram.html)** — la vista de una imagen: "un lado prueba, el otro queda sellado".
 - **[Arquitectura](https://annatchijova.github.io/vigia/velo-architecture.html)** — el documento completo, desde [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
@@ -192,7 +189,7 @@ desde el ledger.
 ### Despliegue (Google Cloud Run)
 
 La app está **viva en
-[velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)**,
+[velo-1048644120951.us-central1.run.app](https://velo-1048644120951.us-central1.run.app/)**,
 desplegada como contenedor desde el `Dockerfile` de la raíz del repo
 (multi-etapa: instalar → compilar el motor raíz → `next build` → `next start`
 en el `$PORT` de Cloud Run):

@@ -9,7 +9,7 @@
 
 ## ▶ [Open the VELO Hub — the whole project on one page](https://velo-hub-zeta.vercel.app/)
 
-[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/) https://velo-1048644120951.us-central1.run.app/
+[![Open the VELO Hub](https://img.shields.io/badge/%E2%96%B6_velo--hub--zeta.vercel.app-open_everything_%E2%86%92-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://velo-hub-zeta.vercel.app/)
 
 </div>
 
@@ -28,6 +28,9 @@ publishing the evidence it came from**.
 
 📄 **[Léelo en español (README.es.md)](./README.es.md)**
 
+**[Technical README](./TECHNICAL_README.md)** — architecture, invariants,
+protocol details, threat model, limitations, and operational guidance.
+
 ⚡ **[Quick start (EN/ES)](./docs/QUICKSTART.md)** — copy-paste setup, the 14 cases one at a time, the demos, and every adversarial script with what it proves.
 
 🔗 **[Verify it on the Midnight explorer](https://preview.midnightexplorer.com/contracts/0x46cac58c4eb0e034b4211d754bfe67f7e8e1aa08d448ebd089437ed573023d9d)** — the deployed contract and its attestations, on a block explorer we do not control. Nothing to install.
@@ -42,7 +45,7 @@ publishing the evidence it came from**.
 
 Every page below is bilingual (EN/ES).
 
-- **[Live app](https://velo-1028999311218.us-central1.run.app)** — the running frontend on Google Cloud Run, reading the real on-chain ledger.
+- **[Live app](https://velo-1048644120951.us-central1.run.app/)** — the running frontend on Google Cloud Run, reading the real on-chain ledger.
 - **[Pitch deck](https://annatchijova.github.io/vigia/velo-pitch-deck.html)** — the bilingual slide deck.
 - **[Architecture diagram](https://annatchijova.github.io/vigia/veloarchitecture-diagram.html)** — the one-picture "one side proves, the other stays sealed" view.
 - **[Architecture](https://annatchijova.github.io/vigia/velo-architecture.html)** — the full write-up, from [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
@@ -290,7 +293,7 @@ copies of one function that had already drifted apart before anyone noticed.
 ### Deploying (Google Cloud Run)
 
 The app is **live at
-[velo-1028999311218.us-central1.run.app](https://velo-1028999311218.us-central1.run.app)**,
+[velo-1048644120951.us-central1.run.app](https://velo-1048644120951.us-central1.run.app/)**,
 deployed as a container from the repo-root `Dockerfile` (multi-stage: install
 → build the root engine → `next build` → `next start` on Cloud Run's `$PORT`):
 
